@@ -1,13 +1,24 @@
-Tried a couple of routers:
+### Selection of a routing library
 
+Requirements:
+ 
+ - GET, POST, DELETE, PUT verbs
+ - complex routes: `/user/id/animal/id`
+ - as lightweight as possible
+ - not a framework. Only router
+
+Tried a couple of routers:
+ 
+ - standard Go router is super slow, does not support complex routes
  - [HttpRouter](https://github.com/julienschmidt/httprouter) - does not support 
  [normal routes](https://github.com/julienschmidt/httprouter/issues/12)
  - [Denco](https://github.com/naoina/denco) - does not support DELETE, PUT
 
-The one that supports the route structure and all http verbs is 
-[httptreemux](https://github.com/dimfeld/httptreemux)
+The one that supports the route structure and all HTTP Verbs is 
+[httptreemux](https://github.com/dimfeld/httptreemux). It is also one of the [fastest and with 
+small memory allocation](https://github.com/dimfeld/go-http-routing-benchmark).
  
-## API design
+### API design
 
  - use nouns, not verbs (verbs are GET/POST/PUT/DELETE)
  - GET never changes the state
@@ -15,6 +26,7 @@ The one that supports the route structure and all http verbs is
  - if resource is related to another resource - use this `user/:id/purchases/` - returns all purchases for some user
  - [filtering, sorting, field selection, paging](http://blog.mwaysolutions.com/2014/06/05/10-best-practices-for-better-restful-api/)
  - return status codes properly
+ - no trailing slashes, it looks like majority of the people do not use them
  
 Root url: `/api/`
 
@@ -55,8 +67,13 @@ Root url: `/api/`
 How to [setup Go with Pycharm](http://stackoverflow.com/a/37698196/1090562)
 
 How to organize Go code:
+
  - https://talks.golang.org/2014/organizeio.slide#9
  - https://medium.com/@benbjohnson/structuring-applications-in-go-3b04be4ff091#.p2aokrleg
  - https://github.com/otoolep/go-httpd
  - http://darian.af/post/the-anatomy-of-a-golang-project/
  - http://dave.cheney.net/2014/12/01/five-suggestions-for-setting-up-a-go-project
+
+### Test and iterate over REST API
+ 
+Install [PostMan](https://www.getpostman.com/). Import data from `unnamed.postman_collection` file.

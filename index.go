@@ -6,7 +6,7 @@ import (
 	"net/http"
 )
 
- //----------- Brands
+//----------- Brands
 func GetAllBrands(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	w.WriteHeader(http.StatusMethodNotAllowed)
 }
@@ -149,49 +149,49 @@ func main() {
 	api := router.NewGroup("/api/v1")
 
 	// Brands
-	api.GET("/brands/", GetAllBrands)
-	api.GET("/brands/:id/", GetBrand)
-	api.POST("/brands/", CreateBrand)
-	api.PUT("/brands/:id/", UpdateBrand)
+	api.GET("/brands", GetAllBrands)
+	api.GET("/brands/:id", GetBrand)
+	api.POST("/brands", CreateBrand)
+	api.PUT("/brands/:id", UpdateBrand)
 
 	// Tags
-	api.GET("/tags/", GetAllTags)
-	api.GET("/tags/:id/", GetTag)
-	api.POST("/tags/", CreateTag)
-	api.PUT("/tags/:id/", UpdateTag)
+	api.GET("/tags", GetAllTags)
+	api.GET("/tags/:id", GetTag)
+	api.POST("/tags", CreateTag)
+	api.PUT("/tags/:id", UpdateTag)
 
 	// Users
-	api.POST("/users/", CreateUser)
-	api.POST("/users/login/", LoginUser)
-	api.POST("/users/logout/", LogoutUser)
-	api.GET("/users/:id/", GetUser)
-	api.GET("/users/me/email/:hash/", VerifyUser)
-	api.PUT("/users/me/info/", UpdateUserInfo)
-	api.PUT("/users/me/avatar/", UpdateUserAvatar)
-	api.POST("/users/me/follow/:id/", FollowUser)
-	api.DELETE("/users/me/follow/:id/", UnfollowUser)
-	api.GET("/users/:id/followers/", GetFollowers)
-	api.GET("/users/:id/following/", GetFollowing)
-	api.GET("/users/:id/purchases/", GetPurchases)
+	api.POST("/users", CreateUser)
+	api.POST("/users/login", LoginUser)
+	api.POST("/users/logout", LogoutUser)
+	api.GET("/users/:id", GetUser)
+	api.GET("/users/me/email/:hash", VerifyUser)
+	api.PUT("/users/me/info", UpdateUserInfo)
+	api.PUT("/users/me/avatar", UpdateUserAvatar)
+	api.POST("/users/me/follow/:id", FollowUser)
+	api.DELETE("/users/me/follow/:id", UnfollowUser)
+	api.GET("/users/:id/followers", GetFollowers)
+	api.GET("/users/:id/following", GetFollowing)
+	api.GET("/users/:id/purchases", GetPurchases)
 
 	// Purchases
-	api.GET("/purchases/", GetAllPurchases)
-	api.GET("/purchases/tag/:id/", GetAllPurchasesWithTag)
-	api.GET("/purchases/brand/:id/", GetAllPurchasesWithBrand)
-	api.POST("/purchases/", CreatePurchase)
-	api.GET("/purchases/:id/", GetPurchase)
-	api.POST("/purchases/:id/like/", LikePurchase)
-	api.DELETE("/purchases/:id/like/", UnlikePurchase)
-	api.POST("/purchases/:id/ask/", AskQuestion)
+	api.GET("/purchases", GetAllPurchases)
+	api.GET("/purchases/tag/:id", GetAllPurchasesWithTag)
+	api.GET("/purchases/brand/:id", GetAllPurchasesWithBrand)
+	api.POST("/purchases", CreatePurchase)
+	api.GET("/purchases/:id", GetPurchase)
+	api.POST("/purchases/:id/like", LikePurchase)
+	api.DELETE("/purchases/:id/like", UnlikePurchase)
+	api.POST("/purchases/:id/ask", AskQuestion)
 
 	// Questions
-	api.POST("/questions/:id/vote/", UpvoteQuestion)
-	api.DELETE("/questions/:id/vote/", DownvoteQuestion)
-	api.POST("/questions/:id/answer/", AnswerQuestion)
+	api.POST("/questions/:id/vote", UpvoteQuestion)
+	api.DELETE("/questions/:id/vote", DownvoteQuestion)
+	api.POST("/questions/:id/answer", AnswerQuestion)
 
 	// Answers
-	api.POST("/answer/:id/vote/", UpvoteAnswer)
-	api.DELETE("/answer/:id/vote/", DownvoteAnswer)
+	api.POST("/answer/:id/vote", UpvoteAnswer)
+	api.DELETE("/answer/:id/vote", DownvoteAnswer)
 
-    log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe(":8080", router))
 }
