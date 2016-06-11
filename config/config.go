@@ -12,6 +12,7 @@ type Config struct {
 	DbHost     string
 	DBPassword string
 	DbPort     int
+	HttpPort   int
 }
 
 // GetConfig extracts all environment variables for further use
@@ -22,6 +23,7 @@ func GetConfig() Config {
 		GetEnvStr("PROJ_DB_HOST"),
 		GetEnvStr("PROJ_DB_PWD"),
 		GetEnvInt("PROJ_DB_PORT"),
+		GetEnvInt("PROJ_HTTP_PORT"),
 	}
 }
 

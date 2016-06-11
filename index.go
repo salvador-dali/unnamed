@@ -2,11 +2,16 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/dimfeld/httptreemux"
+	"github.com/salvador-dali/unnamed/config"
 	"log"
 	"net/http"
 	"strconv"
 )
+
+// Cfg stores information about all environment variables
+var Cfg config.Config
 
 type ErrorCode struct {
 	Code int `json:"code"`
@@ -173,6 +178,9 @@ func DownvoteAnswer(w http.ResponseWriter, r *http.Request, ps map[string]string
 }
 
 func main() {
+	Cfg = config.GetConfig()
+
+	fmt.Println(Cfg)
 	router := httptreemux.New()
 	api := router.NewGroup("/api/v1")
 
@@ -221,5 +229,5 @@ func main() {
 	api.POST("/answer/:id/vote", UpvoteAnswer)
 	api.DELETE("/answer/:id/vote", DownvoteAnswer)
 
-	log.Fatal(http.ListenAndServe(":8080", router))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", Cfg.HttpPort), router))
 }
