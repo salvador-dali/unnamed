@@ -21,7 +21,7 @@ func GetConfig() Config {
 		GetEnvStr("PROJ_DB_USER"),
 		GetEnvStr("PROJ_DB_HOST"),
 		GetEnvStr("PROJ_DB_PWD"),
-		GetEnvStr("PROJ_DB_PORT"),
+		GetEnvInt("PROJ_DB_PORT"),
 	}
 }
 
@@ -29,7 +29,7 @@ func GetConfig() Config {
 func GetEnvStr(key string) string {
 	val := os.Getenv(key)
 	if val == "" {
-		os.Exit(1)
+		panic("")
 	}
 	return val
 }
@@ -38,16 +38,7 @@ func GetEnvStr(key string) string {
 func GetEnvInt(key string) int {
 	val, err := strconv.Atoi(GetEnvStr(key))
 	if err != nil {
-		os.Exit(1)
-	}
-	return val
-}
-
-// GetEnvBool returns a environment variable as boolean. Panics if it is not "true" of "false"
-func GetEnvBool(key string) bool {
-	val, err := strconv.ParseBool(GetEnvStr(key))
-	if err != nil {
-		os.Exit(1)
+		panic("")
 	}
 	return val
 }
