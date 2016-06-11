@@ -1,10 +1,30 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/dimfeld/httptreemux"
 	"log"
 	"net/http"
+	"strconv"
 )
+
+type ErrorCode struct {
+	Code int `json:"code"`
+}
+
+type Id struct {
+	Id int `json:"id"`
+}
+
+func getIntegerID(w http.ResponseWriter, idString string) int {
+	id, err := strconv.Atoi(idString)
+	if err != nil || id <= 0 {
+		w.WriteHeader(http.StatusNotFound)
+		w.Write([]byte("{}"))
+		return 0
+	}
+	return id
+}
 
 //----------- Brands
 func GetAllBrands(w http.ResponseWriter, r *http.Request, _ map[string]string) {
@@ -12,7 +32,15 @@ func GetAllBrands(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 }
 
 func GetBrand(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	w.WriteHeader(http.StatusMethodNotAllowed)
+	w.Header().Set("Content-Type", "application/javascript")
+
+	id := getIntegerID(w, ps["id"])
+	if id <= 0 {
+		return
+	}
+
+	json, _ := json.Marshal(Id{id})
+	w.Write(json)
 }
 
 func CreateBrand(w http.ResponseWriter, r *http.Request, _ map[string]string) {

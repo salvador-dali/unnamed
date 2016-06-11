@@ -1,7 +1,7 @@
 .idea
-readme_explanation.md
-readme_setting_up.md
-lectures_startup.md
+docs/readme_explanation.md
+docs/readme_setting_up.md
+docs/lectures_startup.md
 .env
 
 # Compiled Object files, Static and Dynamic libs (Shared Objects)
