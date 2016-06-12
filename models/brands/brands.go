@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/salvador-dali/unnamed/structs"
 	"log"
 	"net/http"
@@ -74,7 +73,7 @@ func GetBrand(db *sql.DB) func(w http.ResponseWriter, r *http.Request, ps map[st
 	return func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		w.Header().Set("Content-Type", "application/javascript")
 
-		id, brand := getIntegerID(w, ps["id"]), structs.Brand
+		id, brand := getIntegerID(w, ps["id"]), structs.Brand{}
 		if id <= 0 {
 			w.WriteHeader(http.StatusNotFound)
 			return
@@ -129,7 +128,7 @@ func CreateBrand(db *sql.DB) func(w http.ResponseWriter, r *http.Request, _ map[
 			log.Fatal(err)
 		}
 
-		json, err := json.Marshal(structs.Id{elementId})
+		json, err := json.Marshal(structs.Id{int(elementId)})
 		if err != nil {
 			log.Fatal(err)
 		}
