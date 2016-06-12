@@ -4,10 +4,13 @@ package brands
 import (
 	"database/sql"
 	"encoding/json"
+	"errors"
+	"fmt"
 	"github.com/salvador-dali/unnamed/structs"
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 // getIntegerID checks whether the string representation of an ID is positive integer
@@ -22,12 +25,29 @@ func getIntegerID(w http.ResponseWriter, idString string) int {
 	return id
 }
 
+func validateName(name string, n int) (string, error) {
+	if name == "" {
+		return "", errors.New("Wrong string provided")
+	}
+
+	name = strings.TrimSpace(name)
+	if len(name) > 0 && len(name) <= n {
+		return name, nil
+	}
+
+	return "", errors.New("Wrong string provided")
+}
+
+// GetAllBrands returns the (id, name)
 func GetAllBrands(db *sql.DB) func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	return func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		w.Header().Set("Content-Type", "application/javascript")
 
 		brands := []*structs.Brand{}
 		rows, err := db.Query("SELECT id, name FROM brands")
+		if err != nil {
+			log.Fatal(err)
+		}
 		defer rows.Close()
 		for rows.Next() {
 			brand := structs.Brand{}
@@ -41,25 +61,81 @@ func GetAllBrands(db *sql.DB) func(w http.ResponseWriter, r *http.Request, _ map
 			log.Fatal(err)
 		}
 
-		json, _ := json.Marshal(brands)
+		json, err := json.Marshal(brands)
+		if err != nil {
+			log.Fatal(err)
+		}
 		w.Write(json)
 	}
 }
 
-func GetBrand(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	w.Header().Set("Content-Type", "application/javascript")
+// GetBrand returns full information about a brand
+func GetBrand(db *sql.DB) func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	return func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+		w.Header().Set("Content-Type", "application/javascript")
 
-	id := getIntegerID(w, ps["id"])
-	if id <= 0 {
-		return
+		id, brand := getIntegerID(w, ps["id"]), structs.Brand
+		if id <= 0 {
+			w.WriteHeader(http.StatusNotFound)
+			return
+		}
+
+		db.QueryRow("SELECT id, name, issued_at FROM brands WHERE id = ?", id).Scan(&brand)
+
+		json, err := json.Marshal(brand)
+		if err != nil {
+			log.Fatal(err)
+		}
+		w.Write(json)
 	}
-
-	json, _ := json.Marshal(structs.Id{id})
-	w.Write(json)
 }
 
-func CreateBrand(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-	w.WriteHeader(http.StatusMethodNotAllowed)
+func CreateBrand(db *sql.DB) func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	return func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+		w.Header().Set("Content-Type", "application/javascript")
+
+		r.ParseForm()
+		if len(r.Form) != 1 {
+			// TODO provide information why failed
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		// TODO remove constant
+		name, err := validateName(r.PostFormValue("name"), 40)
+		if err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+
+		// approved way to insert data: http://go-database-sql.org/modifying.html
+		query, err := db.Prepare("INSERT INTO brands (name) VALUES($1)")
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		res, err := query.Exec(name)
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		elementId, err := res.LastInsertId()
+		if err != nil {
+			log.Fatal(err)
+		}
+
+		rowCnt, err := res.RowsAffected()
+		if err != nil || rowCnt != 1 {
+			log.Fatal(err)
+		}
+
+		json, err := json.Marshal(structs.Id{elementId})
+		if err != nil {
+			log.Fatal(err)
+		}
+		w.Write(json)
+		w.WriteHeader(http.StatusCreated)
+	}
 }
 
 func UpdateBrand(w http.ResponseWriter, r *http.Request, ps map[string]string) {

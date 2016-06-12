@@ -5,14 +5,20 @@ import (
 	"time"
 )
 
-// Id is a placeholder struct to output id that client asked in unimplemented handler
+// ErrorCode stores code of a problem that happened while processing client's request.
+// It is sent together with 404 status code. It is up to a client how to present it
+type ErrorCode struct {
+	Id int `json:"id"`
+}
+
+// Id stores information about the id of the element which was just inserted
 type Id struct {
 	Id int `json:"id"`
 }
 
-// Brand is a struct that stores all information about a Brand model
+// Brand stores all information about a Brand model
 type Brand struct {
-	Id        int        `json:"id"`
+	Id        int        `json:"id,omitempty"`
 	Name      string     `json:"name,omitempty"`
 	Issued_at *time.Time `json:"issued_at,omitempty"`
 }
