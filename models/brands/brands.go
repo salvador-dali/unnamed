@@ -5,7 +5,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 	"github.com/lib/pq"
 	"github.com/salvador-dali/unnamed/structs"
 	"log"
