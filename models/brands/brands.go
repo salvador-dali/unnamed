@@ -5,6 +5,8 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/lib/pq"
 	"github.com/salvador-dali/unnamed/structs"
 	"log"
 	"net/http"
@@ -84,6 +86,11 @@ func GetBrand(db *sql.DB) func(w http.ResponseWriter, r *http.Request, ps map[st
 		if err != nil {
 			log.Fatal(err)
 		}
+
+		fmt.Println(id)
+		fmt.Println(brand)
+		fmt.Println(json)
+
 		w.Write(json)
 	}
 }
@@ -106,24 +113,20 @@ func CreateBrand(db *sql.DB) func(w http.ResponseWriter, r *http.Request, _ map[
 			return
 		}
 
-		// approved way to insert data: http://go-database-sql.org/modifying.html
-		query, err := db.Prepare("INSERT INTO brands (name) VALUES($1)")
+		elementId := 0
+		err = db.QueryRow("INSERT INTO brands (name) VALUES($1) RETURNING id", name).Scan(&lastInsertId)
 		if err != nil {
-			log.Fatal(err)
-		}
-
-		res, err := query.Exec(name)
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		elementId, err := res.LastInsertId()
-		if err != nil {
-			log.Fatal(err)
-		}
-
-		rowCnt, err := res.RowsAffected()
-		if err != nil || rowCnt != 1 {
+			if errPg, ok := err.(*pq.Error); ok && string(errPg.Code) == "23505" {
+				// 23505 is a code for: duplicate key value violates unique constraint.
+				// Names can't be the same
+				json, err := json.Marshal(structs.ErrorCode{100})
+				if err != nil {
+					log.Fatal(err)
+				}
+				w.Write(json)
+				w.WriteHeader(http.StatusBadRequest)
+				return
+			}
 			log.Fatal(err)
 		}
 
