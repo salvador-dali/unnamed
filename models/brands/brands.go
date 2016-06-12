@@ -84,35 +84,24 @@ func GetBrand(db *sql.DB) func(w http.ResponseWriter, r *http.Request, ps map[st
 			return
 		}
 
-		rows, err := db.Query("SELECT id, name, issued_at FROM brands WHERE id = $1", id)
+		if err := db.QueryRow("SELECT id, name, issued_at FROM brands WHERE id = $1", id).Scan(&brand.Id, &brand.Name, &brand.Issued_at); err != nil {
+			if err == sql.ErrNoRows {
+				json, err := json.Marshal(structs.ErrorCode{errorCodes.IdNotExist})
+				if err != nil {
+					log.Fatal(err)
+				}
+				w.WriteHeader(http.StatusNotFound)
+				w.Write(json)
+				return
+			} else {
+				log.Fatal(err)
+			}
+		}
+
+		json, err := json.Marshal(brand)
 		if err != nil {
 			log.Fatal(err)
 		}
-		defer rows.Close()
-
-		for rows.Next() {
-			err := rows.Scan(&brand.Id, &brand.Name, &brand.Issued_at)
-			if err != nil {
-				log.Fatal(err)
-			}
-
-			json, err := json.Marshal(brand)
-			if err != nil {
-				log.Fatal(err)
-			}
-			w.Write(json)
-			return
-		}
-
-		if err = rows.Err(); err != nil {
-			log.Fatal(err)
-		}
-
-		json, err := json.Marshal(structs.ErrorCode{errorCodes.IdNotExist})
-		if err != nil {
-			log.Fatal(err)
-		}
-		w.WriteHeader(http.StatusNotFound)
 		w.Write(json)
 		return
 	}
@@ -125,8 +114,12 @@ func CreateBrand(db *sql.DB) func(w http.ResponseWriter, r *http.Request, _ map[
 
 		r.ParseForm()
 		if len(r.Form) != 1 {
-			// TODO provide information why failed
+			json, err := json.Marshal(structs.ErrorCode{errorCodes.WrongNumParams})
+			if err != nil {
+				log.Fatal(err)
+			}
 			w.WriteHeader(http.StatusBadRequest)
+			w.Write(json)
 			return
 		}
 
