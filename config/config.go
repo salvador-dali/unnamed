@@ -1,3 +1,5 @@
+// Package config contains functions to read Env variables (String, Int). It reads config variables
+// for this project and stores them in the structure
 package config
 
 import (
@@ -7,12 +9,12 @@ import (
 
 // Config stores environment variables
 type Config struct {
-	DbName     string
-	DBUser     string
-	DbHost     string
-	DBPassword string
-	DbPort     int
-	HttpPort   int
+	DbName   string
+	DbUser   string
+	DbHost   string
+	DbPass   string
+	DbPort   int
+	HttpPort int
 }
 
 // GetConfig extracts all environment variables for further use

@@ -2,6 +2,7 @@
 docs/readme_explanation.md
 docs/readme_setting_up.md
 docs/lectures_startup.md
+tmp/
 .env
 
 # Compiled Object files, Static and Dynamic libs (Shared Objects)
