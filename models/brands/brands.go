@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"github.com/lib/pq"
+	"github.com/salvador-dali/unnamed/errorCodes"
 	"github.com/salvador-dali/unnamed/structs"
 	"log"
 	"net/http"
@@ -18,7 +19,12 @@ import (
 func getIntegerID(w http.ResponseWriter, idString string) int {
 	id, err := strconv.Atoi(idString)
 	if err != nil || id <= 0 {
+		json, err := json.Marshal(structs.ErrorCode{errorCodes.IdNotNatural})
+		if err != nil {
+			log.Fatal(err)
+		}
 		w.WriteHeader(http.StatusNotFound)
+		w.Write(json)
 		return 0
 	}
 	return id
@@ -102,11 +108,17 @@ func GetBrand(db *sql.DB) func(w http.ResponseWriter, r *http.Request, ps map[st
 			log.Fatal(err)
 		}
 
+		json, err := json.Marshal(structs.ErrorCode{errorCodes.IdNotExist})
+		if err != nil {
+			log.Fatal(err)
+		}
 		w.WriteHeader(http.StatusNotFound)
+		w.Write(json)
 		return
 	}
 }
 
+// CreateBrand creates a brand with a specific name
 func CreateBrand(db *sql.DB) func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	return func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		w.Header().Set("Content-Type", "application/javascript")
@@ -121,7 +133,12 @@ func CreateBrand(db *sql.DB) func(w http.ResponseWriter, r *http.Request, _ map[
 		// TODO remove constant
 		name, err := validateName(r.PostFormValue("name"), 40)
 		if err != nil {
+			json, err := json.Marshal(structs.ErrorCode{errorCodes.NameIsNotValid})
+			if err != nil {
+				log.Fatal(err)
+			}
 			w.WriteHeader(http.StatusBadRequest)
+			w.Write(json)
 			return
 		}
 
@@ -129,9 +146,8 @@ func CreateBrand(db *sql.DB) func(w http.ResponseWriter, r *http.Request, _ map[
 		err = db.QueryRow("INSERT INTO brands (name) VALUES($1) RETURNING id", name).Scan(&elementId)
 		if err != nil {
 			if errPg, ok := err.(*pq.Error); ok && string(errPg.Code) == "23505" {
-				// 23505 is a code for: duplicate key value violates unique constraint.
-				// Names can't be the same
-				json, err := json.Marshal(structs.ErrorCode{100})
+				// 23505 is : duplicate key value violates unique constraint. Names can't be the same
+				json, err := json.Marshal(structs.ErrorCode{errorCodes.DuplicateName})
 				if err != nil {
 					log.Fatal(err)
 				}
@@ -151,6 +167,6 @@ func CreateBrand(db *sql.DB) func(w http.ResponseWriter, r *http.Request, _ map[
 	}
 }
 
-func UpdateBrand(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func UpdateBrand(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	w.WriteHeader(http.StatusMethodNotAllowed)
 }
