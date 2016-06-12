@@ -5,12 +5,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"fmt"
+	"github.com/lib/pq"
 	"github.com/salvador-dali/unnamed/structs"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
-	"github.com/lib/pq"
 )
 
 // getIntegerID checks whether the string representation of an ID is positive integer
@@ -19,7 +20,6 @@ func getIntegerID(w http.ResponseWriter, idString string) int {
 	id, err := strconv.Atoi(idString)
 	if err != nil || id <= 0 {
 		w.WriteHeader(http.StatusNotFound)
-		w.Write([]byte("{}"))
 		return 0
 	}
 	return id
@@ -79,17 +79,32 @@ func GetBrand(db *sql.DB) func(w http.ResponseWriter, r *http.Request, ps map[st
 			return
 		}
 
-		err := db.QueryRow("SELECT id, name, issued_at FROM brands WHERE id = $1", id).Scan(&brand.Id, &brand.Name, &brand.Issued_at)
+		rows, err := db.Query("SELECT id, name, issued_at FROM brands WHERE id = $1", id)
 		if err != nil {
 			log.Fatal(err)
 		}
+		defer rows.Close()
 
-		json, err := json.Marshal(brand)
-		if err != nil {
+		for rows.Next() {
+			err := rows.Scan(&brand.Id, &brand.Name, &brand.Issued_at)
+			if err != nil {
+				log.Fatal(err)
+			}
+
+			json, err := json.Marshal(brand)
+			if err != nil {
+				log.Fatal(err)
+			}
+			w.Write(json)
+			return
+		}
+
+		if err = rows.Err(); err != nil {
 			log.Fatal(err)
 		}
 
-		w.Write(json)
+		w.WriteHeader(http.StatusNotFound)
+		return
 	}
 }
 
@@ -132,8 +147,8 @@ func CreateBrand(db *sql.DB) func(w http.ResponseWriter, r *http.Request, _ map[
 		if err != nil {
 			log.Fatal(err)
 		}
-		w.Write(json)
 		w.WriteHeader(http.StatusCreated)
+		w.Write(json)
 	}
 }
 
