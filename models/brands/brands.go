@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
+	"fmt"
 )
 
 // getIntegerID checks whether the string representation of an ID is positive integer
@@ -75,11 +76,10 @@ func GetBrand(db *sql.DB) func(w http.ResponseWriter, r *http.Request, ps map[st
 
 		id, brand := getIntegerID(w, ps["id"]), structs.Brand{}
 		if id <= 0 {
-			w.WriteHeader(http.StatusNotFound)
 			return
 		}
 
-		db.QueryRow("SELECT id, name, issued_at FROM brands WHERE id = ?", id).Scan(&brand)
+		db.QueryRow("SELECT id, name, issued_at FROM brands WHERE id = $1", id).Scan(&brand)
 
 		json, err := json.Marshal(brand)
 		if err != nil {
