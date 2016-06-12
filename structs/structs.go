@@ -12,7 +12,7 @@ type Id struct {
 
 // Brand is a struct that stores all information about a Brand model
 type Brand struct {
-	Id        int       `json:"id"`
-	Name      string    `json:"name,omitempty"`
-	Issued_at time.Time `json:"issued_at,omitempty"`
+	Id        int        `json:"id"`
+	Name      string     `json:"name,omitempty"`
+	Issued_at *time.Time `json:"issued_at,omitempty"`
 }
