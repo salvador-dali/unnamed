@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"fmt"
 	"github.com/lib/pq"
 )
 
