@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"database/sql"
 )
 
 // getIntegerID checks whether the string representation of an ID is positive integer
@@ -21,26 +22,29 @@ func getIntegerID(w http.ResponseWriter, idString string) int {
 	return id
 }
 
-func GetAllBrands(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-	w.Header().Set("Content-Type", "application/javascript")
 
-	brands := []*structs.Brand{}
-	rows, err := Db.Query("SELECT id, name FROM brands")
-	defer rows.Close()
-	for rows.Next() {
-		brand := structs.Brand{}
-		if err := rows.Scan(&brand.Id, &brand.Name); err != nil {
+func GetAllBrands(db *sql.DB) func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+    return func(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+        w.Header().Set("Content-Type", "application/javascript")
+
+		brands := []*structs.Brand{}
+		rows, err := Db.Query("SELECT id, name FROM brands")
+		defer rows.Close()
+		for rows.Next() {
+			brand := structs.Brand{}
+			if err := rows.Scan(&brand.Id, &brand.Name); err != nil {
+				log.Fatal(err)
+			}
+			brands = append(brands, &brand)
+		}
+
+		if err = rows.Err(); err != nil {
 			log.Fatal(err)
 		}
-		brands = append(brands, &brand)
-	}
 
-	if err = rows.Err(); err != nil {
-		log.Fatal(err)
-	}
-
-	json, _ := json.Marshal(brands)
-	w.Write(json)
+		json, _ := json.Marshal(brands)
+		w.Write(json)
+    }
 }
 
 func GetBrand(w http.ResponseWriter, r *http.Request, ps map[string]string) {

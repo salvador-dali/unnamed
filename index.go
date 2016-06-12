@@ -28,8 +28,8 @@ func main() {
 	}
 
 	// Brands
-	api.GET("/brands", brands.GetAllBrands)
-	api.GET("/brands/:id", brands.GetBrand)
+	api.GET("/brands", brands.GetAllBrands(db))
+	api.GET("/brands/:id", brands.GetBrand(db))
 	api.POST("/brands", brands.CreateBrand)
 	api.PUT("/brands/:id", brands.UpdateBrand)
 
