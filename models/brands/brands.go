@@ -10,7 +10,6 @@ import (
 	"net/http"
 	"strconv"
 	"strings"
-	"fmt"
 )
 
 // getIntegerID checks whether the string representation of an ID is positive integer
