@@ -8,7 +8,7 @@ import (
 // ErrorCode stores code of a problem that happened while processing client's request.
 // It is sent together with 404 status code. It is up to a client how to present it
 type ErrorCode struct {
-	Id int `json:"id"`
+	Id int `json:"error"`
 }
 
 // Id stores information about the id of the element which was just inserted

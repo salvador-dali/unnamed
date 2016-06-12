@@ -80,16 +80,15 @@ func GetBrand(db *sql.DB) func(w http.ResponseWriter, r *http.Request, ps map[st
 			return
 		}
 
-		db.QueryRow("SELECT id, name, issued_at FROM brands WHERE id = $1", id).Scan(&brand)
+		err := db.QueryRow("SELECT id, name, issued_at FROM brands WHERE id = $1", id).Scan(&brand.Id, &brand.Name, &brand.Issued_at)
+		if err != nil {
+			log.Fatal(err)
+		}
 
 		json, err := json.Marshal(brand)
 		if err != nil {
 			log.Fatal(err)
 		}
-
-		fmt.Println(id)
-		fmt.Println(brand)
-		fmt.Println(json)
 
 		w.Write(json)
 	}
@@ -123,8 +122,8 @@ func CreateBrand(db *sql.DB) func(w http.ResponseWriter, r *http.Request, _ map[
 				if err != nil {
 					log.Fatal(err)
 				}
-				w.Write(json)
 				w.WriteHeader(http.StatusBadRequest)
+				w.Write(json)
 				return
 			}
 			log.Fatal(err)
