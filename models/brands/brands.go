@@ -3,6 +3,7 @@ package brands
 
 import (
 	"encoding/json"
+	"github.com/salvador-dali/unnamed/structs"
 	"log"
 	"net/http"
 	"strconv"

@@ -1,15 +1,14 @@
 package main
 
 import (
-	"fmt"
 	"database/sql"
+	"fmt"
 	"github.com/dimfeld/httptreemux"
+	_ "github.com/lib/pq"
 	"github.com/salvador-dali/unnamed/config"
-	"github.com/salvador-dali/unnamed/structs"
 	"github.com/salvador-dali/unnamed/models/brands"
 	"log"
 	"net/http"
-	_ "github.com/lib/pq"
 )
 
 // Cfg stores information about all environment variables
