@@ -14,17 +14,13 @@ import (
 // Cfg stores information about all environment variables
 var Cfg config.Config
 
-// Db is a connection to a PSQL database
-var Db *sql.DB
-
 func main() {
 	// Create a router, initialize db connection and config
 	router, Cfg := httptreemux.New(), config.GetConfig()
 	api, dbURL := router.NewGroup("/api/v1"), fmt.Sprintf("postgresql://%s:%s@%s:%d/%s?sslmode=disable", Cfg.DbUser, Cfg.DbPass, Cfg.DbHost, Cfg.DbPort, Cfg.DbName)
-	if db, err := sql.Open("postgres", dbURL); err != nil {
+	db, err := sql.Open("postgres", dbURL)
+	if err != nil {
 		log.Fatal(err)
-	} else {
-		Db = db
 	}
 
 	// Brands

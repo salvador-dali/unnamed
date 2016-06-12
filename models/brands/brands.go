@@ -28,7 +28,7 @@ func GetAllBrands(db *sql.DB) func(w http.ResponseWriter, r *http.Request, _ map
         w.Header().Set("Content-Type", "application/javascript")
 
 		brands := []*structs.Brand{}
-		rows, err := Db.Query("SELECT id, name FROM brands")
+		rows, err := db.Query("SELECT id, name FROM brands")
 		defer rows.Close()
 		for rows.Next() {
 			brand := structs.Brand{}
