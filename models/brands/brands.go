@@ -5,13 +5,13 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
-	"github.com/lib/pq"
 	"github.com/salvador-dali/unnamed/structs"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
+	"fmt"
+	"github.com/lib/pq"
 )
 
 // getIntegerID checks whether the string representation of an ID is positive integer
@@ -114,7 +114,7 @@ func CreateBrand(db *sql.DB) func(w http.ResponseWriter, r *http.Request, _ map[
 		}
 
 		elementId := 0
-		err = db.QueryRow("INSERT INTO brands (name) VALUES($1) RETURNING id", name).Scan(&lastInsertId)
+		err = db.QueryRow("INSERT INTO brands (name) VALUES($1) RETURNING id", name).Scan(&elementId)
 		if err != nil {
 			if errPg, ok := err.(*pq.Error); ok && string(errPg.Code) == "23505" {
 				// 23505 is a code for: duplicate key value violates unique constraint.
