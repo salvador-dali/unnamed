@@ -50,11 +50,12 @@ func GetBrand(db *sql.DB) func(w http.ResponseWriter, r *http.Request, ps map[st
 	return func(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		w.Header().Set("Content-Type", "application/javascript")
 
-		id, brand := helpers.ValidateId(w, ps["id"]), structs.Brand{}
-		if id == nil {
+		id, ok := helpers.ValidateId(w, ps["id"])
+		if !ok {
 			return
 		}
 
+		brand := structs.Brand{}
 		if err := db.QueryRow("SELECT id, name, issued_at FROM brands WHERE id = $1", id).Scan(&brand.Id, &brand.Name, &brand.Issued_at); err != nil {
 			if err == sql.ErrNoRows {
 				json, err := json.Marshal(structs.ErrorCode{errorCodes.IdNotExist})
@@ -87,8 +88,8 @@ func CreateBrand(db *sql.DB) func(w http.ResponseWriter, r *http.Request, _ map[
 			return
 		}
 
-		name := helpers.ValidateName(r.PostFormValue("name"), maximumNameLength)
-		if name == nil {
+		name, ok := helpers.ValidateName(r.PostFormValue("name"), maximumNameLength)
+		if !ok {
 			return
 		}
 
