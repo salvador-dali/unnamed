@@ -7,7 +7,6 @@ import (
 	"github.com/lib/pq"
 	"github.com/salvador-dali/unnamed/errorCodes"
 	"github.com/salvador-dali/unnamed/helpers"
-	"github.com/salvador-dali/unnamed/structs"
 	"log"
 	"net/http"
 )
