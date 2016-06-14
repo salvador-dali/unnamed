@@ -15,7 +15,7 @@ DROP TABLE IF EXISTS timeseries;
 CREATE TABLE "users" (
     "id" bigserial,
     "nickname" varchar(40) NOT NULL,
-    "image" varchar(100),
+    "image" varchar(100) NOT NULL DEFAULT '',
     "about" varchar(1000)  NOT NULL,
     "expertise" int  NOT NULL DEFAULT 0,
     "followers_num" int  NOT NULL DEFAULT 0,

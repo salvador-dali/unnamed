@@ -245,3 +245,20 @@ func UpdateTag(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 
 	sendJSON(w, nil, http.StatusNoContent)
 }
+
+// GetUser returns full information about a user
+func GetUser(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+
+	id := validateId(w, ps["id"])
+	if id <= 0 {
+		return
+	}
+
+	user, err, reason := storage.GetUser(id)
+	if isErrorReasonSerious(err, reason, w) {
+		return
+	}
+
+	sendJSON(w, user, http.StatusOK)
+}

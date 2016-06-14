@@ -127,7 +127,7 @@ func GetTag(id int) (structs.Tag, error, int) {
 	tag := structs.Tag{}
 	if err := Db.QueryRow("SELECT name, description, issued_at FROM tags WHERE id = $1", id).Scan(&tag.Name, &tag.Description, &tag.Issued_at); err != nil {
 		if err == sql.ErrNoRows {
-			return tag, nil, errorCodes.DbNothingToReport
+			return tag, err, errorCodes.DbNoElement
 		}
 
 		return tag, err, errorCodes.DbNothingToReport
@@ -167,4 +167,22 @@ func UpdateTag(id int, name, descr string) (error, int) {
 		}
 	}
 	return err, errorCodes.DbNothingToReport
+}
+
+// --- Users ---
+
+func GetUser(id int) (structs.User, error, int) {
+	user := structs.User{}
+	if err := Db.QueryRow("SELECT nickname, image, about, expertise, followers_num, following_num, purchases_num, questions_num, answers_num, issued_at FROM users WHERE id = $1", id).Scan(
+		&user.Nickname, &user.Image, &user.About, &user.Expertise, &user.Followers_num, &user.Following_num,
+		&user.Purchases_num, &user.Questions_num, &user.Answers_num, &user.Issued_at,
+	); err != nil {
+		if err == sql.ErrNoRows {
+			return user, err, errorCodes.DbNoElement
+		}
+
+		return user, err, errorCodes.DbNothingToReport
+	}
+	user.Id = id
+	return user, nil, errorCodes.DbNothingToReport
 }

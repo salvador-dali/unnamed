@@ -32,5 +32,8 @@ func main() {
 	api.POST("/tags", routes.CreateTag)
 	api.PUT("/tags/:id", routes.UpdateTag)
 
+	// Users
+	api.GET("/users/:id", routes.GetUser)
+
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", Cfg.HttpPort), router))
 }
