@@ -17,8 +17,8 @@ type Config struct {
 	HttpPort int
 }
 
-// GetConfig extracts all environment variables for further use
-func GetConfig() Config {
+// Init extracts all environment variables for further use
+func Init() Config {
 	return Config{
 		GetEnvStr("PROJ_DB_NAME"),
 		GetEnvStr("PROJ_DB_USER"),
