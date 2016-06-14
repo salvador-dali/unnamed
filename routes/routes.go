@@ -13,7 +13,10 @@ import (
 )
 
 // -- A couple of Helper methods and constants
-const maximumNameLength = 40
+const (
+	maximumNameLength  = 40
+	maximumDescrLength = 1000
+)
 
 // sendJSON sends a JSON back to a client with a status Code. Makes error checking
 func sendJSON(w http.ResponseWriter, data interface{}, statusCode int) {
@@ -104,12 +107,12 @@ func GetBrand(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	brands, err, reason := storage.GetBrand(id)
+	brand, err, reason := storage.GetBrand(id)
 	if isErrorReasonSerious(err, reason, w) {
 		return
 	}
 
-	sendJSON(w, brands, http.StatusOK)
+	sendJSON(w, brand, http.StatusOK)
 }
 
 // CreateBrand creates a brand with a specific name
@@ -151,6 +154,91 @@ func UpdateBrand(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	}
 
 	err, reason := storage.UpdateBrand(id, name)
+	if isErrorReasonSerious(err, reason, w) {
+		return
+	}
+
+	sendJSON(w, nil, http.StatusNoContent)
+}
+
+// GetAllTags returns all the tags (id, name)
+func GetAllTags(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+
+	tags, err, reason := storage.GetAllTags()
+	if isErrorReasonSerious(err, reason, w) {
+		return
+	}
+
+	sendJSON(w, tags, http.StatusOK)
+}
+
+// GetTag returns full information about a tag
+func GetTag(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+
+	id := validateId(w, ps["id"])
+	if id <= 0 {
+		return
+	}
+
+	tag, err, reason := storage.GetTag(id)
+	if isErrorReasonSerious(err, reason, w) {
+		return
+	}
+
+	sendJSON(w, tag, http.StatusOK)
+}
+
+// CreateTag creates a tag with a specific name and description
+func CreateTag(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+	if !isValidFormLength(w, r, 2) {
+		return
+	}
+
+	name, ok := validateName(w, r.PostFormValue("name"), maximumNameLength)
+	if !ok {
+		return
+	}
+
+	descr, ok := validateName(w, r.PostFormValue("description"), maximumDescrLength)
+	if !ok {
+		return
+	}
+
+	id, err, reason := storage.CreateTag(name, descr)
+	if isErrorReasonSerious(err, reason, w) {
+		return
+	}
+
+	sendJSON(w, structs.Id{int(id)}, http.StatusCreated)
+}
+
+// UpdateTag changes the tag's name for a specific tagID
+func UpdateTag(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+
+	if !isValidFormLength(w, r, 2) {
+		return
+	}
+
+	id := validateId(w, ps["id"])
+	if id <= 0 {
+		return
+	}
+
+	name, ok := validateName(w, r.PostFormValue("name"), maximumNameLength)
+	if !ok {
+		return
+	}
+
+	descr, ok := validateName(w, r.PostFormValue("description"), maximumDescrLength)
+	if !ok {
+		return
+	}
+
+	err, reason := storage.UpdateTag(id, name, descr)
 	if isErrorReasonSerious(err, reason, w) {
 		return
 	}

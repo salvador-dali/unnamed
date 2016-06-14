@@ -3,9 +3,9 @@ package errorCodes
 
 // Errors related to client's input validation
 const (
-	IdNotNatural      = 100 // ID should be a positive integer
-	NameIsNotValid    = 101 // name does not look right. Too long or empty
-	WrongNumParams    = 102 // number of parameters is not correct
+	IdNotNatural   = 100 // ID should be a positive integer
+	NameIsNotValid = 101 // name does not look right. Too long or empty
+	WrongNumParams = 102 // number of parameters is not correct
 )
 
 // Errors related to a database operations

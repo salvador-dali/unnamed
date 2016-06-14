@@ -26,11 +26,11 @@ func main() {
 	api.POST("/brands", routes.CreateBrand)
 	api.PUT("/brands/:id", routes.UpdateBrand)
 
-	//// Tags
-	//api.GET("/tags", routes.GetAllTags)
-	//api.GET("/tags/:id", routes.GetTag)
-	//api.POST("/tags", routes.CreateTag)
-	//api.PUT("/tags/:id", routes.UpdateTag)
+	// Tags
+	api.GET("/tags", routes.GetAllTags)
+	api.GET("/tags/:id", routes.GetTag)
+	api.POST("/tags", routes.CreateTag)
+	api.PUT("/tags/:id", routes.UpdateTag)
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", Cfg.HttpPort), router))
 }

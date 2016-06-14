@@ -79,7 +79,7 @@ COMMENT ON COLUMN "brands"."issued_at" IS 'When a brand was created';
 CREATE TABLE "tags" (
     "id" serial,
     "name" varchar(40) NOT NULL,
-    "description" text NOT NULL,
+    "description" varchar(1000) NOT NULL,
     "issued_at" timestamp NOT NULL DEFAULT (now() at time zone 'utc'),
     PRIMARY KEY ("id"),
     UNIQUE ("name")
