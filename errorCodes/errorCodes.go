@@ -14,4 +14,5 @@ const (
 	DbValueTooLong    = 600 // text value is too long. Inserted a string of length X + 1 in Varchar(X)
 	DbDuplicate       = 601 // duplicate constrain violation. Inserted X, where X already exist and should be unique
 	DbNoElement       = 602 // was searching for an element by ID. Have not found it
+	DbNothingUpdated  = 603 // was trying to update an element, but the element was not found
 )

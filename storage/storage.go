@@ -5,6 +5,7 @@ import (
 	"../../unnamed/errorCodes"
 	"../../unnamed/structs"
 	"database/sql"
+	"errors"
 	"fmt"
 	"github.com/lib/pq"
 	"log"
@@ -85,7 +86,7 @@ func CreateBrand(name string) (int, error, int) {
 }
 
 func UpdateBrand(id int, name string) (error, int) {
-	_, err := Db.Query("UPDATE brands SET name=$1 WHERE id=$2", name, id)
+	res, err := Db.Exec("UPDATE brands SET name=$1 WHERE id=$2", name, id)
 	if errPg, ok := err.(*pq.Error); ok {
 		s := string(errPg.Code)
 		if s == "23505" {
@@ -94,7 +95,16 @@ func UpdateBrand(id int, name string) (error, int) {
 			return err, errorCodes.DbValueTooLong
 		}
 	}
-	return err, errorCodes.DbNothingToReport
+
+	affect, err := res.RowsAffected()
+	if err != nil {
+		return err, errorCodes.DbNothingToReport
+	}
+
+	if affect == 0 {
+		return errors.New("nothing updated"), errorCodes.DbNothingUpdated
+	}
+	return nil, errorCodes.DbNothingToReport
 }
 
 // --- Tags ---
@@ -157,7 +167,7 @@ func CreateTag(name, descr string) (int, error, int) {
 }
 
 func UpdateTag(id int, name, descr string) (error, int) {
-	_, err := Db.Query("UPDATE tags SET name=$1, description=$2 WHERE id=$3", name, descr, id)
+	res, err := Db.Exec("UPDATE tags SET name=$1, description=$2 WHERE id=$3", name, descr, id)
 	if errPg, ok := err.(*pq.Error); ok {
 		s := string(errPg.Code)
 		if s == "23505" {
@@ -166,7 +176,16 @@ func UpdateTag(id int, name, descr string) (error, int) {
 			return err, errorCodes.DbValueTooLong
 		}
 	}
-	return err, errorCodes.DbNothingToReport
+
+	affect, err := res.RowsAffected()
+	if err != nil {
+		return err, errorCodes.DbNothingToReport
+	}
+
+	if affect == 0 {
+		return errors.New("nothing updated"), errorCodes.DbNothingUpdated
+	}
+	return nil, errorCodes.DbNothingToReport
 }
 
 // --- Users ---
@@ -185,4 +204,26 @@ func GetUser(id int) (structs.User, error, int) {
 	}
 	user.Id = id
 	return user, nil, errorCodes.DbNothingToReport
+}
+
+func UpdateUser(id int, nickname, about string) (error, int) {
+	res, err := Db.Exec("UPDATE users SET nickname=$1, about=$2 WHERE id=$3", nickname, about, id)
+	if errPg, ok := err.(*pq.Error); ok {
+		s := string(errPg.Code)
+		if s == "23505" {
+			return err, errorCodes.DbDuplicate
+		} else if s == "22001" {
+			return err, errorCodes.DbValueTooLong
+		}
+	}
+
+	affect, err := res.RowsAffected()
+	if err != nil {
+		return err, errorCodes.DbNothingToReport
+	}
+
+	if affect == 0 {
+		return errors.New("nothing updated"), errorCodes.DbNothingUpdated
+	}
+	return nil, errorCodes.DbNothingToReport
 }

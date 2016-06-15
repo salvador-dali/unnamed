@@ -16,6 +16,7 @@ import (
 const (
 	maximumNameLength  = 40
 	maximumDescrLength = 1000
+	currentUserId      = 1 // TODO should be removed when login/logout is implemented
 )
 
 // sendJSON sends a JSON back to a client with a status Code. Makes error checking
@@ -261,4 +262,30 @@ func GetUser(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	}
 
 	sendJSON(w, user, http.StatusOK)
+}
+
+// UpdateYourUserInfo changes the information about a user who is currently
+func UpdateYourUserInfo(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+
+	if !isValidFormLength(w, r, 2) {
+		return
+	}
+
+	nickname, ok := validateName(w, r.PostFormValue("nickname"), maximumNameLength)
+	if !ok {
+		return
+	}
+
+	about, ok := validateName(w, r.PostFormValue("about"), maximumDescrLength)
+	if !ok {
+		return
+	}
+
+	err, reason := storage.UpdateUser(currentUserId, nickname, about)
+	if isErrorReasonSerious(err, reason, w) {
+		return
+	}
+
+	sendJSON(w, nil, http.StatusNoContent)
 }
