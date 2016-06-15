@@ -6,6 +6,7 @@ const (
 	IdNotNatural   = 100 // ID should be a positive integer
 	NameIsNotValid = 101 // name does not look right. Too long or empty
 	WrongNumParams = 102 // number of parameters is not correct
+	FollowYourself = 103 // you are trying to follow yourself
 )
 
 // Errors related to a database operations

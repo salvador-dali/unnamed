@@ -26,6 +26,38 @@ func Init(user, pass, host, name string, port int) {
 	Db = db
 }
 
+// a couple of helper database functions
+
+// isAffectedOneRow checks that the result of a pure INSERT or UPDATE executed with Exec has modified only 1 row
+func isAffectedOneRow(sqlResult sql.Result) (error, int) {
+	affectedRows, err := sqlResult.RowsAffected()
+	if err != nil {
+		return err, errorCodes.DbNothingToReport
+	}
+
+	if affectedRows == 1 {
+		return nil, errorCodes.DbNothingToReport
+	} else if affectedRows == 0 {
+		return errors.New("nothing updated"), errorCodes.DbNothingUpdated
+	}
+	return errors.New(fmt.Sprintf("Expected to update 1 value. %d updated", affectedRows)), errorCodes.DbNothingToReport
+}
+
+// checkSpecificDriverErrors analyses the error result against specific errors that a client should know about
+// This checks for Value Limit violation and Duplicate constraint violation
+func checkSpecificDriverErrors(err error) (error, int) {
+	if errPg, ok := err.(*pq.Error); ok {
+		s := string(errPg.Code)
+		if s == "23505" {
+			return err, errorCodes.DbDuplicate
+		} else if s == "22001" {
+			return err, errorCodes.DbValueTooLong
+		}
+	}
+
+	return err, errorCodes.DbNothingToReport
+}
+
 // --- Brands ---
 
 func GetAllBrands() ([]*structs.Brand, error, int) {
@@ -70,41 +102,20 @@ func CreateBrand(name string) (int, error, int) {
 	id := 0
 	err := Db.QueryRow("INSERT INTO brands (name) VALUES($1) RETURNING id", name).Scan(&id)
 	if err == nil {
-		return id, err, errorCodes.DbNothingToReport
+		return id, nil, errorCodes.DbNothingToReport
 	}
 
-	if errPg, ok := err.(*pq.Error); ok {
-		s := string(errPg.Code)
-		if s == "23505" {
-			return id, err, errorCodes.DbDuplicate
-		} else if s == "22001" {
-			return id, err, errorCodes.DbValueTooLong
-		}
-	}
-
-	return id, err, errorCodes.DbNothingToReport
+	err, code := checkSpecificDriverErrors(err)
+	return id, err, code
 }
 
 func UpdateBrand(id int, name string) (error, int) {
-	res, err := Db.Exec("UPDATE brands SET name=$1 WHERE id=$2", name, id)
-	if errPg, ok := err.(*pq.Error); ok {
-		s := string(errPg.Code)
-		if s == "23505" {
-			return err, errorCodes.DbDuplicate
-		} else if s == "22001" {
-			return err, errorCodes.DbValueTooLong
-		}
+	sqlResult, err := Db.Exec("UPDATE brands SET name=$1 WHERE id=$2", name, id)
+	if err, code := checkSpecificDriverErrors(err); err != nil {
+		return err, code
 	}
 
-	affect, err := res.RowsAffected()
-	if err != nil {
-		return err, errorCodes.DbNothingToReport
-	}
-
-	if affect == 0 {
-		return errors.New("nothing updated"), errorCodes.DbNothingUpdated
-	}
-	return nil, errorCodes.DbNothingToReport
+	return isAffectedOneRow(sqlResult)
 }
 
 // --- Tags ---
@@ -151,41 +162,20 @@ func CreateTag(name, descr string) (int, error, int) {
 	id := 0
 	err := Db.QueryRow("INSERT INTO tags (name, description) VALUES($1, $2) RETURNING id", name, descr).Scan(&id)
 	if err == nil {
-		return id, err, errorCodes.DbNothingToReport
+		return id, nil, errorCodes.DbNothingToReport
 	}
 
-	if errPg, ok := err.(*pq.Error); ok {
-		s := string(errPg.Code)
-		if s == "23505" {
-			return id, err, errorCodes.DbDuplicate
-		} else if s == "22001" {
-			return id, err, errorCodes.DbValueTooLong
-		}
-	}
-
-	return id, err, errorCodes.DbNothingToReport
+	err, code := checkSpecificDriverErrors(err)
+	return id, err, code
 }
 
 func UpdateTag(id int, name, descr string) (error, int) {
-	res, err := Db.Exec("UPDATE tags SET name=$1, description=$2 WHERE id=$3", name, descr, id)
-	if errPg, ok := err.(*pq.Error); ok {
-		s := string(errPg.Code)
-		if s == "23505" {
-			return err, errorCodes.DbDuplicate
-		} else if s == "22001" {
-			return err, errorCodes.DbValueTooLong
-		}
+	sqlResult, err := Db.Exec("UPDATE tags SET name=$1, description=$2 WHERE id=$3", name, descr, id)
+	if err, code := checkSpecificDriverErrors(err); err != nil {
+		return err, code
 	}
 
-	affect, err := res.RowsAffected()
-	if err != nil {
-		return err, errorCodes.DbNothingToReport
-	}
-
-	if affect == 0 {
-		return errors.New("nothing updated"), errorCodes.DbNothingUpdated
-	}
-	return nil, errorCodes.DbNothingToReport
+	return isAffectedOneRow(sqlResult)
 }
 
 // --- Users ---
@@ -225,5 +215,31 @@ func UpdateUser(id int, nickname, about string) (error, int) {
 	if affect == 0 {
 		return errors.New("nothing updated"), errorCodes.DbNothingUpdated
 	}
+	return nil, errorCodes.DbNothingToReport
+}
+
+func Follow(whoId, whomId int) (error, int) {
+	if whoId == whomId {
+		return errors.New("can't follow yourself"), errorCodes.FollowYourself
+	}
+
+	sqlResult, err := Db.Exec("INSERT INTO followers (who_id, whom_id) VALUES($1, $2)", whoId, whomId)
+	if err, code := checkSpecificDriverErrors(err); err != nil {
+		return err, code
+	}
+	if err, code := isAffectedOneRow(sqlResult); err != nil {
+		return err, code
+	}
+
+	sqlResult, err = Db.Exec("UPDATE users SET followers_num = followers_num + 1 WHERE id=$1;", whomId)
+	if err, code := isAffectedOneRow(sqlResult); err != nil {
+		return err, code
+	}
+
+	sqlResult, err = Db.Exec("UPDATE users SET following_num = following_num + 1 WHERE id=$1;", whoId)
+	if err, code := isAffectedOneRow(sqlResult); err != nil {
+		return err, code
+	}
+
 	return nil, errorCodes.DbNothingToReport
 }

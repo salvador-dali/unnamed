@@ -35,6 +35,7 @@ func main() {
 	// Users
 	api.GET("/users/:id", routes.GetUser)
 	api.PUT("/users/me/info", routes.UpdateYourUserInfo)
+	api.POST("/users/me/follow/:id", routes.Follow)
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", Cfg.HttpPort), router))
 }
