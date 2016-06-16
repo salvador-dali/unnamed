@@ -523,3 +523,31 @@ func UnlikePurchase(purchaseId, userId int) (error, int) {
 
 	return nil, errorCodes.DbNothingToReport
 }
+
+func AskQuestion(purchaseId, userId int, question string) (int, error, int) {
+	id := 0
+	whosePurchase, err, code := whoCreatedPurchase(purchaseId)
+	if err != nil {
+		return id, err, code
+	}
+
+	if whosePurchase == userId {
+		return id, errors.New("can't ask question about your stuff"), errorCodes.DbAskAboutOwnStuff
+	}
+
+	err = Db.QueryRow("INSERT INTO questions (user_id, purchase_id, name) VALUES($1, $2, $3) RETURNING id", userId, purchaseId, question).Scan(&id)
+	if err != nil {
+		err, code := checkSpecificDriverErrors(err)
+		return id, err, code
+	}
+
+	sqlResult, err := Db.Exec(`
+		UPDATE users
+		SET questions_num = questions_num + 1
+		WHERE id= $1`, userId)
+	if err, code := isAffectedOneRow(sqlResult); err != nil {
+		return id, err, code
+	}
+
+	return id, nil, errorCodes.DbNothingToReport
+}

@@ -40,12 +40,24 @@ func main() {
 	api.GET("/users/:id/followers", routes.GetFollowers)
 	api.GET("/users/:id/following", routes.GetFollowing)
 	api.GET("/users/:id/purchases", routes.GetUserPurchases)
+
+	// Purchases
 	api.GET("/purchases", routes.GetAllPurchases)
 	api.GET("/purchases/brand/:id", routes.GetAllPurchasesWithBrand)
 	api.GET("/purchases/tag/:id", routes.GetAllPurchasesWithTag)
 	api.GET("/purchases/:id", routes.GetPurchase)
 	api.POST("/purchases/:id/like", routes.LikePurchase)
 	api.DELETE("/purchases/:id/like", routes.UnlikePurchase)
+	api.POST("/purchases/:id/ask", routes.AskQuestion)
+
+	// Questions
+	//api.POST("/questions/:id/vote", routes.UpvoteQuestion)
+	//api.DELETE("/questions/:id/vote", routes.DownvoteQuestion)
+	//api.POST("/questions/:id/answer", routes.AnswerQuestion)
+
+	// Answers
+	//api.POST("/answer/:id/vote", routes.UpvoteAnswer)
+	//api.DELETE("/answer/:id/vote", routes.DownvoteAnswer)
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", Cfg.HttpPort), router))
 }

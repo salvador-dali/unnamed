@@ -14,9 +14,10 @@ import (
 
 // -- A couple of Helper methods and constants
 const (
-	maximumNameLength  = 40
-	maximumDescrLength = 1000
-	currentUserId      = 1 // TODO should be removed when login/logout is implemented
+	maximumNameLength     = 40
+	maximumQuestionLength = 100
+	maximumDescrLength    = 1000
+	currentUserId         = 1 // TODO should be removed when login/logout is implemented
 )
 
 // sendJSON sends a JSON back to a client with a status Code. Makes error checking
@@ -453,4 +454,29 @@ func UnlikePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string
 	}
 
 	sendJSON(w, nil, http.StatusNoContent)
+}
+
+func AskQuestion(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+
+	if !isValidFormLength(w, r, 1) {
+		return
+	}
+
+	purchaseId := validateId(w, ps["id"])
+	if purchaseId <= 0 {
+		return
+	}
+
+	name, ok := validateName(w, r.PostFormValue("name"), maximumQuestionLength)
+	if !ok {
+		return
+	}
+
+	id, err, reason := storage.AskQuestion(purchaseId, currentUserId, name)
+	if isErrorReasonSerious(err, reason, w) {
+		return
+	}
+
+	sendJSON(w, structs.Id{int(id)}, http.StatusCreated)
 }
