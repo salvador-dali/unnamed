@@ -43,6 +43,7 @@ func main() {
 
 	// Purchases
 	api.GET("/purchases", routes.GetAllPurchases)
+	api.POST("/purchases", routes.CreatePurchase)
 	api.GET("/purchases/brand/:id", routes.GetAllPurchasesWithBrand)
 	api.GET("/purchases/tag/:id", routes.GetAllPurchasesWithTag)
 	api.GET("/purchases/:id", routes.GetPurchase)

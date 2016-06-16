@@ -422,6 +422,36 @@ func GetPurchase(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	sendJSON(w, purchase, http.StatusOK)
 }
 
+// CreatePurchase allows a current user to create a purchase
+func CreatePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+	if !isValidFormLength(w, r, 3) {
+		return
+	}
+
+	descr, ok := validateName(w, r.PostFormValue("description"), maximumDescrLength)
+	if !ok {
+		return
+	}
+
+	brandId := validateId(w, r.PostFormValue("brand"))
+	if brandId <= 0 {
+		return
+	}
+
+	tagId := validateId(w, r.PostFormValue("tag"))
+	if tagId <= 0 {
+		return
+	}
+
+	id, err, reason := storage.CreatePurchase(currentUserId, descr, brandId, []int{tagId})
+	if isErrorReasonSerious(err, reason, w) {
+		return
+	}
+
+	sendJSON(w, structs.Id{int(id)}, http.StatusCreated)
+}
+
 // LikePurchase allows current user to like a particular purchase
 func LikePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
@@ -456,6 +486,7 @@ func UnlikePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string
 	sendJSON(w, nil, http.StatusNoContent)
 }
 
+// AskQuestion allows current user to ask a question about someone's purchase
 func AskQuestion(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 

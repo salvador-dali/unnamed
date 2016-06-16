@@ -9,9 +9,13 @@ import (
 	"fmt"
 	"github.com/lib/pq"
 	"log"
+	"strconv"
+	"strings"
 )
 
 var Db *sql.DB
+
+const maxTags = 4 // maximum number of tags for a purchase
 
 // Init prepares the database abstraction for later use. It does not establish any connections to
 // the database, nor does it validate driver connection parameters. To do this call Ping
@@ -179,6 +183,37 @@ func UpdateTag(id int, name, descr string) (error, int) {
 	}
 
 	return isAffectedOneRow(sqlResult)
+}
+
+// validateTags makes sure that all the tags are in the database. psql does not support this http://dba.stackexchange.com/q/60132/15318
+func validateTags(tags []int) (error, int) {
+	if len(tags) == 0 {
+		return errors.New("no tags"), errorCodes.NoTags
+	}
+	if len(tags) > maxTags {
+		return errors.New("too many tags"), errorCodes.TooManyTags
+	}
+
+	for _, v := range tags {
+		if v <= 0 {
+			return errors.New("tag is negative"), errorCodes.IdNotNatural
+		}
+	}
+
+	stringTagIds, num := make([]string, len(tags), len(tags)), 0
+	for k, v := range tags {
+		stringTagIds[k] = strconv.Itoa(v)
+	}
+
+	if err := Db.QueryRow("SELECT COUNT(id) FROM tags WHERE id IN ($1)", strings.Join(stringTagIds, ",")).Scan(&num); err != nil {
+		return err, errorCodes.DbNothingToReport
+	}
+
+	if num != len(tags) {
+		return errors.New("some tags are missing"), errorCodes.DbNotAllTagsCorrect
+	}
+
+	return nil, errorCodes.DbNothingToReport
 }
 
 // --- Users ---
@@ -402,6 +437,41 @@ func getPurchases(rows *sql.Rows, err error) ([]*structs.Purchase, error, int) {
 	}
 
 	return purchases, nil, errorCodes.DbNothingToReport
+}
+
+func CreatePurchase(userId int, description string, brandId int, tagsId []int) (int, error, int) {
+	err, code := validateTags(tagsId)
+	if err != nil {
+		return 0, err, code
+	}
+
+	stringTagIds, id := make([]string, len(tagsId), len(tagsId)), 0
+	for k, v := range tagsId {
+		stringTagIds[k] = strconv.Itoa(v)
+	}
+
+	tagsToInsert := "{" + strings.Join(stringTagIds, ",") + "}"
+	err = Db.QueryRow(`
+		INSERT INTO purchases (image, description, user_id, tags, brand)
+		VALUES('', $1, $2, $3, $4)
+		RETURNING id`, description, userId, tagsToInsert, brandId).Scan(&id)
+	if err != nil {
+		return 0, err, errorCodes.DbNothingToReport
+	}
+
+	if err, code = checkSpecificDriverErrors(err); err != nil {
+		return 0, err, code
+	}
+
+	sqlResult, err := Db.Exec(`
+		UPDATE users
+		SET purchases_num = purchases_num + 1
+		WHERE id=$1`, userId)
+	if err, code := isAffectedOneRow(sqlResult); err != nil {
+		return 0, err, code
+	}
+
+	return id, nil, errorCodes.DbNothingToReport
 }
 
 func GetAllPurchases() ([]*structs.Purchase, error, int) {
