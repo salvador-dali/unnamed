@@ -98,7 +98,7 @@ CREATE TABLE "purchases" (
     "user_id" bigint NOT NULL,
     "issued_at" timestamp  NOT NULL DEFAULT (now() at time zone 'utc'),
     "tags" integer[] NOT NULL,
-    "brand" integer,
+    "brand" integer NOT NULL DEFAULT 0,
     "likes_num" integer NOT NULL DEFAULT 0,
     PRIMARY KEY ("id"),
     FOREIGN KEY ("brand") REFERENCES "brands"("id") ON DELETE SET NULL,

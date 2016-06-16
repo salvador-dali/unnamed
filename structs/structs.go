@@ -45,3 +45,15 @@ type User struct {
 	Answers_num   int        `json:"answers_num,omitempty"`
 	Issued_at     *time.Time `json:"issued_at,omitempty"`
 }
+
+// Purchase stores all information about a Purchase model
+type Purchase struct {
+	Id          int    `json:"id,omitempty"`
+	Image       string `json:"image,omitempty"`
+	Description string `json:"description,omitempty"`
+	User_id     string `json:"user_id,omitempty"`
+	Issued_at   string `json:"issued_at,omitempty"`
+	Tags        []int  `json:"tags,omitempty"`
+	Brand       int    `json:"brand,omitempty"`
+	Likes_num   int    `json:"likes_num,omitempty"`
+}

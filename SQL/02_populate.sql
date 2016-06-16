@@ -23,6 +23,7 @@ INSERT INTO brands (name) VALUES('BMW');
 INSERT INTO brands (name) VALUES('Playstation');
 INSERT INTO brands (name) VALUES('Ferrari');
 INSERT INTO brands (name) VALUES('Gucci');
+INSERT INTO brands (id, name) VALUES(0, 'EMPTY BRAND');
 
 -- following each other
 INSERT INTO followers ("who_id", "whom_id") VALUES(1, 2);
