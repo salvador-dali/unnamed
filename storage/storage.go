@@ -382,12 +382,8 @@ func GetUserPurchases(id int) ([]*structs.Purchase, error, int) {
 
 // --- Purchases ---
 
-func GetAllPurchases() ([]*structs.Purchase, error, int) {
+func getPurchases(rows *sql.Rows, err error) ([]*structs.Purchase, error, int) {
 	purchases := []*structs.Purchase{}
-	rows, err := Db.Query(`
-		SELECT id, image, description, issued_at, brand, likes_num
-		FROM purchases
-		ORDER BY issued_at DESC`)
 	if err != nil {
 		return purchases, err, errorCodes.DbNothingToReport
 	}
@@ -395,7 +391,7 @@ func GetAllPurchases() ([]*structs.Purchase, error, int) {
 
 	for rows.Next() {
 		p := structs.Purchase{}
-		if err := rows.Scan(&p.Id, &p.Image, &p.Description, &p.Issued_at, &p.Brand, &p.Likes_num); err != nil {
+		if err := rows.Scan(&p.Id, &p.Image, &p.Description, &p.User_id, &p.Issued_at, &p.Brand, &p.Likes_num); err != nil {
 			return purchases, err, errorCodes.DbNothingToReport
 		}
 		purchases = append(purchases, &p)
@@ -406,4 +402,33 @@ func GetAllPurchases() ([]*structs.Purchase, error, int) {
 	}
 
 	return purchases, nil, errorCodes.DbNothingToReport
+}
+
+func GetAllPurchases() ([]*structs.Purchase, error, int) {
+	rows, err := Db.Query(`
+		SELECT id, image, description, user_id, issued_at, brand, likes_num
+		FROM purchases
+		ORDER BY issued_at DESC`)
+
+	return getPurchases(rows, err)
+}
+
+func GetAllPurchasesWithBrand(brandId int) ([]*structs.Purchase, error, int) {
+	rows, err := Db.Query(`
+		SELECT id, image, description, user_id, issued_at, brand, likes_num
+		FROM purchases
+		WHERE brand = $1
+		ORDER BY issued_at DESC`, brandId)
+
+	return getPurchases(rows, err)
+}
+
+func GetAllPurchasesWithTag(tagId int) ([]*structs.Purchase, error, int) {
+	rows, err := Db.Query(`
+		SELECT id, image, description, user_id, issued_at, brand, likes_num
+		FROM purchases
+		WHERE $1 = ANY (tags)
+		ORDER BY issued_at DESC`, tagId)
+
+	return getPurchases(rows, err)
 }
