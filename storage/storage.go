@@ -379,3 +379,31 @@ func GetUserPurchases(id int) ([]*structs.Purchase, error, int) {
 
 	return purchases, nil, errorCodes.DbNothingToReport
 }
+
+// --- Purchases ---
+
+func GetAllPurchases() ([]*structs.Purchase, error, int) {
+	purchases := []*structs.Purchase{}
+	rows, err := Db.Query(`
+		SELECT id, image, description, issued_at, brand, likes_num
+		FROM purchases
+		ORDER BY issued_at DESC`)
+	if err != nil {
+		return purchases, err, errorCodes.DbNothingToReport
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		p := structs.Purchase{}
+		if err := rows.Scan(&p.Id, &p.Image, &p.Description, &p.Issued_at, &p.Brand, &p.Likes_num); err != nil {
+			return purchases, err, errorCodes.DbNothingToReport
+		}
+		purchases = append(purchases, &p)
+	}
+
+	if err = rows.Err(); err != nil {
+		return purchases, err, errorCodes.DbNothingToReport
+	}
+
+	return purchases, nil, errorCodes.DbNothingToReport
+}
