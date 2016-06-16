@@ -16,4 +16,6 @@ const (
 	DbDuplicate       = 601 // duplicate constrain violation. Inserted X, where X already exist and should be unique
 	DbNoElement       = 602 // was searching for an element by ID. Have not found it
 	DbNothingUpdated  = 603 // was trying to update an element, but the element was not found
+	DbNoPurchase      = 604 // purchase with such ID does not exist
+	DbVoteForOwnStuff = 605 // a person whould not be able to vote for his own stuff
 )

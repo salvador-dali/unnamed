@@ -44,6 +44,7 @@ func main() {
 	api.GET("/purchases/brand/:id", routes.GetAllPurchasesWithBrand)
 	api.GET("/purchases/tag/:id", routes.GetAllPurchasesWithTag)
 	api.GET("/purchases/:id", routes.GetPurchase)
+	api.POST("/purchases/:id/like", routes.LikePurchase)
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", Cfg.HttpPort), router))
 }

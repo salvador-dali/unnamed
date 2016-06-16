@@ -420,3 +420,20 @@ func GetPurchase(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 
 	sendJSON(w, purchase, http.StatusOK)
 }
+
+// LikePurchase allows current user to like a particular purchase
+func LikePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+
+	purchaseId := validateId(w, ps["id"])
+	if purchaseId <= 0 {
+		return
+	}
+
+	err, reason := storage.LikePurchase(purchaseId, currentUserId)
+	if isErrorReasonSerious(err, reason, w) {
+		return
+	}
+
+	sendJSON(w, nil, http.StatusNoContent)
+}

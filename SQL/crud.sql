@@ -2,10 +2,6 @@
 INSERT INTO purchases (image, description, user_id, tags, brand) VALUES('some_img', 'descr', 8, '{1, 3}', 2); -- verify tags
 UPDATE users SET purchases_num = purchases_num + 1 WHERE id= 8;
 
--- like a purchase
-INSERT INTO likes (purchase_id, user_id) VALUES(4, 10);
-UPDATE purchases SET likes_num = likes_num + 1 WHERE id= 4;
-
 -- unlike a purchase
 DELETE FROM likes WHERE purchase_id = 4 AND user_id = 10;
 UPDATE purchases SET likes_num = likes_num - 1 WHERE id= 4;
