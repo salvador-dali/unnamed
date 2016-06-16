@@ -39,6 +39,7 @@ func main() {
 	api.DELETE("/users/me/follow/:id", routes.Unfollow)
 	api.GET("/users/:id/followers", routes.GetFollowers)
 	api.GET("/users/:id/following", routes.GetFollowing)
+	api.GET("/users/:id/purchases", routes.GetUserPurchases)
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", Cfg.HttpPort), router))
 }
