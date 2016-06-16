@@ -270,3 +270,55 @@ func Unfollow(whoId, whomId int) (error, int) {
 
 	return nil, errorCodes.DbNothingToReport
 }
+
+func GetFollowering(id int) ([]*structs.User, error, int) {
+	users := []*structs.User{}
+	rows, err := Db.Query(`
+		SELECT id, nickname, image FROM users WHERE id in (
+			SELECT whom_id FROM followers WHERE who_id = $1
+		)`, id)
+	if err != nil {
+		return users, err, errorCodes.DbNothingToReport
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		user := structs.User{}
+		if err := rows.Scan(&user.Id, &user.Nickname, &user.Image); err != nil {
+			return users, err, errorCodes.DbNothingToReport
+		}
+		users = append(users, &user)
+	}
+
+	if err = rows.Err(); err != nil {
+		return users, err, errorCodes.DbNothingToReport
+	}
+
+	return users, nil, errorCodes.DbNothingToReport
+}
+
+func GetFollowers(id int) ([]*structs.User, error, int) {
+	users := []*structs.User{}
+	rows, err := Db.Query(`
+		SELECT id, nickname, image FROM users WHERE id in (
+			SELECT who_id FROM followers WHERE whom_id = $1
+		)`, id)
+	if err != nil {
+		return users, err, errorCodes.DbNothingToReport
+	}
+	defer rows.Close()
+
+	for rows.Next() {
+		user := structs.User{}
+		if err := rows.Scan(&user.Id, &user.Nickname, &user.Image); err != nil {
+			return users, err, errorCodes.DbNothingToReport
+		}
+		users = append(users, &user)
+	}
+
+	if err = rows.Err(); err != nil {
+		return users, err, errorCodes.DbNothingToReport
+	}
+
+	return users, nil, errorCodes.DbNothingToReport
+}

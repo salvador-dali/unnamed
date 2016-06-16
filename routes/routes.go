@@ -323,3 +323,37 @@ func Unfollow(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 
 	sendJSON(w, nil, http.StatusNoContent)
 }
+
+// GetFollowing returns all the users, whom this user follows
+func GetFollowing(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+
+	id := validateId(w, ps["id"])
+	if id <= 0 {
+		return
+	}
+
+	users, err, reason := storage.GetFollowering(id)
+	if isErrorReasonSerious(err, reason, w) {
+		return
+	}
+
+	sendJSON(w, users, http.StatusOK)
+}
+
+// GetFollowers returns all the users, who follows this user
+func GetFollowers(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+
+	id := validateId(w, ps["id"])
+	if id <= 0 {
+		return
+	}
+
+	users, err, reason := storage.GetFollowers(id)
+	if isErrorReasonSerious(err, reason, w) {
+		return
+	}
+
+	sendJSON(w, users, http.StatusOK)
+}

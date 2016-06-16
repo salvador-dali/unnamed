@@ -37,6 +37,8 @@ func main() {
 	api.PUT("/users/me/info", routes.UpdateYourUserInfo)
 	api.POST("/users/me/follow/:id", routes.Follow)
 	api.DELETE("/users/me/follow/:id", routes.Unfollow)
+	api.GET("/users/:id/followers", routes.GetFollowers)
+	api.GET("/users/:id/following", routes.GetFollowing)
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", Cfg.HttpPort), router))
 }
