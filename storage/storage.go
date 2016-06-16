@@ -170,7 +170,10 @@ func CreateTag(name, descr string) (int, error, int) {
 }
 
 func UpdateTag(id int, name, descr string) (error, int) {
-	sqlResult, err := Db.Exec("UPDATE tags SET name=$1, description=$2 WHERE id=$3", name, descr, id)
+	sqlResult, err := Db.Exec(`
+		UPDATE tags
+		SET name=$1, description=$2
+		WHERE id=$3`, name, descr, id)
 	if err, code := checkSpecificDriverErrors(err); err != nil {
 		return err, code
 	}
@@ -182,7 +185,9 @@ func UpdateTag(id int, name, descr string) (error, int) {
 
 func GetUser(id int) (structs.User, error, int) {
 	user := structs.User{}
-	if err := Db.QueryRow("SELECT nickname, image, about, expertise, followers_num, following_num, purchases_num, questions_num, answers_num, issued_at FROM users WHERE id = $1", id).Scan(
+	if err := Db.QueryRow(`
+		SELECT nickname, image, about, expertise, followers_num, following_num, purchases_num, questions_num, answers_num, issued_at
+		FROM users WHERE id = $1`, id).Scan(
 		&user.Nickname, &user.Image, &user.About, &user.Expertise, &user.Followers_num, &user.Following_num,
 		&user.Purchases_num, &user.Questions_num, &user.Answers_num, &user.Issued_at,
 	); err != nil {
@@ -197,7 +202,10 @@ func GetUser(id int) (structs.User, error, int) {
 }
 
 func UpdateUser(id int, nickname, about string) (error, int) {
-	res, err := Db.Exec("UPDATE users SET nickname=$1, about=$2 WHERE id=$3", nickname, about, id)
+	res, err := Db.Exec(`
+		UPDATE users
+		SET nickname=$1, about=$2
+		WHERE id=$3", nickname, about, id`)
 	if errPg, ok := err.(*pq.Error); ok {
 		s := string(errPg.Code)
 		if s == "23505" {
@@ -231,12 +239,18 @@ func Follow(whoId, whomId int) (error, int) {
 		return err, code
 	}
 
-	sqlResult, err = Db.Exec("UPDATE users SET followers_num = followers_num + 1 WHERE id=$1;", whomId)
+	sqlResult, err = Db.Exec(`
+		UPDATE users
+		SET followers_num = followers_num + 1
+		WHERE id=$1`, whomId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
 		return err, code
 	}
 
-	sqlResult, err = Db.Exec("UPDATE users SET following_num = following_num + 1 WHERE id=$1;", whoId)
+	sqlResult, err = Db.Exec(`
+		UPDATE users
+		SET following_num = following_num + 1
+		WHERE id=$1`, whoId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
 		return err, code
 	}
@@ -249,7 +263,9 @@ func Unfollow(whoId, whomId int) (error, int) {
 		return errors.New("can't follow yourself"), errorCodes.FollowYourself
 	}
 
-	sqlResult, err := Db.Exec("DELETE FROM followers WHERE who_id=$1 AND whom_id=$2", whoId, whomId)
+	sqlResult, err := Db.Exec(`
+		DELETE FROM followers
+		WHERE who_id=$1 AND whom_id=$2`, whoId, whomId)
 	if err != nil {
 		return err, errorCodes.DbNothingToReport
 	}
@@ -258,12 +274,18 @@ func Unfollow(whoId, whomId int) (error, int) {
 		return err, code
 	}
 
-	sqlResult, err = Db.Exec("UPDATE users SET followers_num = followers_num - 1 WHERE id=$1;", whomId)
+	sqlResult, err = Db.Exec(`
+		UPDATE users
+		SET followers_num = followers_num - 1
+		WHERE id=$1`, whomId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
 		return err, code
 	}
 
-	sqlResult, err = Db.Exec("UPDATE users SET following_num = following_num - 1 WHERE id=$1;", whoId)
+	sqlResult, err = Db.Exec(`
+		UPDATE users
+		SET following_num = following_num - 1
+		WHERE id=$1`, whoId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
 		return err, code
 	}
@@ -274,8 +296,12 @@ func Unfollow(whoId, whomId int) (error, int) {
 func GetFollowering(id int) ([]*structs.User, error, int) {
 	users := []*structs.User{}
 	rows, err := Db.Query(`
-		SELECT id, nickname, image FROM users WHERE id in (
-			SELECT whom_id FROM followers WHERE who_id = $1
+		SELECT id, nickname, image
+		FROM users
+		WHERE id IN (
+			SELECT whom_id
+			FROM followers
+			WHERE who_id = $1
 		)`, id)
 	if err != nil {
 		return users, err, errorCodes.DbNothingToReport
@@ -300,8 +326,12 @@ func GetFollowering(id int) ([]*structs.User, error, int) {
 func GetFollowers(id int) ([]*structs.User, error, int) {
 	users := []*structs.User{}
 	rows, err := Db.Query(`
-		SELECT id, nickname, image FROM users WHERE id in (
-			SELECT who_id FROM followers WHERE whom_id = $1
+		SELECT id, nickname, image
+		FROM users
+		WHERE id IN (
+			SELECT who_id
+			FROM followers
+			WHERE whom_id = $1
 		)`, id)
 	if err != nil {
 		return users, err, errorCodes.DbNothingToReport
@@ -325,7 +355,11 @@ func GetFollowers(id int) ([]*structs.User, error, int) {
 
 func GetUserPurchases(id int) ([]*structs.Purchase, error, int) {
 	purchases := []*structs.Purchase{}
-	rows, err := Db.Query("SELECT id, image, description, issued_at, brand, likes_num FROM purchases WHERE user_id = $1", id)
+	rows, err := Db.Query(`
+		SELECT id, image, description, issued_at, brand, likes_num
+		FROM purchases
+		WHERE user_id = $1
+		ORDER BY issued_at DESC`, id)
 	if err != nil {
 		return purchases, err, errorCodes.DbNothingToReport
 	}
