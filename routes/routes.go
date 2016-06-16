@@ -85,6 +85,25 @@ func isValidFormLength(w http.ResponseWriter, r *http.Request, validLen int) boo
 	return false
 }
 
+// extractPurchasesWithIdSendJSON simplifies extracting many purchases knowing some id
+type getPurchasesWithId func(int) ([]*structs.Purchase, error, int)
+
+func extractPurchasesWithIdSendJSON(getData getPurchasesWithId, w http.ResponseWriter, ps map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+
+	id := validateId(w, ps["id"])
+	if id <= 0 {
+		return
+	}
+
+	data, err, reason := getData(id)
+	if isErrorReasonSerious(err, reason, w) {
+		return
+	}
+
+	sendJSON(w, data, http.StatusOK)
+}
+
 // -- Actual Handlers
 
 // GetAllBrands returns all the brands (id, name)
@@ -358,22 +377,12 @@ func GetFollowers(w http.ResponseWriter, r *http.Request, ps map[string]string) 
 	sendJSON(w, users, http.StatusOK)
 }
 
+// GetUserPurchases returns all the list of all purchases done by this user in reverse order
 func GetUserPurchases(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	w.Header().Set("Content-Type", "application/javascript")
-
-	id := validateId(w, ps["id"])
-	if id <= 0 {
-		return
-	}
-
-	purchases, err, reason := storage.GetUserPurchases(id)
-	if isErrorReasonSerious(err, reason, w) {
-		return
-	}
-
-	sendJSON(w, purchases, http.StatusOK)
+	extractPurchasesWithIdSendJSON(storage.GetUserPurchases, w, ps)
 }
 
+// GetAllPurchases returns all the purchases in reverse order
 func GetAllPurchases(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
@@ -385,34 +394,12 @@ func GetAllPurchases(w http.ResponseWriter, r *http.Request, ps map[string]strin
 	sendJSON(w, purchases, http.StatusOK)
 }
 
+// GetAllPurchases returns all the purchases which were tagged with a particular brand
 func GetAllPurchasesWithBrand(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	w.Header().Set("Content-Type", "application/javascript")
-
-	id := validateId(w, ps["id"])
-	if id <= 0 {
-		return
-	}
-
-	purchases, err, reason := storage.GetAllPurchasesWithBrand(id)
-	if isErrorReasonSerious(err, reason, w) {
-		return
-	}
-
-	sendJSON(w, purchases, http.StatusOK)
+	extractPurchasesWithIdSendJSON(storage.GetAllPurchasesWithBrand, w, ps)
 }
 
+// GetAllPurchases returns all the purchases which were tagged with a particular tag
 func GetAllPurchasesWithTag(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	w.Header().Set("Content-Type", "application/javascript")
-
-	id := validateId(w, ps["id"])
-	if id <= 0 {
-		return
-	}
-
-	purchases, err, reason := storage.GetAllPurchasesWithTag(id)
-	if isErrorReasonSerious(err, reason, w) {
-		return
-	}
-
-	sendJSON(w, purchases, http.StatusOK)
+	extractPurchasesWithIdSendJSON(storage.GetAllPurchasesWithTag, w, ps)
 }
