@@ -432,3 +432,21 @@ func GetAllPurchasesWithTag(tagId int) ([]*structs.Purchase, error, int) {
 
 	return getPurchases(rows, err)
 }
+
+func GetPurchase(id int) (structs.Purchase, error, int) {
+	p := structs.Purchase{}
+	if err := Db.QueryRow(`
+		SELECT image, description, user_id, issued_at, brand, likes_num
+		FROM purchases
+		WHERE id = $1`, id,
+	).Scan(&p.Image, &p.Description, &p.User_id, &p.Issued_at, &p.Brand, &p.Likes_num); err != nil {
+		if err == sql.ErrNoRows {
+			return p, err, errorCodes.DbNoElement
+		}
+
+		return p, err, errorCodes.DbNothingToReport
+	}
+
+	p.Id = id
+	return p, nil, errorCodes.DbNothingToReport
+}

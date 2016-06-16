@@ -43,6 +43,7 @@ func main() {
 	api.GET("/purchases", routes.GetAllPurchases)
 	api.GET("/purchases/brand/:id", routes.GetAllPurchasesWithBrand)
 	api.GET("/purchases/tag/:id", routes.GetAllPurchasesWithTag)
+	api.GET("/purchases/:id", routes.GetPurchase)
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", Cfg.HttpPort), router))
 }
