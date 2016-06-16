@@ -243,3 +243,30 @@ func Follow(whoId, whomId int) (error, int) {
 
 	return nil, errorCodes.DbNothingToReport
 }
+
+func Unfollow(whoId, whomId int) (error, int) {
+	if whoId == whomId {
+		return errors.New("can't follow yourself"), errorCodes.FollowYourself
+	}
+
+	sqlResult, err := Db.Exec("DELETE FROM followers WHERE who_id=$1 AND whom_id=$2", whoId, whomId)
+	if err != nil {
+		return err, errorCodes.DbNothingToReport
+	}
+
+	if err, code := isAffectedOneRow(sqlResult); err != nil {
+		return err, code
+	}
+
+	sqlResult, err = Db.Exec("UPDATE users SET followers_num = followers_num - 1 WHERE id=$1;", whomId)
+	if err, code := isAffectedOneRow(sqlResult); err != nil {
+		return err, code
+	}
+
+	sqlResult, err = Db.Exec("UPDATE users SET following_num = following_num - 1 WHERE id=$1;", whoId)
+	if err, code := isAffectedOneRow(sqlResult); err != nil {
+		return err, code
+	}
+
+	return nil, errorCodes.DbNothingToReport
+}

@@ -1,25 +1,3 @@
--- create new user
-INSERT INTO users (nickname, about) VALUES('user_1', 'about user 1');
-
--- update avatar
-UPDATE users SET image = 'new_path' WHERE id = 10;
-
--- create/update tag/brand
-INSERT INTO tags (name, description) VALUES('tag_6', 'descr_tag_6');
-UPDATE tags SET name='tag_6', description='descr_tag_6' WHERE id=5;
-INSERT INTO brands (name) VALUES('brand_4');
-UPDATE brands SET name='brand_4' WHERE id=3;
-
--- follow
-INSERT INTO followers ("who_id", "whom_id") VALUES(6, 10);
-UPDATE users SET followers_num = followers_num + 1 WHERE id= 10;
-UPDATE users SET following_num = following_num + 1 WHERE id= 6;
-
--- unfollow
-DELETE FROM followers WHERE who_id=6 AND whom_id=10;
-UPDATE users SET followers_num = followers_num - 1 WHERE id= 10;
-UPDATE users SET following_num = following_num - 1 WHERE id= 6;
-
 -- create a purchase
 INSERT INTO purchases (image, description, user_id, tags, brand) VALUES('some_img', 'descr', 8, '{1, 3}', 2); -- verify tags
 UPDATE users SET purchases_num = purchases_num + 1 WHERE id= 8;

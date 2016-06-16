@@ -290,7 +290,7 @@ func UpdateYourUserInfo(w http.ResponseWriter, r *http.Request, ps map[string]st
 	sendJSON(w, nil, http.StatusNoContent)
 }
 
-// UpdateYourUserInfo changes the information about a user who is currently
+// Follow a current user starts following some user
 func Follow(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
@@ -300,6 +300,23 @@ func Follow(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	}
 
 	err, reason := storage.Follow(currentUserId, id)
+	if isErrorReasonSerious(err, reason, w) {
+		return
+	}
+
+	sendJSON(w, nil, http.StatusNoContent)
+}
+
+// Unfollow a current stops following some user
+func Unfollow(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+
+	id := validateId(w, ps["id"])
+	if id <= 0 {
+		return
+	}
+
+	err, reason := storage.Unfollow(currentUserId, id)
 	if isErrorReasonSerious(err, reason, w) {
 		return
 	}
