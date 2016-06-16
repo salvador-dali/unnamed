@@ -437,3 +437,20 @@ func LikePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string) 
 
 	sendJSON(w, nil, http.StatusNoContent)
 }
+
+// UnlikePurchase allows current user to revert his like of a particular purchase
+func UnlikePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+
+	purchaseId := validateId(w, ps["id"])
+	if purchaseId <= 0 {
+		return
+	}
+
+	err, reason := storage.UnlikePurchase(purchaseId, currentUserId)
+	if isErrorReasonSerious(err, reason, w) {
+		return
+	}
+
+	sendJSON(w, nil, http.StatusNoContent)
+}

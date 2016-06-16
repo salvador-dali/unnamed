@@ -451,23 +451,31 @@ func GetPurchase(id int) (structs.Purchase, error, int) {
 	return p, nil, errorCodes.DbNothingToReport
 }
 
-func LikePurchase(purchaseId, userId int) (error, int) {
-	// check whose purchase it is
+func whoCreatedPurchase(purchaseId int) (int, error, int) {
 	whosePurchase := 0
 	if err := Db.QueryRow("SELECT user_id FROM purchases WHERE id = $1", purchaseId).Scan(&whosePurchase); err != nil {
 		if err == sql.ErrNoRows {
-			return err, errorCodes.DbNoPurchase
+			return whosePurchase, err, errorCodes.DbNoPurchase
 		}
 
-		return err, errorCodes.DbNothingToReport
+		return whosePurchase, err, errorCodes.DbNothingToReport
 	}
-	
+	return whosePurchase, nil, errorCodes.DbNothingToReport
+}
+
+func LikePurchase(purchaseId, userId int) (error, int) {
+	// check whose purchase it is
+	whosePurchase, err, code := whoCreatedPurchase(purchaseId)
+	if err != nil {
+		return err, code
+	}
+
 	if whosePurchase == userId {
 		return errors.New("can't vote for own purchase"), errorCodes.DbVoteForOwnStuff
 	}
 
-	// now when the person votes for someones else purchase
-	sqlResult, err := Db.Exec("INSERT INTO likes (purchase_id, user_id) VALUES($1, $2);", purchaseId, userId)
+	// now allow the person to vote for someones else purchase
+	sqlResult, err := Db.Exec("INSERT INTO likes (purchase_id, user_id) VALUES($1, $2)", purchaseId, userId)
 	if err, code := checkSpecificDriverErrors(err); err != nil {
 		return err, code
 	}
@@ -478,6 +486,36 @@ func LikePurchase(purchaseId, userId int) (error, int) {
 	sqlResult, err = Db.Exec(`
 		UPDATE purchases
 		SET likes_num = likes_num + 1
+		WHERE id= $1`, purchaseId)
+	if err, code := isAffectedOneRow(sqlResult); err != nil {
+		return err, code
+	}
+
+	return nil, errorCodes.DbNothingToReport
+}
+
+func UnlikePurchase(purchaseId, userId int) (error, int) {
+	// check whose purchase it is
+	whosePurchase, err, code := whoCreatedPurchase(purchaseId)
+	if err != nil {
+		return err, code
+	}
+
+	if whosePurchase == userId {
+		return errors.New("can't vote for own purchase"), errorCodes.DbVoteForOwnStuff
+	}
+
+	sqlResult, err := Db.Exec("DELETE FROM likes WHERE purchase_id = $1 AND user_id = $2", purchaseId, userId)
+	if err, code := checkSpecificDriverErrors(err); err != nil {
+		return err, code
+	}
+	if err, code := isAffectedOneRow(sqlResult); err != nil {
+		return err, code
+	}
+
+	sqlResult, err = Db.Exec(`
+		UPDATE purchases
+		SET likes_num = likes_num - 1
 		WHERE id= $1`, purchaseId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
 		return err, code
