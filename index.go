@@ -54,7 +54,7 @@ func main() {
 	// Questions
 	//api.POST("/questions/:id/vote", routes.UpvoteQuestion)
 	//api.DELETE("/questions/:id/vote", routes.DownvoteQuestion)
-	//api.POST("/questions/:id/answer", routes.AnswerQuestion)
+	api.POST("/questions/:id/answer", routes.AnswerQuestion)
 
 	// Answers
 	//api.POST("/answer/:id/vote", routes.UpvoteAnswer)

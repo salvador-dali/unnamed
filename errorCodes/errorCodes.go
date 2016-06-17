@@ -13,13 +13,15 @@ const (
 
 // Errors related to a database operations
 const (
-	DbNothingToReport   = 0   // either there was no error, or client should not know about it
-	DbValueTooLong      = 600 // text value is too long. Inserted a string of length X + 1 in Varchar(X)
-	DbDuplicate         = 601 // duplicate constrain violation. Inserted X, where X already exist and should be unique
-	DbNoElement         = 602 // was searching for an element by ID. Have not found it
-	DbNothingUpdated    = 603 // was trying to update an element, but the element was not found
-	DbNoPurchase        = 604 // purchase with such ID does not exist
-	DbVoteForOwnStuff   = 605 // a person should not vote for his own stuff
-	DbAskAboutOwnStuff  = 606 // a person should not ask questions about his purchase
-	DbNotAllTagsCorrect = 607 // a one or more tags are not in the database
+	DbNothingToReport           = 0   // either there was no error, or client should not know about it
+	DbValueTooLong              = 600 // text value is too long. Inserted a string of length X + 1 in Varchar(X)
+	DbDuplicate                 = 601 // duplicate constrain violation. Inserted X, where X already exist and should be unique
+	DbNoElement                 = 602 // was searching for an element by ID. Have not found it
+	DbNothingUpdated            = 603 // was trying to update an element, but the element was not found
+	DbNoPurchase                = 604 // purchase with such ID does not exist
+	DbVoteForOwnStuff           = 605 // a person should not vote for his own stuff
+	DbAskAboutOwnStuff          = 606 // a person should not ask questions about his purchase
+	DbNotAllTagsCorrect         = 607 // a one or more tags are not in the database
+	DbNoPurchaseForQuestion     = 608 // purchase for this question ID does not exist
+	DbCannotAnswerOtherPurchase = 609 // user can answer only question about his purchase
 )

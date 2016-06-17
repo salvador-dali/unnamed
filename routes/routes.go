@@ -511,3 +511,29 @@ func AskQuestion(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 
 	sendJSON(w, structs.Id{int(id)}, http.StatusCreated)
 }
+
+// AnswerQuestion allows current user to answer a question about his own purchase
+func AnswerQuestion(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+
+	if !isValidFormLength(w, r, 1) {
+		return
+	}
+
+	questionId := validateId(w, ps["id"])
+	if questionId <= 0 {
+		return
+	}
+
+	name, ok := validateName(w, r.PostFormValue("name"), maximumDescrLength)
+	if !ok {
+		return
+	}
+
+	id, err, reason := storage.AnswerQuestion(questionId, currentUserId, name)
+	if isErrorReasonSerious(err, reason, w) {
+		return
+	}
+
+	sendJSON(w, structs.Id{int(id)}, http.StatusCreated)
+}

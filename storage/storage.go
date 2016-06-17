@@ -521,7 +521,7 @@ func GetPurchase(id int) (structs.Purchase, error, int) {
 	return p, nil, errorCodes.DbNothingToReport
 }
 
-func whoCreatedPurchase(purchaseId int) (int, error, int) {
+func whoCreatedPurchaseByPurchaseId(purchaseId int) (int, error, int) {
 	whosePurchase := 0
 	if err := Db.QueryRow("SELECT user_id FROM purchases WHERE id = $1", purchaseId).Scan(&whosePurchase); err != nil {
 		if err == sql.ErrNoRows {
@@ -533,9 +533,24 @@ func whoCreatedPurchase(purchaseId int) (int, error, int) {
 	return whosePurchase, nil, errorCodes.DbNothingToReport
 }
 
+func whoCreatedPurchaseByQuestionId(questionId int) (int, error, int) {
+	whosePurchase := 0
+	if err := Db.QueryRow(`
+		SELECT user_id FROM purchases WHERE id = (
+			SELECT purchase_id FROM questions WHERE id = $1
+		)`, questionId).Scan(&whosePurchase); err != nil {
+		if err == sql.ErrNoRows {
+			return 0, err, errorCodes.DbNoPurchaseForQuestion
+		}
+
+		return 0, err, errorCodes.DbNothingToReport
+	}
+	return whosePurchase, nil, errorCodes.DbNothingToReport
+}
+
 func LikePurchase(purchaseId, userId int) (error, int) {
 	// check whose purchase it is
-	whosePurchase, err, code := whoCreatedPurchase(purchaseId)
+	whosePurchase, err, code := whoCreatedPurchaseByPurchaseId(purchaseId)
 	if err != nil {
 		return err, code
 	}
@@ -566,7 +581,7 @@ func LikePurchase(purchaseId, userId int) (error, int) {
 
 func UnlikePurchase(purchaseId, userId int) (error, int) {
 	// check whose purchase it is
-	whosePurchase, err, code := whoCreatedPurchase(purchaseId)
+	whosePurchase, err, code := whoCreatedPurchaseByPurchaseId(purchaseId)
 	if err != nil {
 		return err, code
 	}
@@ -596,7 +611,7 @@ func UnlikePurchase(purchaseId, userId int) (error, int) {
 
 func AskQuestion(purchaseId, userId int, question string) (int, error, int) {
 	id := 0
-	whosePurchase, err, code := whoCreatedPurchase(purchaseId)
+	whosePurchase, err, code := whoCreatedPurchaseByPurchaseId(purchaseId)
 	if err != nil {
 		return id, err, code
 	}
@@ -605,7 +620,11 @@ func AskQuestion(purchaseId, userId int, question string) (int, error, int) {
 		return id, errors.New("can't ask question about your stuff"), errorCodes.DbAskAboutOwnStuff
 	}
 
-	err = Db.QueryRow("INSERT INTO questions (user_id, purchase_id, name) VALUES($1, $2, $3) RETURNING id", userId, purchaseId, question).Scan(&id)
+	err = Db.QueryRow(`
+		INSERT INTO questions (user_id, purchase_id, name)
+		VALUES($1, $2, $3)
+		RETURNING id`, userId, purchaseId, question,
+	).Scan(&id)
 	if err != nil {
 		err, code := checkSpecificDriverErrors(err)
 		return id, err, code
@@ -615,6 +634,39 @@ func AskQuestion(purchaseId, userId int, question string) (int, error, int) {
 		UPDATE users
 		SET questions_num = questions_num + 1
 		WHERE id= $1`, userId)
+	if err, code := isAffectedOneRow(sqlResult); err != nil {
+		return id, err, code
+	}
+
+	return id, nil, errorCodes.DbNothingToReport
+}
+
+// --- Answers ---
+func AnswerQuestion(questionId, userId int, answer string) (int, error, int) {
+	whosePurchase, err, code := whoCreatedPurchaseByQuestionId(questionId)
+	if err != nil {
+		return 0, err, code
+	}
+
+	if whosePurchase != userId {
+		return 0, errors.New("can asnwer only questions regarding your purchase"), errorCodes.DbCannotAnswerOtherPurchase
+	}
+
+	id := 0
+	err = Db.QueryRow(`
+		INSERT INTO answers (user_id, question_id, name)
+		VALUES($1, $2, $3)
+		RETURNING id`, userId, questionId, answer,
+	).Scan(&id)
+	if err != nil {
+		err, code := checkSpecificDriverErrors(err)
+		return id, err, code
+	}
+
+	sqlResult, err := Db.Exec(`
+		UPDATE users
+		SET answers_num = answers_num + 1
+		WHERE id = $1`, userId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
 		return id, err, code
 	}
