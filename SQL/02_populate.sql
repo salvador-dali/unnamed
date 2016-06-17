@@ -17,7 +17,7 @@ INSERT INTO tags (name, description) VALUES('car', 'Vehicles that people use to 
 INSERT INTO tags (name, description) VALUES('hat', 'Stuff people put on their heads');
 INSERT INTO tags (name, description) VALUES('phone', 'People use it to speak with other people');
 
--- create a couple of tags
+-- create a couple of brands
 INSERT INTO brands (name) VALUES('Apple');
 INSERT INTO brands (name) VALUES('BMW');
 INSERT INTO brands (name) VALUES('Playstation');
@@ -43,16 +43,16 @@ UPDATE users SET following_num = following_num + 1 WHERE id= 6;
 UPDATE users SET followers_num = followers_num + 1 WHERE id= 2;
 
 -- create a few purchases
-INSERT INTO purchases (image, description, user_id, tags, brand) VALUES('some_img', 'Look at my new drone', 1, '{2}', Null);
+INSERT INTO purchases (image, description, user_id, tag_ids, brand_id) VALUES('some_img', 'Look at my new drone', 1, '{2}', 0);
 UPDATE users SET purchases_num = purchases_num + 1 WHERE id= 1;
 
-INSERT INTO purchases (image, description, user_id, tags, brand) VALUES('some_img', 'How cool am I?', 4, '{3, 5}', 5);
+INSERT INTO purchases (image, description, user_id, tag_ids, brand_id) VALUES('some_img', 'How cool am I?', 4, '{3, 5}', 5);
 UPDATE users SET purchases_num = purchases_num + 1 WHERE id= 4;
 
-INSERT INTO purchases (image, description, user_id, tags, brand) VALUES('some_img', 'I really like drones', 1, '{4}', Null);
+INSERT INTO purchases (image, description, user_id, tag_ids, brand_id) VALUES('some_img', 'I really like drones', 1, '{4}', 0);
 UPDATE users SET purchases_num = purchases_num + 1 WHERE id= 1;
 
-INSERT INTO purchases (image, description, user_id, tags, brand) VALUES('some_img', 'Now I am fond of cars', 1, '{2}', 4);
+INSERT INTO purchases (image, description, user_id, tag_ids, brand_id) VALUES('some_img', 'Now I am fond of cars', 1, '{2}', 4);
 UPDATE users SET purchases_num = purchases_num + 1 WHERE id= 1;
 
 -- some people like them

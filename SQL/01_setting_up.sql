@@ -13,7 +13,7 @@ DROP TABLE IF EXISTS timeseries;
 
 -- Users
 CREATE TABLE "users" (
-    "id" bigserial,
+    "id" serial,
     "nickname" varchar(40) NOT NULL,
     "image" varchar(100) NOT NULL DEFAULT '',
     "about" varchar(1000)  NOT NULL,
@@ -50,8 +50,8 @@ COMMENT ON COLUMN "users"."brands_ignore" IS 'Array of brands, the person wishes
 
 -- Followers
 CREATE TABLE "followers" (
-    "who_id" bigint NOT NULL,
-    "whom_id" bigint NOT NULL,
+    "who_id" int NOT NULL,
+    "whom_id" int NOT NULL,
     "issued_at" timestamp NOT NULL DEFAULT (now() at time zone 'utc'),
     FOREIGN KEY ("who_id") REFERENCES "users"("id"),
     FOREIGN KEY ("whom_id") REFERENCES "users"("id")
@@ -92,18 +92,17 @@ COMMENT ON COLUMN "tags"."issued_at" IS 'When a tag was created';
 
 -- Purchases
 CREATE TABLE "purchases" (
-    "id" bigserial,
+    "id" serial,
     "image" varchar(100) NOT NULL,
     "description" varchar(1000) NOT NULL,
-    "user_id" bigint NOT NULL,
+    "user_id" int NOT NULL,
     "issued_at" timestamp  NOT NULL DEFAULT (now() at time zone 'utc'),
-    "tags" integer[] NOT NULL,
-    "brand" integer NOT NULL DEFAULT 0,
+    "tag_ids" integer[] NOT NULL,
+    "brand_id" integer NOT NULL DEFAULT 0,
     "likes_num" integer NOT NULL DEFAULT 0,
     PRIMARY KEY ("id"),
-    FOREIGN KEY ("brand") REFERENCES "brands"("id") ON DELETE SET NULL,
+    FOREIGN KEY ("brand_id") REFERENCES "brands"("id") ON DELETE SET NULL,
     FOREIGN KEY ("user_id") REFERENCES "users"("id")
-    -- TODO add foreign key for tags
 );
 COMMENT ON TABLE "purchases" IS 'All purchases in the system';
 COMMENT ON COLUMN "purchases"."id" IS 'ID of a purchase';
@@ -111,14 +110,14 @@ COMMENT ON COLUMN "purchases"."image" IS 'Path to the location of the image';
 COMMENT ON COLUMN "purchases"."description" IS 'Short description of what exactly was bought and why is it so exciting for a user';
 COMMENT ON COLUMN "purchases"."user_id" IS 'Who posted this purchase';
 COMMENT ON COLUMN "purchases"."issued_at" IS 'When was the purchase posted';
-COMMENT ON COLUMN "purchases"."tags" IS 'Array of tags associated with the purchase';
-COMMENT ON COLUMN "purchases"."brand" IS 'A brand associated with the purchase. A purchase can have no brand';
+COMMENT ON COLUMN "purchases"."tag_ids" IS 'Array of tags associated with the purchase';
+COMMENT ON COLUMN "purchases"."brand_id" IS 'A brand associated with the purchase. A purchase can have no brand';
 COMMENT ON COLUMN "purchases"."likes_num" IS 'Number of likes a purchase received';
 
 -- Likes
 CREATE TABLE "likes" (
-    "purchase_id" bigint NOT NULL,
-    "user_id" bigint NOT NULL,
+    "purchase_id" int NOT NULL,
+    "user_id" int NOT NULL,
     "issued_at" timestamp NOT NULL DEFAULT (now() at time zone 'utc'),
     FOREIGN KEY ("user_id") REFERENCES "users"("id"),
     FOREIGN KEY ("purchase_id") REFERENCES "purchases"("id")
@@ -131,12 +130,12 @@ COMMENT ON COLUMN "likes"."issued_at" IS 'When a like was issued';
 
 -- Questions
 CREATE TABLE "questions" (
-    "id" bigserial,
-    "user_id" bigint NOT NULL,
-    "purchase_id" bigint NOT NULL,
+    "id" serial,
+    "user_id" int NOT NULL,
+    "purchase_id" int NOT NULL,
     "name" varchar(100) NOT NULL,
     "issued_at" timestamp NOT NULL DEFAULT (now() at time zone 'utc'),
-    "votes_num" int DEFAULT 0 NOT NULl,
+    "votes_num" int NOT NULl DEFAULT 0,
     PRIMARY KEY ("id"),
     FOREIGN KEY ("purchase_id") REFERENCES "purchases"("id"),
     FOREIGN KEY ("user_id") REFERENCES "users"("id")
@@ -151,9 +150,9 @@ COMMENT ON COLUMN "questions"."votes_num" IS 'Number of votes that this question
 
 -- Answers
 CREATE TABLE "answers" (
-    "id" bigserial,
-    "user_id" bigint NOT NULL,
-    "question_id" bigint NOT NULL,
+    "id" serial,
+    "user_id" int NOT NULL,
+    "question_id" int NOT NULL,
     "name" varchar(1000) NOT NULL,
     "issued_at" timestamp NOT NULL DEFAULT (now() at time zone 'utc'),
     "votes_num" int NOT NULL DEFAULT 0,
@@ -171,8 +170,8 @@ COMMENT ON COLUMN "answers"."votes_num" IS 'Number of votes, the answer received
 
 -- Votes
 CREATE TABLE "votes_questions" (
-    "user_id" bigint NOT NULL,
-    "question_id" bigint NOT NULL,
+    "user_id" int NOT NULL,
+    "question_id" int NOT NULL,
     "issued_at" timestamp NOT NULL DEFAULT (now() at time zone 'utc'),
     "is_voting_up" boolean NOT NULL,
     FOREIGN KEY ("user_id") REFERENCES "users"("id"),
@@ -185,8 +184,8 @@ COMMENT ON COLUMN "votes_questions"."issued_at" IS 'When was the vote issued';
 COMMENT ON COLUMN "votes_questions"."is_voting_up" IS 'Is person voting up or down';
 
 CREATE TABLE "votes_answers" (
-    "user_id" bigint NOT NULL,
-    "answer_id" bigint NOT NULL,
+    "user_id" int NOT NULL,
+    "answer_id" int NOT NULL,
     "issued_at" timestamp NOT NULL DEFAULT (now() at time zone 'utc'),
     "is_voting_up" boolean NOT NULL,
     FOREIGN KEY ("user_id") REFERENCES "users"("id"),
@@ -200,9 +199,9 @@ COMMENT ON COLUMN "votes_answers"."is_voting_up" IS 'Is person voting up or down
 
 -- information about all events in the system
 CREATE TABLE "timeseries" (
-    "id" bigserial,
+    "id" serial,
     "issued_at" timestamp,
-    "user_id" bigint,
+    "user_id" int,
     "fingerprint" bit(128),
     "lat" real,
     "lng" real,
@@ -214,14 +213,14 @@ CREATE TABLE "timeseries" (
     "ip" cidr,
     "action_type" int,
     "experiment_type" smallint,
-    "user_id2" bigint,
+    "user_id2" int,
     "brand_id" int,
     "tag_id" int,
-    "purchase_id" bigint,
-    "like_id" bigint,
-    "question_id" bigint,
-    "answer_id" bigint,
-    "vote_id" bigint,
+    "purchase_id" int,
+    "like_id" int,
+    "question_id" int,
+    "answer_id" int,
+    "vote_id" int,
     "is_backend" boolean,
     PRIMARY KEY ("id")
 );

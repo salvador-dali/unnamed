@@ -431,7 +431,7 @@ func getPurchases(rows *sql.Rows, err error) ([]*structs.Purchase, error, int) {
 
 func GetUserPurchases(userId int) ([]*structs.Purchase, error, int) {
 	rows, err := Db.Query(`
-		SELECT id, image, description, user_id, issued_at, brand, likes_num
+		SELECT id, image, description, user_id, issued_at, brand_id, likes_num
 		FROM purchases
 		WHERE user_id = $1
 		ORDER BY issued_at DESC`, userId)
@@ -451,7 +451,7 @@ func CreatePurchase(userId int, description string, brandId int, tagsId []int) (
 
 	tagsToInsert := "{" + strings.Join(stringTagIds, ",") + "}"
 	err := Db.QueryRow(`
-		INSERT INTO purchases (image, description, user_id, tags, brand)
+		INSERT INTO purchases (image, description, user_id, tag_ids, brand_id)
 		VALUES ('', $1, $2, $3, $4)
 		RETURNING id`, description, userId, tagsToInsert, brandId).Scan(&id)
 	if err != nil {
@@ -475,7 +475,7 @@ func CreatePurchase(userId int, description string, brandId int, tagsId []int) (
 
 func GetAllPurchases() ([]*structs.Purchase, error, int) {
 	rows, err := Db.Query(`
-		SELECT id, image, description, user_id, issued_at, brand, likes_num
+		SELECT id, image, description, user_id, issued_at, brand_id, likes_num
 		FROM purchases
 		ORDER BY issued_at DESC`)
 
@@ -484,7 +484,7 @@ func GetAllPurchases() ([]*structs.Purchase, error, int) {
 
 func GetAllPurchasesWithBrand(brandId int) ([]*structs.Purchase, error, int) {
 	rows, err := Db.Query(`
-		SELECT id, image, description, user_id, issued_at, brand, likes_num
+		SELECT id, image, description, user_id, issued_at, brand_id, likes_num
 		FROM purchases
 		WHERE brand = $1
 		ORDER BY issued_at DESC`, brandId)
@@ -494,7 +494,7 @@ func GetAllPurchasesWithBrand(brandId int) ([]*structs.Purchase, error, int) {
 
 func GetAllPurchasesWithTag(tagId int) ([]*structs.Purchase, error, int) {
 	rows, err := Db.Query(`
-		SELECT id, image, description, user_id, issued_at, brand, likes_num
+		SELECT id, image, description, user_id, issued_at, brand_id, likes_num
 		FROM purchases
 		WHERE $1 = ANY (tags)
 		ORDER BY issued_at DESC`, tagId)
@@ -505,7 +505,7 @@ func GetAllPurchasesWithTag(tagId int) ([]*structs.Purchase, error, int) {
 func GetPurchase(purchaseId int) (structs.Purchase, error, int) {
 	p := structs.Purchase{}
 	if err := Db.QueryRow(`
-		SELECT image, description, user_id, issued_at, brand, likes_num
+		SELECT image, description, user_id, issued_at, brand_id, likes_num
 		FROM purchases
 		WHERE id = $1`, purchaseId,
 	).Scan(&p.Image, &p.Description, &p.User_id, &p.Issued_at, &p.Brand, &p.Likes_num); err != nil {
