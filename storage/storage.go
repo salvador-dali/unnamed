@@ -52,9 +52,10 @@ func isAffectedOneRow(sqlResult sql.Result) (error, int) {
 func checkSpecificDriverErrors(err error) (error, int) {
 	if errPg, ok := err.(*pq.Error); ok {
 		s := string(errPg.Code)
-		if s == "23505" {
+		switch {
+		case s == "23505":
 			return err, errorCodes.DbDuplicate
-		} else if s == "22001" {
+		case s == "22001":
 			return err, errorCodes.DbValueTooLong
 		}
 	}
@@ -65,56 +66,68 @@ func checkSpecificDriverErrors(err error) (error, int) {
 // --- Brands ---
 
 func GetAllBrands() ([]*structs.Brand, error, int) {
-	brands := []*structs.Brand{}
-
-	rows, err := Db.Query("SELECT id, name FROM brands")
+	rows, err := Db.Query(`
+		SELECT id, name
+		FROM brands`)
 	if err != nil {
-		return brands, err, errorCodes.DbNothingToReport
+		return []*structs.Brand{}, err, errorCodes.DbNothingToReport
 	}
 	defer rows.Close()
 
+	brands := []*structs.Brand{}
 	for rows.Next() {
 		brand := structs.Brand{}
 		if err := rows.Scan(&brand.Id, &brand.Name); err != nil {
-			return brands, err, errorCodes.DbNothingToReport
+			return []*structs.Brand{}, err, errorCodes.DbNothingToReport
 		}
 		brands = append(brands, &brand)
 	}
 
 	if err = rows.Err(); err != nil {
-		return brands, err, errorCodes.DbNothingToReport
+		return []*structs.Brand{}, err, errorCodes.DbNothingToReport
 	}
 
 	return brands, nil, errorCodes.DbNothingToReport
 }
 
-func GetBrand(id int) (structs.Brand, error, int) {
+func GetBrand(brandId int) (structs.Brand, error, int) {
 	brand := structs.Brand{}
-	if err := Db.QueryRow("SELECT name, issued_at FROM brands WHERE id = $1", id).Scan(&brand.Name, &brand.Issued_at); err != nil {
+	if err := Db.QueryRow(`
+		SELECT name, issued_at
+		FROM brands
+		WHERE id = $1`, brandId,
+	).Scan(&brand.Name, &brand.Issued_at); err != nil {
 		if err == sql.ErrNoRows {
-			return brand, err, errorCodes.DbNoElement
+			return structs.Brand{}, err, errorCodes.DbNoElement
 		}
 
-		return brand, err, errorCodes.DbNothingToReport
+		return structs.Brand{}, err, errorCodes.DbNothingToReport
 	}
 
-	brand.Id = id
+	brand.Id = brandId
 	return brand, nil, errorCodes.DbNothingToReport
 }
 
 func CreateBrand(name string) (int, error, int) {
-	id := 0
-	err := Db.QueryRow("INSERT INTO brands (name) VALUES($1) RETURNING id", name).Scan(&id)
+	brandId := 0
+	err := Db.QueryRow(`
+		INSERT INTO brands (name)
+		VALUES ($1)
+		RETURNING id`, name,
+	).Scan(&brandId)
 	if err == nil {
-		return id, nil, errorCodes.DbNothingToReport
+		return brandId, nil, errorCodes.DbNothingToReport
 	}
 
 	err, code := checkSpecificDriverErrors(err)
-	return id, err, code
+	return 0, err, code
 }
 
-func UpdateBrand(id int, name string) (error, int) {
-	sqlResult, err := Db.Exec("UPDATE brands SET name=$1 WHERE id=$2", name, id)
+func UpdateBrand(brandId int, name string) (error, int) {
+	sqlResult, err := Db.Exec(`
+		UPDATE brands
+		SET name = $1
+		WHERE id = $2`, name, brandId)
 	if err, code := checkSpecificDriverErrors(err); err != nil {
 		return err, code
 	}
@@ -125,59 +138,68 @@ func UpdateBrand(id int, name string) (error, int) {
 // --- Tags ---
 
 func GetAllTags() ([]*structs.Tag, error, int) {
-	tags := []*structs.Tag{}
-
-	rows, err := Db.Query("SELECT id, name FROM tags")
+	rows, err := Db.Query(`
+		SELECT id, name
+		FROM tags`)
 	if err != nil {
-		return tags, err, errorCodes.DbNothingToReport
+		return []*structs.Tag{}, err, errorCodes.DbNothingToReport
 	}
 	defer rows.Close()
 
+	tags := []*structs.Tag{}
 	for rows.Next() {
 		tag := structs.Tag{}
 		if err := rows.Scan(&tag.Id, &tag.Name); err != nil {
-			return tags, err, errorCodes.DbNothingToReport
+			return []*structs.Tag{}, err, errorCodes.DbNothingToReport
 		}
 		tags = append(tags, &tag)
 	}
 
 	if err = rows.Err(); err != nil {
-		return tags, err, errorCodes.DbNothingToReport
+		return []*structs.Tag{}, err, errorCodes.DbNothingToReport
 	}
 
 	return tags, nil, errorCodes.DbNothingToReport
 }
 
-func GetTag(id int) (structs.Tag, error, int) {
+func GetTag(tagId int) (structs.Tag, error, int) {
 	tag := structs.Tag{}
-	if err := Db.QueryRow("SELECT name, description, issued_at FROM tags WHERE id = $1", id).Scan(&tag.Name, &tag.Description, &tag.Issued_at); err != nil {
+	if err := Db.QueryRow(`
+		SELECT name, description, issued_at
+		FROM tags
+		WHERE id = $1`, tagId,
+	).Scan(&tag.Name, &tag.Description, &tag.Issued_at); err != nil {
 		if err == sql.ErrNoRows {
-			return tag, err, errorCodes.DbNoElement
+			return structs.Tag{}, err, errorCodes.DbNoElement
 		}
 
-		return tag, err, errorCodes.DbNothingToReport
+		return structs.Tag{}, err, errorCodes.DbNothingToReport
 	}
 
-	tag.Id = id
+	tag.Id = tagId
 	return tag, nil, errorCodes.DbNothingToReport
 }
 
 func CreateTag(name, descr string) (int, error, int) {
-	id := 0
-	err := Db.QueryRow("INSERT INTO tags (name, description) VALUES($1, $2) RETURNING id", name, descr).Scan(&id)
+	tagId := 0
+	err := Db.QueryRow(`
+		INSERT INTO tags (name, description)
+		VALUES ($1, $2)
+		RETURNING id`, name, descr,
+	).Scan(&tagId)
 	if err == nil {
-		return id, nil, errorCodes.DbNothingToReport
+		return tagId, nil, errorCodes.DbNothingToReport
 	}
 
 	err, code := checkSpecificDriverErrors(err)
-	return id, err, code
+	return 0, err, code
 }
 
-func UpdateTag(id int, name, descr string) (error, int) {
+func UpdateTag(tagId int, name, descr string) (error, int) {
 	sqlResult, err := Db.Exec(`
 		UPDATE tags
 		SET name=$1, description=$2
-		WHERE id=$3`, name, descr, id)
+		WHERE id=$3`, name, descr, tagId)
 	if err, code := checkSpecificDriverErrors(err); err != nil {
 		return err, code
 	}
@@ -186,30 +208,34 @@ func UpdateTag(id int, name, descr string) (error, int) {
 }
 
 // validateTags makes sure that all the tags are in the database. psql does not support this http://dba.stackexchange.com/q/60132/15318
-func validateTags(tags []int) (error, int) {
-	if len(tags) == 0 {
+func validateTags(tagIds []int) (error, int) {
+	if len(tagIds) == 0 {
 		return errors.New("no tags"), errorCodes.NoTags
 	}
-	if len(tags) > maxTags {
+	if len(tagIds) > maxTags {
 		return errors.New("too many tags"), errorCodes.TooManyTags
 	}
 
-	for _, v := range tags {
+	for _, v := range tagIds {
 		if v <= 0 {
 			return errors.New("tag is negative"), errorCodes.IdNotNatural
 		}
 	}
 
-	stringTagIds, num := make([]string, len(tags), len(tags)), 0
-	for k, v := range tags {
+	stringTagIds, num := make([]string, len(tagIds), len(tagIds)), 0
+	for k, v := range tagIds {
 		stringTagIds[k] = strconv.Itoa(v)
 	}
 
-	if err := Db.QueryRow("SELECT COUNT(id) FROM tags WHERE id IN ($1)", strings.Join(stringTagIds, ",")).Scan(&num); err != nil {
+	if err := Db.QueryRow(`
+		SELECT COUNT(id)
+		FROM tags
+		WHERE id IN ($1)`, strings.Join(stringTagIds, ","),
+	).Scan(&num); err != nil {
 		return err, errorCodes.DbNothingToReport
 	}
 
-	if num != len(tags) {
+	if num != len(tagIds) {
 		return errors.New("some tags are missing"), errorCodes.DbNotAllTagsCorrect
 	}
 
@@ -218,47 +244,36 @@ func validateTags(tags []int) (error, int) {
 
 // --- Users ---
 
-func GetUser(id int) (structs.User, error, int) {
+func GetUser(userId int) (structs.User, error, int) {
 	user := structs.User{}
 	if err := Db.QueryRow(`
 		SELECT nickname, image, about, expertise, followers_num, following_num, purchases_num, questions_num, answers_num, issued_at
-		FROM users WHERE id = $1`, id).Scan(
-		&user.Nickname, &user.Image, &user.About, &user.Expertise, &user.Followers_num, &user.Following_num,
-		&user.Purchases_num, &user.Questions_num, &user.Answers_num, &user.Issued_at,
+		FROM users WHERE id = $1`, userId,
+	).Scan(
+		&user.Nickname, &user.Image, &user.About, &user.Expertise, &user.Followers_num,
+		&user.Following_num, &user.Purchases_num, &user.Questions_num, &user.Answers_num,
+		&user.Issued_at,
 	); err != nil {
 		if err == sql.ErrNoRows {
-			return user, err, errorCodes.DbNoElement
+			return structs.User{}, err, errorCodes.DbNoElement
 		}
 
-		return user, err, errorCodes.DbNothingToReport
+		return structs.User{}, err, errorCodes.DbNothingToReport
 	}
-	user.Id = id
+	user.Id = userId
 	return user, nil, errorCodes.DbNothingToReport
 }
 
-func UpdateUser(id int, nickname, about string) (error, int) {
-	res, err := Db.Exec(`
+func UpdateUser(userId int, nickname, about string) (error, int) {
+	sqlResult, err := Db.Exec(`
 		UPDATE users
-		SET nickname=$1, about=$2
-		WHERE id=$3", nickname, about, id`)
-	if errPg, ok := err.(*pq.Error); ok {
-		s := string(errPg.Code)
-		if s == "23505" {
-			return err, errorCodes.DbDuplicate
-		} else if s == "22001" {
-			return err, errorCodes.DbValueTooLong
-		}
+		SET nickname = $1, about = $2
+		WHERE id = $3`, nickname, about, userId)
+	if err, code := checkSpecificDriverErrors(err); err != nil {
+		return err, code
 	}
 
-	affect, err := res.RowsAffected()
-	if err != nil {
-		return err, errorCodes.DbNothingToReport
-	}
-
-	if affect == 0 {
-		return errors.New("nothing updated"), errorCodes.DbNothingUpdated
-	}
-	return nil, errorCodes.DbNothingToReport
+	return isAffectedOneRow(sqlResult)
 }
 
 func Follow(whoId, whomId int) (error, int) {
@@ -266,7 +281,9 @@ func Follow(whoId, whomId int) (error, int) {
 		return errors.New("can't follow yourself"), errorCodes.FollowYourself
 	}
 
-	sqlResult, err := Db.Exec("INSERT INTO followers (who_id, whom_id) VALUES($1, $2)", whoId, whomId)
+	sqlResult, err := Db.Exec(`
+		INSERT INTO followers (who_id, whom_id)
+		VALUES ($1, $2)`, whoId, whomId)
 	if err, code := checkSpecificDriverErrors(err); err != nil {
 		return err, code
 	}
@@ -277,7 +294,7 @@ func Follow(whoId, whomId int) (error, int) {
 	sqlResult, err = Db.Exec(`
 		UPDATE users
 		SET followers_num = followers_num + 1
-		WHERE id=$1`, whomId)
+		WHERE id = $1`, whomId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
 		return err, code
 	}
@@ -285,7 +302,7 @@ func Follow(whoId, whomId int) (error, int) {
 	sqlResult, err = Db.Exec(`
 		UPDATE users
 		SET following_num = following_num + 1
-		WHERE id=$1`, whoId)
+		WHERE id = $1`, whoId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
 		return err, code
 	}
@@ -300,7 +317,7 @@ func Unfollow(whoId, whomId int) (error, int) {
 
 	sqlResult, err := Db.Exec(`
 		DELETE FROM followers
-		WHERE who_id=$1 AND whom_id=$2`, whoId, whomId)
+		WHERE who_id = $1 AND whom_id = $2`, whoId, whomId)
 	if err != nil {
 		return err, errorCodes.DbNothingToReport
 	}
@@ -312,7 +329,7 @@ func Unfollow(whoId, whomId int) (error, int) {
 	sqlResult, err = Db.Exec(`
 		UPDATE users
 		SET followers_num = followers_num - 1
-		WHERE id=$1`, whomId)
+		WHERE id = $1`, whomId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
 		return err, code
 	}
@@ -320,7 +337,7 @@ func Unfollow(whoId, whomId int) (error, int) {
 	sqlResult, err = Db.Exec(`
 		UPDATE users
 		SET following_num = following_num - 1
-		WHERE id=$1`, whoId)
+		WHERE id = $1`, whoId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
 		return err, code
 	}
@@ -328,8 +345,7 @@ func Unfollow(whoId, whomId int) (error, int) {
 	return nil, errorCodes.DbNothingToReport
 }
 
-func GetFollowering(id int) ([]*structs.User, error, int) {
-	users := []*structs.User{}
+func GetFollowing(userId int) ([]*structs.User, error, int) {
 	rows, err := Db.Query(`
 		SELECT id, nickname, image
 		FROM users
@@ -337,29 +353,29 @@ func GetFollowering(id int) ([]*structs.User, error, int) {
 			SELECT whom_id
 			FROM followers
 			WHERE who_id = $1
-		)`, id)
+		)`, userId)
 	if err != nil {
-		return users, err, errorCodes.DbNothingToReport
+		return []*structs.User{}, err, errorCodes.DbNothingToReport
 	}
 	defer rows.Close()
 
+	users := []*structs.User{}
 	for rows.Next() {
 		user := structs.User{}
 		if err := rows.Scan(&user.Id, &user.Nickname, &user.Image); err != nil {
-			return users, err, errorCodes.DbNothingToReport
+			return []*structs.User{}, err, errorCodes.DbNothingToReport
 		}
 		users = append(users, &user)
 	}
 
 	if err = rows.Err(); err != nil {
-		return users, err, errorCodes.DbNothingToReport
+		return []*structs.User{}, err, errorCodes.DbNothingToReport
 	}
 
 	return users, nil, errorCodes.DbNothingToReport
 }
 
-func GetFollowers(id int) ([]*structs.User, error, int) {
-	users := []*structs.User{}
+func GetFollowers(userId int) ([]*structs.User, error, int) {
 	rows, err := Db.Query(`
 		SELECT id, nickname, image
 		FROM users
@@ -367,81 +383,64 @@ func GetFollowers(id int) ([]*structs.User, error, int) {
 			SELECT who_id
 			FROM followers
 			WHERE whom_id = $1
-		)`, id)
+		)`, userId)
 	if err != nil {
-		return users, err, errorCodes.DbNothingToReport
+		return []*structs.User{}, err, errorCodes.DbNothingToReport
 	}
 	defer rows.Close()
 
+	users := []*structs.User{}
 	for rows.Next() {
 		user := structs.User{}
 		if err := rows.Scan(&user.Id, &user.Nickname, &user.Image); err != nil {
-			return users, err, errorCodes.DbNothingToReport
+			return []*structs.User{}, err, errorCodes.DbNothingToReport
 		}
 		users = append(users, &user)
 	}
 
 	if err = rows.Err(); err != nil {
-		return users, err, errorCodes.DbNothingToReport
+		return []*structs.User{}, err, errorCodes.DbNothingToReport
 	}
 
 	return users, nil, errorCodes.DbNothingToReport
 }
 
-func GetUserPurchases(id int) ([]*structs.Purchase, error, int) {
-	purchases := []*structs.Purchase{}
-	rows, err := Db.Query(`
-		SELECT id, image, description, issued_at, brand, likes_num
-		FROM purchases
-		WHERE user_id = $1
-		ORDER BY issued_at DESC`, id)
-	if err != nil {
-		return purchases, err, errorCodes.DbNothingToReport
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		p := structs.Purchase{}
-		if err := rows.Scan(&p.Id, &p.Image, &p.Description, &p.Issued_at, &p.Brand, &p.Likes_num); err != nil {
-			return purchases, err, errorCodes.DbNothingToReport
-		}
-		purchases = append(purchases, &p)
-	}
-
-	if err = rows.Err(); err != nil {
-		return purchases, err, errorCodes.DbNothingToReport
-	}
-
-	return purchases, nil, errorCodes.DbNothingToReport
-}
-
 // --- Purchases ---
 
 func getPurchases(rows *sql.Rows, err error) ([]*structs.Purchase, error, int) {
-	purchases := []*structs.Purchase{}
 	if err != nil {
-		return purchases, err, errorCodes.DbNothingToReport
+		return []*structs.Purchase{}, err, errorCodes.DbNothingToReport
 	}
 	defer rows.Close()
 
+	purchases := []*structs.Purchase{}
 	for rows.Next() {
 		p := structs.Purchase{}
 		if err := rows.Scan(&p.Id, &p.Image, &p.Description, &p.User_id, &p.Issued_at, &p.Brand, &p.Likes_num); err != nil {
-			return purchases, err, errorCodes.DbNothingToReport
+			return []*structs.Purchase{}, err, errorCodes.DbNothingToReport
 		}
 		purchases = append(purchases, &p)
 	}
 
 	if err = rows.Err(); err != nil {
-		return purchases, err, errorCodes.DbNothingToReport
+		return []*structs.Purchase{}, err, errorCodes.DbNothingToReport
 	}
 
 	return purchases, nil, errorCodes.DbNothingToReport
 }
 
+func GetUserPurchases(userId int) ([]*structs.Purchase, error, int) {
+	rows, err := Db.Query(`
+		SELECT id, image, description, user_id, issued_at, brand, likes_num
+		FROM purchases
+		WHERE user_id = $1
+		ORDER BY issued_at DESC`, userId)
+
+	return getPurchases(rows, err)
+}
+
 func CreatePurchase(userId int, description string, brandId int, tagsId []int) (int, error, int) {
-	err, code := validateTags(tagsId)
-	if err != nil {
+	if err, code := validateTags(tagsId); err != nil {
 		return 0, err, code
 	}
 
@@ -451,15 +450,15 @@ func CreatePurchase(userId int, description string, brandId int, tagsId []int) (
 	}
 
 	tagsToInsert := "{" + strings.Join(stringTagIds, ",") + "}"
-	err = Db.QueryRow(`
+	err := Db.QueryRow(`
 		INSERT INTO purchases (image, description, user_id, tags, brand)
-		VALUES('', $1, $2, $3, $4)
+		VALUES ('', $1, $2, $3, $4)
 		RETURNING id`, description, userId, tagsToInsert, brandId).Scan(&id)
 	if err != nil {
 		return 0, err, errorCodes.DbNothingToReport
 	}
 
-	if err, code = checkSpecificDriverErrors(err); err != nil {
+	if err, code := checkSpecificDriverErrors(err); err != nil {
 		return 0, err, code
 	}
 
@@ -503,41 +502,50 @@ func GetAllPurchasesWithTag(tagId int) ([]*structs.Purchase, error, int) {
 	return getPurchases(rows, err)
 }
 
-func GetPurchase(id int) (structs.Purchase, error, int) {
+func GetPurchase(purchaseId int) (structs.Purchase, error, int) {
 	p := structs.Purchase{}
 	if err := Db.QueryRow(`
 		SELECT image, description, user_id, issued_at, brand, likes_num
 		FROM purchases
-		WHERE id = $1`, id,
+		WHERE id = $1`, purchaseId,
 	).Scan(&p.Image, &p.Description, &p.User_id, &p.Issued_at, &p.Brand, &p.Likes_num); err != nil {
 		if err == sql.ErrNoRows {
-			return p, err, errorCodes.DbNoElement
+			return structs.Purchase{}, err, errorCodes.DbNoElement
 		}
 
-		return p, err, errorCodes.DbNothingToReport
+		return structs.Purchase{}, err, errorCodes.DbNothingToReport
 	}
 
-	p.Id = id
+	p.Id = purchaseId
 	return p, nil, errorCodes.DbNothingToReport
 }
 
 func whoCreatedPurchaseByPurchaseId(purchaseId int) (int, error, int) {
 	whosePurchase := 0
-	if err := Db.QueryRow("SELECT user_id FROM purchases WHERE id = $1", purchaseId).Scan(&whosePurchase); err != nil {
+	if err := Db.QueryRow(`
+		SELECT user_id
+		FROM purchases
+		WHERE id = $1`, purchaseId,
+	).Scan(&whosePurchase); err != nil {
 		if err == sql.ErrNoRows {
-			return whosePurchase, err, errorCodes.DbNoPurchase
+			return 0, err, errorCodes.DbNoPurchase
 		}
 
-		return whosePurchase, err, errorCodes.DbNothingToReport
+		return 0, err, errorCodes.DbNothingToReport
 	}
+
 	return whosePurchase, nil, errorCodes.DbNothingToReport
 }
 
 func whoCreatedPurchaseByQuestionId(questionId int) (int, error, int) {
 	whosePurchase := 0
 	if err := Db.QueryRow(`
-		SELECT user_id FROM purchases WHERE id = (
-			SELECT purchase_id FROM questions WHERE id = $1
+		SELECT user_id
+		FROM purchases
+		WHERE id = (
+			SELECT purchase_id
+			FROM questions
+			WHERE id = $1
 		)`, questionId).Scan(&whosePurchase); err != nil {
 		if err == sql.ErrNoRows {
 			return 0, err, errorCodes.DbNoPurchaseForQuestion
@@ -545,6 +553,7 @@ func whoCreatedPurchaseByQuestionId(questionId int) (int, error, int) {
 
 		return 0, err, errorCodes.DbNothingToReport
 	}
+
 	return whosePurchase, nil, errorCodes.DbNothingToReport
 }
 
@@ -560,7 +569,9 @@ func LikePurchase(purchaseId, userId int) (error, int) {
 	}
 
 	// now allow the person to vote for someones else purchase
-	sqlResult, err := Db.Exec("INSERT INTO likes (purchase_id, user_id) VALUES($1, $2)", purchaseId, userId)
+	sqlResult, err := Db.Exec(`
+		INSERT INTO likes (purchase_id, user_id)
+		VALUES ($1, $2)`, purchaseId, userId)
 	if err, code := checkSpecificDriverErrors(err); err != nil {
 		return err, code
 	}
@@ -571,7 +582,7 @@ func LikePurchase(purchaseId, userId int) (error, int) {
 	sqlResult, err = Db.Exec(`
 		UPDATE purchases
 		SET likes_num = likes_num + 1
-		WHERE id= $1`, purchaseId)
+		WHERE id = $1`, purchaseId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
 		return err, code
 	}
@@ -590,7 +601,9 @@ func UnlikePurchase(purchaseId, userId int) (error, int) {
 		return errors.New("can't vote for own purchase"), errorCodes.DbVoteForOwnStuff
 	}
 
-	sqlResult, err := Db.Exec("DELETE FROM likes WHERE purchase_id = $1 AND user_id = $2", purchaseId, userId)
+	sqlResult, err := Db.Exec(`
+		DELETE FROM likes
+		WHERE purchase_id = $1 AND user_id = $2`, purchaseId, userId)
 	if err, code := checkSpecificDriverErrors(err); err != nil {
 		return err, code
 	}
@@ -601,7 +614,7 @@ func UnlikePurchase(purchaseId, userId int) (error, int) {
 	sqlResult, err = Db.Exec(`
 		UPDATE purchases
 		SET likes_num = likes_num - 1
-		WHERE id= $1`, purchaseId)
+		WHERE id = $1`, purchaseId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
 		return err, code
 	}
@@ -610,35 +623,35 @@ func UnlikePurchase(purchaseId, userId int) (error, int) {
 }
 
 func AskQuestion(purchaseId, userId int, question string) (int, error, int) {
-	id := 0
 	whosePurchase, err, code := whoCreatedPurchaseByPurchaseId(purchaseId)
 	if err != nil {
-		return id, err, code
+		return 0, err, code
 	}
 
 	if whosePurchase == userId {
-		return id, errors.New("can't ask question about your stuff"), errorCodes.DbAskAboutOwnStuff
+		return 0, errors.New("can't ask question about your stuff"), errorCodes.DbAskAboutOwnStuff
 	}
 
+	questionId := 0
 	err = Db.QueryRow(`
 		INSERT INTO questions (user_id, purchase_id, name)
-		VALUES($1, $2, $3)
+		VALUES ($1, $2, $3)
 		RETURNING id`, userId, purchaseId, question,
-	).Scan(&id)
+	).Scan(&questionId)
 	if err != nil {
 		err, code := checkSpecificDriverErrors(err)
-		return id, err, code
+		return 0, err, code
 	}
 
 	sqlResult, err := Db.Exec(`
 		UPDATE users
 		SET questions_num = questions_num + 1
-		WHERE id= $1`, userId)
+		WHERE id = $1`, userId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		return id, err, code
+		return 0, err, code
 	}
 
-	return id, nil, errorCodes.DbNothingToReport
+	return questionId, nil, errorCodes.DbNothingToReport
 }
 
 // --- Answers ---
@@ -652,15 +665,15 @@ func AnswerQuestion(questionId, userId int, answer string) (int, error, int) {
 		return 0, errors.New("can asnwer only questions regarding your purchase"), errorCodes.DbCannotAnswerOtherPurchase
 	}
 
-	id := 0
+	answerId := 0
 	err = Db.QueryRow(`
 		INSERT INTO answers (user_id, question_id, name)
-		VALUES($1, $2, $3)
+		VALUES ($1, $2, $3)
 		RETURNING id`, userId, questionId, answer,
-	).Scan(&id)
+	).Scan(&answerId)
 	if err != nil {
 		err, code := checkSpecificDriverErrors(err)
-		return id, err, code
+		return 0, err, code
 	}
 
 	sqlResult, err := Db.Exec(`
@@ -668,8 +681,8 @@ func AnswerQuestion(questionId, userId int, answer string) (int, error, int) {
 		SET answers_num = answers_num + 1
 		WHERE id = $1`, userId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		return id, err, code
+		return 0, err, code
 	}
 
-	return id, nil, errorCodes.DbNothingToReport
+	return answerId, nil, errorCodes.DbNothingToReport
 }

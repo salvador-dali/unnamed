@@ -353,7 +353,7 @@ func GetFollowing(w http.ResponseWriter, r *http.Request, ps map[string]string) 
 		return
 	}
 
-	users, err, reason := storage.GetFollowering(id)
+	users, err, reason := storage.GetFollowing(id)
 	if isErrorReasonSerious(err, reason, w) {
 		return
 	}
