@@ -68,7 +68,8 @@ func checkSpecificDriverErrors(err error) (error, int) {
 func GetAllBrands() ([]*structs.Brand, error, int) {
 	rows, err := Db.Query(`
 		SELECT id, name
-		FROM brands`)
+		FROM brands
+		WHERE id > 0`)
 	if err != nil {
 		return []*structs.Brand{}, err, errorCodes.DbNothingToReport
 	}
@@ -91,6 +92,10 @@ func GetAllBrands() ([]*structs.Brand, error, int) {
 }
 
 func GetBrand(brandId int) (structs.Brand, error, int) {
+	if brandId <= 0 {
+		return structs.Brand{}, errors.New("Not positive id"), errorCodes.DbNoElement
+	}
+
 	brand := structs.Brand{}
 	if err := Db.QueryRow(`
 		SELECT name, issued_at
