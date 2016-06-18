@@ -206,8 +206,8 @@ func CreateTag(name, descr string) (int, error, int) {
 func UpdateTag(tagId int, name, descr string) (error, int) {
 	sqlResult, err := Db.Exec(`
 		UPDATE tags
-		SET name=$1, description=$2
-		WHERE id=$3`, name, descr, tagId)
+		SET name = $1, description = $2
+		WHERE id = $3`, name, descr, tagId)
 	if err, code := checkSpecificDriverErrors(err); err != nil {
 		return err, code
 	}

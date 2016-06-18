@@ -312,3 +312,47 @@ func TestCreateTag(t *testing.T) {
 		t.Errorf("Should have 11 tags, have %v", len(tags))
 	}
 }
+
+func TestUpdateTag(t *testing.T) {
+	type testEl struct {
+		id           int
+		name         string
+		descr        string
+		res_is_error bool
+		res_code     int
+	}
+
+	randStr := randomString(40)
+	table := []testEl{
+		testEl{1, randomString(1), randomString(1), false, errorCodes.DbNothingToReport},
+		testEl{2, "car", randomString(159), true, errorCodes.DbDuplicate},
+		testEl{3, "phone", randomString(10), true, errorCodes.DbDuplicate},
+		testEl{2, randomString(34), randomString(999), false, errorCodes.DbNothingToReport},
+		testEl{3, randStr, randomString(989), false, errorCodes.DbNothingToReport},
+		testEl{4, randStr, randomString(123), true, errorCodes.DbDuplicate},
+		testEl{2, randomString(41), randomString(23), true, errorCodes.DbValueTooLong},
+		testEl{5, randomString(31), randomString(1001), true, errorCodes.DbValueTooLong},
+		testEl{0, randomString(10), randomString(10), true, errorCodes.DbNothingUpdated},
+		testEl{-1, randomString(10), randomString(10), true, errorCodes.DbNothingUpdated},
+		testEl{43, randomString(10), randomString(10), true, errorCodes.DbNothingUpdated},
+		testEl{123, randomString(10), randomString(10), true, errorCodes.DbNothingUpdated},
+	}
+
+	for _, val := range table {
+		err, code := UpdateTag(val.id, val.name, val.descr)
+		if val.res_is_error {
+			if err == nil || code != val.res_code {
+				t.Errorf("The tag %v should not be updated, but it was: %v, %v", val.id, err, code)
+			}
+		} else {
+			if err != nil || code != val.res_code {
+				t.Errorf("The tag %v should have been updated, but was not", val.id)
+			}
+
+			tag, _, _ := GetTag(val.id)
+			if tag.Name != val.name || tag.Description != val.descr {
+				t.Errorf("Expected value %v after update, got %v", val.name, tag.Name)
+			}
+		}
+	}
+}
