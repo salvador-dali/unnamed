@@ -129,6 +129,9 @@ func CreateBrand(name string) (int, error, int) {
 }
 
 func UpdateBrand(brandId int, name string) (error, int) {
+	if brandId <= 0 {
+		return errors.New("nothing updated"), errorCodes.DbNothingUpdated
+	}
 	sqlResult, err := Db.Exec(`
 		UPDATE brands
 		SET name = $1

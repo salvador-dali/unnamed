@@ -5,21 +5,21 @@ import (
 	"../../unnamed/errorCodes"
 	"../../unnamed/structs"
 	"log"
+	"math/rand"
 	"os"
 	"os/exec"
 	"testing"
-	"math/rand"
 	"time"
 )
 
 const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 
 func randomString(n int) string {
-    b := make([]byte, n)
-    for i := range b {
-        b[i] = letterBytes[rand.Intn(len(letterBytes))]
-    }
-    return string(b)
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Intn(len(letterBytes))]
+	}
+	return string(b)
 }
 
 func setup() {
@@ -86,7 +86,7 @@ func TestGetBrand(t *testing.T) {
 		0:   testEl{true, errorCodes.DbNoElement, structs.Brand{}},
 		-1:  testEl{true, errorCodes.DbNoElement, structs.Brand{}},
 		123: testEl{true, errorCodes.DbNoElement, structs.Brand{}},
-		43: testEl{true, errorCodes.DbNoElement, structs.Brand{}},
+		43:  testEl{true, errorCodes.DbNoElement, structs.Brand{}},
 	}
 
 	for id, val := range table {
@@ -110,7 +110,7 @@ func TestGetBrand(t *testing.T) {
 
 func TestCreateBrand(t *testing.T) {
 	type testEl struct {
-		name string
+		name   string
 		res_id int
 	}
 
@@ -145,7 +145,7 @@ func TestCreateBrand(t *testing.T) {
 
 	for _, val := range wrong_table {
 		id, err, code := CreateBrand(val.name)
-		if err == nil || id != 0 || code !=val.res_id{
+		if err == nil || id != 0 || code != val.res_id {
 			t.Error("New brand should not be created")
 		}
 	}
@@ -153,5 +153,48 @@ func TestCreateBrand(t *testing.T) {
 	brands, _, _ := GetAllBrands()
 	if len(brands) != 10 {
 		t.Error("It looks like a couple of brands were created, but they should not")
+	}
+}
+
+func TestUpdateBrand(t *testing.T) {
+	type testEl struct {
+		id           int
+		name         string
+		res_is_error bool
+		res_code     int
+	}
+
+	randStr := randomString(40)
+	table := []testEl{
+		testEl{1, randomString(1), false, errorCodes.DbNothingToReport},
+		testEl{2, "Playstation", true, errorCodes.DbDuplicate},
+		testEl{3, "Ferrari", true, errorCodes.DbDuplicate},
+		testEl{2, randomString(6), false, errorCodes.DbNothingToReport},
+		testEl{3, randStr, false, errorCodes.DbNothingToReport},
+		testEl{4, randStr, true, errorCodes.DbDuplicate},
+		testEl{2, randomString(41), true, errorCodes.DbValueTooLong},
+		testEl{5, randomString(141), true, errorCodes.DbValueTooLong},
+		testEl{0, randomString(10), true, errorCodes.DbNothingUpdated},
+		testEl{-1, randomString(10), true, errorCodes.DbNothingUpdated},
+		testEl{43, randomString(10), true, errorCodes.DbNothingUpdated},
+		testEl{123, randomString(10), true, errorCodes.DbNothingUpdated},
+	}
+
+	for _, val := range table {
+		err, code := UpdateBrand(val.id, val.name)
+		if val.res_is_error {
+			if err == nil || code != val.res_code {
+				t.Errorf("The brand %v should not be updated, but it was: %v, %v", val.id, err, code)
+			}
+		} else {
+			if err != nil || code != val.res_code {
+				t.Errorf("The brand %v should have been updated, but was not", val.id)
+			}
+
+			brand, _, _ := GetBrand(val.id)
+			if brand.Name != val.name {
+				t.Errorf("Expected value %v after update, got %v", val.name, brand.Name)
+			}
+		}
 	}
 }
