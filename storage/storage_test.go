@@ -8,7 +8,19 @@ import (
 	"os"
 	"os/exec"
 	"testing"
+	"math/rand"
+	"time"
 )
+
+const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+
+func randomString(n int) string {
+    b := make([]byte, n)
+    for i := range b {
+        b[i] = letterBytes[rand.Intn(len(letterBytes))]
+    }
+    return string(b)
+}
 
 func setup() {
 	// prepare database by creating tables and populating it with data
@@ -22,6 +34,9 @@ func setup() {
 	// initialize Db connection
 	cnf := config.Init()
 	Init(cnf.DbUser, cnf.DbPass, cnf.DbHost, cnf.DbName, cnf.DbPort)
+
+	// initialize randomness
+	rand.Seed(time.Now().UTC().UnixNano())
 }
 
 // Setup and db.close will be called before and after each test http://stackoverflow.com/a/34102842/1090562
@@ -71,6 +86,7 @@ func TestGetBrand(t *testing.T) {
 		0:   testEl{true, errorCodes.DbNoElement, structs.Brand{}},
 		-1:  testEl{true, errorCodes.DbNoElement, structs.Brand{}},
 		123: testEl{true, errorCodes.DbNoElement, structs.Brand{}},
+		43: testEl{true, errorCodes.DbNoElement, structs.Brand{}},
 	}
 
 	for id, val := range table {
@@ -89,5 +105,53 @@ func TestGetBrand(t *testing.T) {
 		if brand.Id != 0 && brand.Issued_at == nil {
 			t.Errorf("Wrong result for case %v: Real Brand has an Issued_at date", id)
 		}
+	}
+}
+
+func TestCreateBrand(t *testing.T) {
+	type testEl struct {
+		name string
+		res_id int
+	}
+
+	correct_table := []testEl{
+		testEl{randomString(1), 6},
+		testEl{randomString(6), 7},
+		testEl{randomString(16), 8},
+		testEl{randomString(40), 9},
+		testEl{randomString(39), 10},
+	}
+
+	for _, val := range correct_table {
+		id, err, code := CreateBrand(val.name)
+		if id != val.res_id || err != nil || code != errorCodes.DbNothingToReport {
+			t.Errorf("Expected to create a brand. Got %v %v %v", id, err, code)
+		}
+
+		brand, err, code := GetBrand(id)
+		if brand.Name != val.name {
+			t.Errorf("Expected to create a brand with a name %v, got %v", brand.Name, val.name)
+		}
+	}
+
+	wrong_table := []testEl{
+		testEl{randomString(41), errorCodes.DbValueTooLong},
+		testEl{randomString(56), errorCodes.DbValueTooLong},
+		testEl{correct_table[0].name, errorCodes.DbDuplicate},
+		testEl{correct_table[1].name, errorCodes.DbDuplicate},
+		testEl{correct_table[2].name, errorCodes.DbDuplicate},
+		testEl{correct_table[3].name, errorCodes.DbDuplicate},
+	}
+
+	for _, val := range wrong_table {
+		id, err, code := CreateBrand(val.name)
+		if err == nil || id != 0 || code !=val.res_id{
+			t.Error("New brand should not be created")
+		}
+	}
+
+	brands, _, _ := GetAllBrands()
+	if len(brands) != 10 {
+		t.Error("It looks like a couple of brands were created, but they should not")
 	}
 }
