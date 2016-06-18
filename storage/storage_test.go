@@ -1,3 +1,5 @@
+// In this file there will be a lot of booleans represented as 0 or 1, also some names
+// would be very short. This is done to have tests aligned. (true and false are of different length)
 package storage
 
 import (
@@ -13,13 +15,35 @@ import (
 )
 
 const (
-	letterBytes  = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	maxLenSmall  = 40
-	maxLenMedium = 100
-	maxLenBig    = 1000
+	letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	maxLenS     = 40
+	maxLenB     = 1000
 )
 
-func randomString(n int) string {
+// randomString generates a random string of a specific length
+// This length can be bigger or smaller than you predefined. Also you can ask it to be on the edge
+// of the allowed values. For example if you want a value bigger than X, it will generate you
+// some strings of the length X + 1 or bigger (if on the edge it will be only X + 1)
+// If you want smaller than X, it will generate you anything less or equal to X. If on the edge, it
+// will be equal to X
+func randomString(length int, isBiggerI, isEdgeCaseI int) string {
+	n := 0
+	isEdgeCase := isEdgeCaseI == 1
+	isBigger := isBiggerI == 1
+	if isEdgeCase {
+		if isBigger {
+			n = length + 1
+		} else {
+			n = length
+		}
+	} else {
+		if isBigger {
+			n = length + 1 + rand.Intn(10)
+		} else {
+			n = length - 1 - rand.Intn(length-1)
+		}
+	}
+
 	b := make([]byte, n)
 	for i := range b {
 		b[i] = letterBytes[rand.Intn(len(letterBytes))]
@@ -52,6 +76,42 @@ func TestMain(m *testing.M) {
 	os.Exit(retCode)
 }
 
+func TestRandomString(t *testing.T) {
+	length := 50
+
+	// bigger, not on the edge
+	for i := 0; i < 300; i++ {
+		s := randomString(length, 1, 0)
+		if len(s) <= length {
+			t.Errorf("String should be bigger %v, got %v. IMPORTANT function is random, investigate, do not blindly rerun", length, len(s))
+		}
+	}
+
+	// bigger, on the edge
+	for i := 0; i < 20; i++ {
+		s := randomString(length, 1, 1)
+		if len(s) != length+1 {
+			t.Errorf("String should be equal to %v, got %v. IMPORTANT function is random, investigate, do not blindly rerun", length+1, len(s))
+		}
+	}
+
+	// smaller, not on the edge
+	for i := 0; i < 300; i++ {
+		s := randomString(length, 0, 0)
+		if len(s) > length {
+			t.Errorf("String should be smaller or equal to %v, got %v. IMPORTANT function is random, investigate, do not blindly rerun", length, len(s))
+		}
+	}
+
+	// smaller, on the edge
+	for i := 0; i < 20; i++ {
+		s := randomString(length, 0, 1)
+		if len(s) != length {
+			t.Errorf("String should be equal to %v, got %v. IMPORTANT function is random, investigate, do not blindly rerun", length, len(s))
+		}
+	}
+}
+
 // --- Brands tests ---
 func TestGetAllBrands(t *testing.T) {
 	brands, err, code := GetAllBrands()
@@ -79,29 +139,29 @@ func TestGetAllBrands(t *testing.T) {
 
 func TestGetBrand(t *testing.T) {
 	type testEl struct {
-		res_is_error bool
+		res_is_error int
 		res_code     int
 		res          structs.Brand
 	}
 
 	table := map[int]testEl{
-		1:   testEl{false, errorCodes.DbNothingToReport, structs.Brand{1, "Apple", nil}},
-		2:   testEl{false, errorCodes.DbNothingToReport, structs.Brand{2, "BMW", nil}},
-		3:   testEl{false, errorCodes.DbNothingToReport, structs.Brand{3, "Playstation", nil}},
-		5:   testEl{false, errorCodes.DbNothingToReport, structs.Brand{5, "Gucci", nil}},
-		0:   testEl{true, errorCodes.DbNoElement, structs.Brand{}},
-		-1:  testEl{true, errorCodes.DbNoElement, structs.Brand{}},
-		123: testEl{true, errorCodes.DbNoElement, structs.Brand{}},
-		43:  testEl{true, errorCodes.DbNoElement, structs.Brand{}},
+		1:   testEl{0, errorCodes.DbNothingToReport, structs.Brand{1, "Apple", nil}},
+		2:   testEl{0, errorCodes.DbNothingToReport, structs.Brand{2, "BMW", nil}},
+		3:   testEl{0, errorCodes.DbNothingToReport, structs.Brand{3, "Playstation", nil}},
+		5:   testEl{0, errorCodes.DbNothingToReport, structs.Brand{5, "Gucci", nil}},
+		0:   testEl{1, errorCodes.DbNoElement, structs.Brand{}},
+		-1:  testEl{1, errorCodes.DbNoElement, structs.Brand{}},
+		123: testEl{1, errorCodes.DbNoElement, structs.Brand{}},
+		43:  testEl{1, errorCodes.DbNoElement, structs.Brand{}},
 	}
 
 	for id, val := range table {
 		brand, err, code := GetBrand(id)
-		if val.res_is_error && err == nil {
+		if val.res_is_error == 1 && err == nil {
 			t.Errorf("Wrong result for case %v. Expected error, did not get it", id)
 		}
 
-		if !val.res_is_error && err != nil {
+		if val.res_is_error == 0 && err != nil {
 			t.Errorf("Wrong result for case %v. Expected nil, got error", id)
 		}
 
@@ -121,16 +181,17 @@ func TestCreateBrand(t *testing.T) {
 	}
 
 	correct_table := []testEl{
-		testEl{randomString(1), 6},
-		testEl{randomString(6), 7},
-		testEl{randomString(16), 8},
-		testEl{randomString(maxLenSmall), 9},
-		testEl{randomString(39), 10},
+		testEl{randomString(maxLenS, 0, 1), 6},
+		testEl{randomString(maxLenS, 0, 0), 7},
+		testEl{randomString(maxLenS, 0, 0), 8},
+		testEl{randomString(maxLenS, 0, 0), 9},
+		testEl{randomString(maxLenS, 0, 0), 10},
 	}
 
 	wrong_table := []testEl{
-		testEl{randomString(maxLenSmall + 1), errorCodes.DbValueTooLong},
-		testEl{randomString(56), errorCodes.DbValueTooLong},
+		testEl{randomString(maxLenS, 1, 1), errorCodes.DbValueTooLong},
+		testEl{randomString(maxLenS, 1, 0), errorCodes.DbValueTooLong},
+		testEl{randomString(maxLenS, 1, 0), errorCodes.DbValueTooLong},
 		testEl{correct_table[0].name, errorCodes.DbDuplicate},
 		testEl{correct_table[1].name, errorCodes.DbDuplicate},
 		testEl{correct_table[2].name, errorCodes.DbDuplicate},
@@ -166,29 +227,28 @@ func TestUpdateBrand(t *testing.T) {
 	type testEl struct {
 		id           int
 		name         string
-		res_is_error bool
+		res_is_error int
 		res_code     int
 	}
 
-	randStr := randomString(maxLenSmall)
+	randStr := randomString(maxLenS, 0, 0)
 	table := []testEl{
-		testEl{1, randomString(1), false, errorCodes.DbNothingToReport},
-		testEl{2, "Playstation", true, errorCodes.DbDuplicate},
-		testEl{3, "Ferrari", true, errorCodes.DbDuplicate},
-		testEl{2, randomString(6), false, errorCodes.DbNothingToReport},
-		testEl{3, randStr, false, errorCodes.DbNothingToReport},
-		testEl{4, randStr, true, errorCodes.DbDuplicate},
-		testEl{2, randomString(maxLenSmall + 1), true, errorCodes.DbValueTooLong},
-		testEl{5, randomString(141), true, errorCodes.DbValueTooLong},
-		testEl{0, randomString(10), true, errorCodes.DbNothingUpdated},
-		testEl{-1, randomString(10), true, errorCodes.DbNothingUpdated},
-		testEl{43, randomString(10), true, errorCodes.DbNothingUpdated},
-		testEl{123, randomString(10), true, errorCodes.DbNothingUpdated},
+		testEl{2, "Playstation", 1, errorCodes.DbDuplicate},
+		testEl{3, "Ferrari", 1, errorCodes.DbDuplicate},
+		testEl{3, randStr, 0, errorCodes.DbNothingToReport},
+		testEl{4, randStr, 1, errorCodes.DbDuplicate},
+		testEl{1, randomString(maxLenS, 0, 0), 0, errorCodes.DbNothingToReport},
+		testEl{2, randomString(maxLenS, 0, 1), 0, errorCodes.DbNothingToReport},
+		testEl{2, randomString(maxLenS, 1, 0), 1, errorCodes.DbValueTooLong},
+		testEl{5, randomString(maxLenS, 1, 1), 1, errorCodes.DbValueTooLong},
+		testEl{0, randomString(maxLenS, 0, 0), 1, errorCodes.DbNothingUpdated},
+		testEl{-1, randomString(maxLenS, 0, 0), 1, errorCodes.DbNothingUpdated},
+		testEl{43, randomString(maxLenS, 0, 0), 1, errorCodes.DbNothingUpdated},
 	}
 
 	for _, val := range table {
 		err, code := UpdateBrand(val.id, val.name)
-		if val.res_is_error {
+		if val.res_is_error == 1 {
 			if err == nil || code != val.res_code {
 				t.Errorf("The brand %v should not be updated, but it was: %v, %v", val.id, err, code)
 			}
@@ -233,29 +293,29 @@ func TestGetAllTags(t *testing.T) {
 
 func TestGetTag(t *testing.T) {
 	type testEl struct {
-		res_is_error bool
+		res_is_error int
 		res_code     int
 		res          structs.Tag
 	}
 
 	table := map[int]testEl{
-		1:   testEl{false, errorCodes.DbNothingToReport, structs.Tag{1, "dress", "nice dresses", nil}},
-		2:   testEl{false, errorCodes.DbNothingToReport, structs.Tag{2, "drone", "cool flying machines that do stuff", nil}},
-		3:   testEl{false, errorCodes.DbNothingToReport, structs.Tag{3, "cosmetics", "Known as make-up, are substances or products used to enhance the appearance or scent of the body", nil}},
-		6:   testEl{false, errorCodes.DbNothingToReport, structs.Tag{6, "phone", "People use it to speak with other people", nil}},
-		0:   testEl{true, errorCodes.DbNoElement, structs.Tag{}},
-		-1:  testEl{true, errorCodes.DbNoElement, structs.Tag{}},
-		123: testEl{true, errorCodes.DbNoElement, structs.Tag{}},
-		43:  testEl{true, errorCodes.DbNoElement, structs.Tag{}},
+		1:   testEl{0, errorCodes.DbNothingToReport, structs.Tag{1, "dress", "nice dresses", nil}},
+		2:   testEl{0, errorCodes.DbNothingToReport, structs.Tag{2, "drone", "cool flying machines that do stuff", nil}},
+		3:   testEl{0, errorCodes.DbNothingToReport, structs.Tag{3, "cosmetics", "Known as make-up, are substances or products used to enhance the appearance or scent of the body", nil}},
+		6:   testEl{0, errorCodes.DbNothingToReport, structs.Tag{6, "phone", "People use it to speak with other people", nil}},
+		0:   testEl{1, errorCodes.DbNoElement, structs.Tag{}},
+		-1:  testEl{1, errorCodes.DbNoElement, structs.Tag{}},
+		123: testEl{1, errorCodes.DbNoElement, structs.Tag{}},
+		43:  testEl{1, errorCodes.DbNoElement, structs.Tag{}},
 	}
 
 	for id, val := range table {
 		tag, err, code := GetTag(id)
-		if val.res_is_error && err == nil {
+		if val.res_is_error == 1 && err == nil {
 			t.Errorf("Wrong result for case %v. Expected error, did not get it", id)
 		}
 
-		if !val.res_is_error && err != nil {
+		if val.res_is_error == 0 && err != nil {
 			t.Errorf("Wrong result for case %v. Expected nil, got error", id)
 		}
 
@@ -276,17 +336,17 @@ func TestCreateTag(t *testing.T) {
 	}
 
 	correct_table := []testEl{
-		testEl{randomString(1), randomString(23), 7},
-		testEl{randomString(6), randomString(245), 8},
-		testEl{randomString(16), randomString(643), 9},
-		testEl{randomString(maxLenSmall), randomString(maxLenBig), 10},
-		testEl{randomString(39), randomString(1), 11},
+		testEl{randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 7},
+		testEl{randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 1), 8},
+		testEl{randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 0), 9},
+		testEl{randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 1), 10},
 	}
 
 	wrong_table := []testEl{
-		testEl{randomString(maxLenSmall + 1), randomString(41), errorCodes.DbValueTooLong},
-		testEl{randomString(6), randomString(maxLenBig + 1), errorCodes.DbValueTooLong},
-		testEl{randomString(64), randomString(1201), errorCodes.DbValueTooLong},
+		testEl{randomString(maxLenS, 1, 0), randomString(maxLenB, 1, 0), errorCodes.DbValueTooLong},
+		testEl{randomString(maxLenS, 1, 0), randomString(maxLenB, 1, 1), errorCodes.DbValueTooLong},
+		testEl{randomString(maxLenS, 1, 1), randomString(maxLenB, 1, 0), errorCodes.DbValueTooLong},
+		testEl{randomString(maxLenS, 1, 1), randomString(maxLenB, 1, 1), errorCodes.DbValueTooLong},
 		testEl{correct_table[0].name, "", errorCodes.DbDuplicate},
 		testEl{correct_table[1].name, "", errorCodes.DbDuplicate},
 		testEl{correct_table[2].name, "", errorCodes.DbDuplicate},
@@ -313,7 +373,7 @@ func TestCreateTag(t *testing.T) {
 	}
 
 	tags, _, _ := GetAllTags()
-	if len(tags) != 11 {
+	if len(tags) != 10 {
 		t.Errorf("Should have 11 tags, have %v", len(tags))
 	}
 }
@@ -323,30 +383,32 @@ func TestUpdateTag(t *testing.T) {
 		id           int
 		name         string
 		descr        string
-		res_is_error bool
+		res_is_error int
 		res_code     int
 	}
 
-	randStr := randomString(maxLenSmall)
+	randStr := randomString(maxLenS, 0, 0)
 	table := []testEl{
-		testEl{1, randomString(1), randomString(1), false, errorCodes.DbNothingToReport},
-		testEl{2, "car", randomString(159), true, errorCodes.DbDuplicate},
-		testEl{3, "phone", randomString(10), true, errorCodes.DbDuplicate},
-		testEl{2, randomString(34), randomString(999), false, errorCodes.DbNothingToReport},
-		testEl{3, randStr, randomString(989), false, errorCodes.DbNothingToReport},
-		testEl{4, randStr, randomString(123), true, errorCodes.DbDuplicate},
-		testEl{2, randomString(maxLenSmall + 1), randomString(23), true, errorCodes.DbValueTooLong},
-		testEl{5, randomString(31), randomString(maxLenBig + 1), true, errorCodes.DbValueTooLong},
-		testEl{5, randomString(maxLenSmall + 1), randomString(maxLenBig + 1), true, errorCodes.DbValueTooLong},
-		testEl{0, randomString(10), randomString(10), true, errorCodes.DbNothingUpdated},
-		testEl{-1, randomString(10), randomString(10), true, errorCodes.DbNothingUpdated},
-		testEl{43, randomString(10), randomString(10), true, errorCodes.DbNothingUpdated},
-		testEl{123, randomString(10), randomString(10), true, errorCodes.DbNothingUpdated},
+		testEl{2, "car", randomString(maxLenB, 0, 0), 1, errorCodes.DbDuplicate},
+		testEl{3, "phone", randomString(maxLenB, 0, 0), 1, errorCodes.DbDuplicate},
+		testEl{3, randStr, randomString(maxLenB, 0, 0), 0, errorCodes.DbNothingToReport},
+		testEl{4, randStr, randomString(maxLenB, 0, 0), 1, errorCodes.DbDuplicate},
+		testEl{1, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 0, errorCodes.DbNothingToReport},
+		testEl{2, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 1), 0, errorCodes.DbNothingToReport},
+		testEl{2, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 0), 0, errorCodes.DbNothingToReport},
+		testEl{2, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 1), 0, errorCodes.DbNothingToReport},
+		testEl{5, randomString(maxLenS, 1, 1), randomString(maxLenB, 0, 0), 1, errorCodes.DbValueTooLong},
+		testEl{5, randomString(maxLenS, 1, 0), randomString(maxLenB, 0, 0), 1, errorCodes.DbValueTooLong},
+		testEl{5, randomString(maxLenS, 0, 0), randomString(maxLenB, 1, 1), 1, errorCodes.DbValueTooLong},
+		testEl{5, randomString(maxLenS, 0, 0), randomString(maxLenB, 1, 0), 1, errorCodes.DbValueTooLong},
+		testEl{0, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 1, errorCodes.DbNothingUpdated},
+		testEl{-1, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 1, errorCodes.DbNothingUpdated},
+		testEl{43, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 1, errorCodes.DbNothingUpdated},
 	}
 
 	for _, val := range table {
 		err, code := UpdateTag(val.id, val.name, val.descr)
-		if val.res_is_error {
+		if val.res_is_error == 1 {
 			if err == nil || code != val.res_code {
 				t.Errorf("The tag %v should not be updated, but it was: %v, %v", val.id, err, code)
 			}
@@ -366,27 +428,27 @@ func TestUpdateTag(t *testing.T) {
 // --- Users tests ---
 func TestGetUser(t *testing.T) {
 	type testEl struct {
-		res_is_error bool
+		res_is_error int
 		res_code     int
 		res          structs.User
 	}
 
 	table := map[int]testEl{
-		1:   testEl{false, errorCodes.DbNothingToReport, structs.User{1, "Albert Einstein", "", "Developed the general theory of relativity.", 0, 0, 3, 3, 0, 1, nil}},
-		2:   testEl{false, errorCodes.DbNothingToReport, structs.User{2, "Isaac Newton", "", "Mechanics, laws of motion", 0, 2, 0, 0, 0, 0, nil}},
-		0:   testEl{true, errorCodes.DbNoElement, structs.User{}},
-		-1:  testEl{true, errorCodes.DbNoElement, structs.User{}},
-		123: testEl{true, errorCodes.DbNoElement, structs.User{}},
-		43:  testEl{true, errorCodes.DbNoElement, structs.User{}},
+		1:   testEl{0, errorCodes.DbNothingToReport, structs.User{1, "Albert Einstein", "", "Developed the general theory of relativity.", 0, 0, 3, 3, 0, 1, nil}},
+		2:   testEl{0, errorCodes.DbNothingToReport, structs.User{2, "Isaac Newton", "", "Mechanics, laws of motion", 0, 2, 0, 0, 0, 0, nil}},
+		0:   testEl{1, errorCodes.DbNoElement, structs.User{}},
+		-1:  testEl{1, errorCodes.DbNoElement, structs.User{}},
+		123: testEl{1, errorCodes.DbNoElement, structs.User{}},
+		43:  testEl{1, errorCodes.DbNoElement, structs.User{}},
 	}
 
 	for id, val := range table {
 		user, err, code := GetUser(id)
-		if val.res_is_error && err == nil {
+		if val.res_is_error == 1 && err == nil {
 			t.Errorf("Wrong result for case %v. Expected error, did not get it", id)
 		}
 
-		if !val.res_is_error && err != nil {
+		if val.res_is_error == 0 && err != nil {
 			t.Errorf("Wrong result for case %v. Expected nil, got error", id)
 		}
 
@@ -408,29 +470,31 @@ func TestUpdateUser(t *testing.T) {
 		id           int
 		nickname     string
 		about        string
-		res_is_error bool
+		res_is_error int
 		res_code     int
 	}
 
-	randStr := randomString(maxLenSmall)
+	randStr := randomString(maxLenS, 0, 0)
 	table := []testEl{
-		testEl{1, randomString(10), randomString(531), false, errorCodes.DbNothingToReport},
-		testEl{2, "Marie Curie", randomString(159), true, errorCodes.DbDuplicate},
-		testEl{3, "Nikola Tesla", randomString(10), true, errorCodes.DbDuplicate},
-		testEl{2, randomString(34), randomString(999), false, errorCodes.DbNothingToReport},
-		testEl{3, randStr, randomString(989), false, errorCodes.DbNothingToReport},
-		testEl{4, randStr, randomString(123), true, errorCodes.DbDuplicate},
-		testEl{2, randomString(maxLenSmall + 1), randomString(23), true, errorCodes.DbValueTooLong},
-		testEl{5, randomString(31), randomString(maxLenBig + 1), true, errorCodes.DbValueTooLong},
-		testEl{0, randomString(10), randomString(10), true, errorCodes.DbNothingUpdated},
-		testEl{-1, randomString(10), randomString(10), true, errorCodes.DbNothingUpdated},
-		testEl{43, randomString(10), randomString(10), true, errorCodes.DbNothingUpdated},
-		testEl{123, randomString(10), randomString(10), true, errorCodes.DbNothingUpdated},
+		testEl{2, "Marie Curie", randomString(maxLenB, 0, 0), 1, errorCodes.DbDuplicate},
+		testEl{3, "Nikola Tesla", randomString(maxLenB, 0, 0), 1, errorCodes.DbDuplicate},
+		testEl{3, randStr, randomString(maxLenB, 0, 0), 0, errorCodes.DbNothingToReport},
+		testEl{4, randStr, randomString(maxLenB, 0, 0), 1, errorCodes.DbDuplicate},
+		testEl{1, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 0, errorCodes.DbNothingToReport},
+		testEl{2, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 1), 0, errorCodes.DbNothingToReport},
+		testEl{3, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 0), 0, errorCodes.DbNothingToReport},
+		testEl{4, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 1), 0, errorCodes.DbNothingToReport},
+		testEl{2, randomString(maxLenS, 1, 0), randomString(maxLenB, 0, 0), 1, errorCodes.DbValueTooLong},
+		testEl{5, randomString(maxLenS, 0, 0), randomString(maxLenB, 1, 0), 1, errorCodes.DbValueTooLong},
+		testEl{5, randomString(maxLenS, 1, 0), randomString(maxLenB, 1, 0), 1, errorCodes.DbValueTooLong},
+		testEl{0, randomString(maxLenS, 0, 0), randomString(maxLenS, 0, 0), 1, errorCodes.DbNothingUpdated},
+		testEl{-1, randomString(maxLenS, 0, 0), randomString(maxLenS, 0, 0), 1, errorCodes.DbNothingUpdated},
+		testEl{43, randomString(maxLenS, 0, 0), randomString(maxLenS, 0, 0), 1, errorCodes.DbNothingUpdated},
 	}
 
 	for _, val := range table {
 		err, code := UpdateUser(val.id, val.nickname, val.about)
-		if val.res_is_error {
+		if val.res_is_error == 1 {
 			if err == nil || code != val.res_code {
 				t.Errorf("User %v should not be updated, but it was: %v, %v", val.id, err, code)
 			}
