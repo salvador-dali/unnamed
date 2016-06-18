@@ -12,7 +12,12 @@ import (
 	"time"
 )
 
-const letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+const (
+	letterBytes  = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
+	maxLenSmall  = 40
+	maxLenMedium = 100
+	maxLenBig    = 1000
+)
 
 func randomString(n int) string {
 	b := make([]byte, n)
@@ -119,8 +124,17 @@ func TestCreateBrand(t *testing.T) {
 		testEl{randomString(1), 6},
 		testEl{randomString(6), 7},
 		testEl{randomString(16), 8},
-		testEl{randomString(40), 9},
+		testEl{randomString(maxLenSmall), 9},
 		testEl{randomString(39), 10},
+	}
+
+	wrong_table := []testEl{
+		testEl{randomString(maxLenSmall + 1), errorCodes.DbValueTooLong},
+		testEl{randomString(56), errorCodes.DbValueTooLong},
+		testEl{correct_table[0].name, errorCodes.DbDuplicate},
+		testEl{correct_table[1].name, errorCodes.DbDuplicate},
+		testEl{correct_table[2].name, errorCodes.DbDuplicate},
+		testEl{correct_table[3].name, errorCodes.DbDuplicate},
 	}
 
 	for _, val := range correct_table {
@@ -133,15 +147,6 @@ func TestCreateBrand(t *testing.T) {
 		if brand.Name != val.name {
 			t.Errorf("Expected to create a brand with a name %v, got %v", brand.Name, val.name)
 		}
-	}
-
-	wrong_table := []testEl{
-		testEl{randomString(41), errorCodes.DbValueTooLong},
-		testEl{randomString(56), errorCodes.DbValueTooLong},
-		testEl{correct_table[0].name, errorCodes.DbDuplicate},
-		testEl{correct_table[1].name, errorCodes.DbDuplicate},
-		testEl{correct_table[2].name, errorCodes.DbDuplicate},
-		testEl{correct_table[3].name, errorCodes.DbDuplicate},
 	}
 
 	for _, val := range wrong_table {
@@ -165,7 +170,7 @@ func TestUpdateBrand(t *testing.T) {
 		res_code     int
 	}
 
-	randStr := randomString(40)
+	randStr := randomString(maxLenSmall)
 	table := []testEl{
 		testEl{1, randomString(1), false, errorCodes.DbNothingToReport},
 		testEl{2, "Playstation", true, errorCodes.DbDuplicate},
@@ -173,7 +178,7 @@ func TestUpdateBrand(t *testing.T) {
 		testEl{2, randomString(6), false, errorCodes.DbNothingToReport},
 		testEl{3, randStr, false, errorCodes.DbNothingToReport},
 		testEl{4, randStr, true, errorCodes.DbDuplicate},
-		testEl{2, randomString(41), true, errorCodes.DbValueTooLong},
+		testEl{2, randomString(maxLenSmall + 1), true, errorCodes.DbValueTooLong},
 		testEl{5, randomString(141), true, errorCodes.DbValueTooLong},
 		testEl{0, randomString(10), true, errorCodes.DbNothingUpdated},
 		testEl{-1, randomString(10), true, errorCodes.DbNothingUpdated},
@@ -274,8 +279,18 @@ func TestCreateTag(t *testing.T) {
 		testEl{randomString(1), randomString(23), 7},
 		testEl{randomString(6), randomString(245), 8},
 		testEl{randomString(16), randomString(643), 9},
-		testEl{randomString(40), randomString(1000), 10},
+		testEl{randomString(maxLenSmall), randomString(maxLenBig), 10},
 		testEl{randomString(39), randomString(1), 11},
+	}
+
+	wrong_table := []testEl{
+		testEl{randomString(maxLenSmall + 1), randomString(41), errorCodes.DbValueTooLong},
+		testEl{randomString(6), randomString(maxLenBig + 1), errorCodes.DbValueTooLong},
+		testEl{randomString(64), randomString(1201), errorCodes.DbValueTooLong},
+		testEl{correct_table[0].name, "", errorCodes.DbDuplicate},
+		testEl{correct_table[1].name, "", errorCodes.DbDuplicate},
+		testEl{correct_table[2].name, "", errorCodes.DbDuplicate},
+		testEl{correct_table[3].name, "", errorCodes.DbDuplicate},
 	}
 
 	for _, val := range correct_table {
@@ -288,16 +303,6 @@ func TestCreateTag(t *testing.T) {
 		if tag.Name != val.name || tag.Description != val.descr {
 			t.Errorf("Expected to create a tag with a name %v, got %v", tag.Name, val.name)
 		}
-	}
-
-	wrong_table := []testEl{
-		testEl{randomString(41), randomString(41), errorCodes.DbValueTooLong},
-		testEl{randomString(6), randomString(1001), errorCodes.DbValueTooLong},
-		testEl{randomString(64), randomString(1201), errorCodes.DbValueTooLong},
-		testEl{correct_table[0].name, "", errorCodes.DbDuplicate},
-		testEl{correct_table[1].name, "", errorCodes.DbDuplicate},
-		testEl{correct_table[2].name, "", errorCodes.DbDuplicate},
-		testEl{correct_table[3].name, "", errorCodes.DbDuplicate},
 	}
 
 	for _, val := range wrong_table {
@@ -322,7 +327,7 @@ func TestUpdateTag(t *testing.T) {
 		res_code     int
 	}
 
-	randStr := randomString(40)
+	randStr := randomString(maxLenSmall)
 	table := []testEl{
 		testEl{1, randomString(1), randomString(1), false, errorCodes.DbNothingToReport},
 		testEl{2, "car", randomString(159), true, errorCodes.DbDuplicate},
@@ -330,8 +335,9 @@ func TestUpdateTag(t *testing.T) {
 		testEl{2, randomString(34), randomString(999), false, errorCodes.DbNothingToReport},
 		testEl{3, randStr, randomString(989), false, errorCodes.DbNothingToReport},
 		testEl{4, randStr, randomString(123), true, errorCodes.DbDuplicate},
-		testEl{2, randomString(41), randomString(23), true, errorCodes.DbValueTooLong},
-		testEl{5, randomString(31), randomString(1001), true, errorCodes.DbValueTooLong},
+		testEl{2, randomString(maxLenSmall + 1), randomString(23), true, errorCodes.DbValueTooLong},
+		testEl{5, randomString(31), randomString(maxLenBig + 1), true, errorCodes.DbValueTooLong},
+		testEl{5, randomString(maxLenSmall + 1), randomString(maxLenBig + 1), true, errorCodes.DbValueTooLong},
 		testEl{0, randomString(10), randomString(10), true, errorCodes.DbNothingUpdated},
 		testEl{-1, randomString(10), randomString(10), true, errorCodes.DbNothingUpdated},
 		testEl{43, randomString(10), randomString(10), true, errorCodes.DbNothingUpdated},
@@ -352,6 +358,90 @@ func TestUpdateTag(t *testing.T) {
 			tag, _, _ := GetTag(val.id)
 			if tag.Name != val.name || tag.Description != val.descr {
 				t.Errorf("Expected value %v after update, got %v", val.name, tag.Name)
+			}
+		}
+	}
+}
+
+// --- Users tests ---
+func TestGetUser(t *testing.T) {
+	type testEl struct {
+		res_is_error bool
+		res_code     int
+		res          structs.User
+	}
+
+	table := map[int]testEl{
+		1:   testEl{false, errorCodes.DbNothingToReport, structs.User{1, "Albert Einstein", "", "Developed the general theory of relativity.", 0, 0, 3, 3, 0, 1, nil}},
+		2:   testEl{false, errorCodes.DbNothingToReport, structs.User{2, "Isaac Newton", "", "Mechanics, laws of motion", 0, 2, 0, 0, 0, 0, nil}},
+		0:   testEl{true, errorCodes.DbNoElement, structs.User{}},
+		-1:  testEl{true, errorCodes.DbNoElement, structs.User{}},
+		123: testEl{true, errorCodes.DbNoElement, structs.User{}},
+		43:  testEl{true, errorCodes.DbNoElement, structs.User{}},
+	}
+
+	for id, val := range table {
+		user, err, code := GetUser(id)
+		if val.res_is_error && err == nil {
+			t.Errorf("Wrong result for case %v. Expected error, did not get it", id)
+		}
+
+		if !val.res_is_error && err != nil {
+			t.Errorf("Wrong result for case %v. Expected nil, got error", id)
+		}
+
+		if code != val.res_code || user.Id != val.res.Id || user.Nickname != val.res.Nickname ||
+			user.Image != val.res.Image || user.About != val.res.About || user.Expertise != val.res.Expertise ||
+			user.Followers_num != val.res.Followers_num || user.Following_num != val.res.Following_num ||
+			user.Purchases_num != val.res.Purchases_num || user.Questions_num != val.res.Questions_num ||
+			user.Answers_num != val.res.Answers_num {
+			t.Errorf("Wrong result for case %v: \n Expected %v \n Got %v %v %v", id, val, err, code, user)
+		}
+		if user.Id != 0 && user.Issued_at == nil {
+			t.Errorf("Wrong result for case %v: Real User has an Issued_at date", id)
+		}
+	}
+}
+
+func TestUpdateUser(t *testing.T) {
+	type testEl struct {
+		id           int
+		nickname     string
+		about        string
+		res_is_error bool
+		res_code     int
+	}
+
+	randStr := randomString(maxLenSmall)
+	table := []testEl{
+		testEl{1, randomString(10), randomString(531), false, errorCodes.DbNothingToReport},
+		testEl{2, "Marie Curie", randomString(159), true, errorCodes.DbDuplicate},
+		testEl{3, "Nikola Tesla", randomString(10), true, errorCodes.DbDuplicate},
+		testEl{2, randomString(34), randomString(999), false, errorCodes.DbNothingToReport},
+		testEl{3, randStr, randomString(989), false, errorCodes.DbNothingToReport},
+		testEl{4, randStr, randomString(123), true, errorCodes.DbDuplicate},
+		testEl{2, randomString(maxLenSmall + 1), randomString(23), true, errorCodes.DbValueTooLong},
+		testEl{5, randomString(31), randomString(maxLenBig + 1), true, errorCodes.DbValueTooLong},
+		testEl{0, randomString(10), randomString(10), true, errorCodes.DbNothingUpdated},
+		testEl{-1, randomString(10), randomString(10), true, errorCodes.DbNothingUpdated},
+		testEl{43, randomString(10), randomString(10), true, errorCodes.DbNothingUpdated},
+		testEl{123, randomString(10), randomString(10), true, errorCodes.DbNothingUpdated},
+	}
+
+	for _, val := range table {
+		err, code := UpdateUser(val.id, val.nickname, val.about)
+		if val.res_is_error {
+			if err == nil || code != val.res_code {
+				t.Errorf("User %v should not be updated, but it was: %v, %v", val.id, err, code)
+			}
+		} else {
+			if err != nil || code != val.res_code {
+				t.Errorf("User %v should have been updated, but was not", val.id)
+			}
+
+			user, _, _ := GetUser(val.id)
+			if user.Nickname != val.nickname || user.About != val.about {
+				t.Errorf("Expected value %v after update, got %v", val.nickname, user.Nickname)
 			}
 		}
 	}

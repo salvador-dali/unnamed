@@ -437,6 +437,43 @@ func getPurchases(rows *sql.Rows, err error) ([]*structs.Purchase, error, int) {
 	return purchases, nil, errorCodes.DbNothingToReport
 }
 
+func whoCreatedPurchaseByPurchaseId(purchaseId int) (int, error, int) {
+	whosePurchase := 0
+	if err := Db.QueryRow(`
+		SELECT user_id
+		FROM purchases
+		WHERE id = $1`, purchaseId,
+	).Scan(&whosePurchase); err != nil {
+		if err == sql.ErrNoRows {
+			return 0, err, errorCodes.DbNoPurchase
+		}
+
+		return 0, err, errorCodes.DbNothingToReport
+	}
+
+	return whosePurchase, nil, errorCodes.DbNothingToReport
+}
+
+func whoCreatedPurchaseByQuestionId(questionId int) (int, error, int) {
+	whosePurchase := 0
+	if err := Db.QueryRow(`
+		SELECT user_id
+		FROM purchases
+		WHERE id = (
+			SELECT purchase_id
+			FROM questions
+			WHERE id = $1
+		)`, questionId).Scan(&whosePurchase); err != nil {
+		if err == sql.ErrNoRows {
+			return 0, err, errorCodes.DbNoPurchaseForQuestion
+		}
+
+		return 0, err, errorCodes.DbNothingToReport
+	}
+
+	return whosePurchase, nil, errorCodes.DbNothingToReport
+}
+
 func GetUserPurchases(userId int) ([]*structs.Purchase, error, int) {
 	rows, err := Db.Query(`
 		SELECT id, image, description, user_id, issued_at, brand_id, likes_num
@@ -526,43 +563,6 @@ func GetPurchase(purchaseId int) (structs.Purchase, error, int) {
 
 	p.Id = purchaseId
 	return p, nil, errorCodes.DbNothingToReport
-}
-
-func whoCreatedPurchaseByPurchaseId(purchaseId int) (int, error, int) {
-	whosePurchase := 0
-	if err := Db.QueryRow(`
-		SELECT user_id
-		FROM purchases
-		WHERE id = $1`, purchaseId,
-	).Scan(&whosePurchase); err != nil {
-		if err == sql.ErrNoRows {
-			return 0, err, errorCodes.DbNoPurchase
-		}
-
-		return 0, err, errorCodes.DbNothingToReport
-	}
-
-	return whosePurchase, nil, errorCodes.DbNothingToReport
-}
-
-func whoCreatedPurchaseByQuestionId(questionId int) (int, error, int) {
-	whosePurchase := 0
-	if err := Db.QueryRow(`
-		SELECT user_id
-		FROM purchases
-		WHERE id = (
-			SELECT purchase_id
-			FROM questions
-			WHERE id = $1
-		)`, questionId).Scan(&whosePurchase); err != nil {
-		if err == sql.ErrNoRows {
-			return 0, err, errorCodes.DbNoPurchaseForQuestion
-		}
-
-		return 0, err, errorCodes.DbNothingToReport
-	}
-
-	return whosePurchase, nil, errorCodes.DbNothingToReport
 }
 
 func LikePurchase(purchaseId, userId int) (error, int) {
