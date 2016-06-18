@@ -2,6 +2,7 @@
 import psycopg2
 import os
 
+
 def populate_data():
     # Clean up and recreate the database. Database is populated with some sample data
     conn = psycopg2.connect(

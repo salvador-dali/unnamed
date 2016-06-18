@@ -10,8 +10,8 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
+	"sort"
 	"testing"
-	"time"
 )
 
 const (
@@ -51,7 +51,28 @@ func randomString(length int, isBiggerI, isEdgeCaseI int) string {
 	return string(b)
 }
 
-func setup() {
+func isSortedArrayEquivalentToArray(arrSorted, arr []int) bool {
+	if len(arrSorted) != len(arr) {
+		return false
+	}
+
+	sort.Ints(arr)
+
+	for i, v := range arrSorted {
+		if v != arr[i] {
+			return false
+		}
+	}
+	return true
+}
+
+func initializeDb() {
+	// initialize Db connection
+	cnf := config.Init()
+	Init(cnf.DbUser, cnf.DbPass, cnf.DbHost, cnf.DbName, cnf.DbPort)
+}
+
+func cleanUpDb() {
 	// prepare database by creating tables and populating it with data
 	cmd := exec.Command("../SQL/set_up_database.py")
 	cmd.Stdout = os.Stdout
@@ -59,20 +80,15 @@ func setup() {
 	if cmd.Run() != nil {
 		log.Fatal("Can't prepare SQL database")
 	}
-
-	// initialize Db connection
-	cnf := config.Init()
-	Init(cnf.DbUser, cnf.DbPass, cnf.DbHost, cnf.DbName, cnf.DbPort)
-
-	// initialize randomness
-	rand.Seed(time.Now().UTC().UnixNano())
 }
 
 // Setup and db.close will be called before and after each test http://stackoverflow.com/a/34102842/1090562
 func TestMain(m *testing.M) {
-	setup()
+	initializeDb()
 	retCode := m.Run()
+
 	defer Db.Close()
+	cleanUpDb()
 	os.Exit(retCode)
 }
 
@@ -114,6 +130,8 @@ func TestRandomString(t *testing.T) {
 
 // --- Brands tests ---
 func TestGetAllBrands(t *testing.T) {
+	cleanUpDb()
+
 	brands, err, code := GetAllBrands()
 	if err != nil || code != errorCodes.DbNothingToReport {
 		t.Error("Should finish without no error")
@@ -138,6 +156,8 @@ func TestGetAllBrands(t *testing.T) {
 }
 
 func TestGetBrand(t *testing.T) {
+	cleanUpDb()
+
 	type testEl struct {
 		res_is_error int
 		res_code     int
@@ -175,6 +195,8 @@ func TestGetBrand(t *testing.T) {
 }
 
 func TestCreateBrand(t *testing.T) {
+	cleanUpDb()
+
 	type testEl struct {
 		name   string
 		res_id int
@@ -224,6 +246,8 @@ func TestCreateBrand(t *testing.T) {
 }
 
 func TestUpdateBrand(t *testing.T) {
+	cleanUpDb()
+
 	type testEl struct {
 		id           int
 		name         string
@@ -267,6 +291,8 @@ func TestUpdateBrand(t *testing.T) {
 
 // --- Tags tests ---
 func TestGetAllTags(t *testing.T) {
+	cleanUpDb()
+
 	tags, err, code := GetAllTags()
 	if err != nil || code != errorCodes.DbNothingToReport {
 		t.Error("Should finish without no error")
@@ -292,6 +318,8 @@ func TestGetAllTags(t *testing.T) {
 }
 
 func TestGetTag(t *testing.T) {
+	cleanUpDb()
+
 	type testEl struct {
 		res_is_error int
 		res_code     int
@@ -329,6 +357,8 @@ func TestGetTag(t *testing.T) {
 }
 
 func TestCreateTag(t *testing.T) {
+	cleanUpDb()
+
 	type testEl struct {
 		name   string
 		descr  string
@@ -379,6 +409,8 @@ func TestCreateTag(t *testing.T) {
 }
 
 func TestUpdateTag(t *testing.T) {
+	cleanUpDb()
+
 	type testEl struct {
 		id           int
 		name         string
@@ -427,6 +459,8 @@ func TestUpdateTag(t *testing.T) {
 
 // --- Users tests ---
 func TestGetUser(t *testing.T) {
+	cleanUpDb()
+
 	type testEl struct {
 		res_is_error int
 		res_code     int
@@ -466,6 +500,8 @@ func TestGetUser(t *testing.T) {
 }
 
 func TestUpdateUser(t *testing.T) {
+	cleanUpDb()
+
 	type testEl struct {
 		id           int
 		nickname     string
@@ -508,5 +544,97 @@ func TestUpdateUser(t *testing.T) {
 				t.Errorf("Expected value %v after update, got %v", val.nickname, user.Nickname)
 			}
 		}
+	}
+}
+
+func TestGetFollowers(t *testing.T) {
+	cleanUpDb()
+
+	tableCorrect := map[int][]int{
+		1: []int{},
+		2: []int{1, 6},
+		3: []int{},
+		4: []int{1},
+		7: []int{1},
+	}
+	for id, followersCorrect := range tableCorrect {
+		followers, err, code := GetFollowers(id)
+		if err != nil || code != errorCodes.DbNothingToReport {
+			t.Errorf("Expected to get followers, got a mistake %v %v", err, code)
+		}
+
+		if len(followers) != len(followersCorrect) {
+			t.Errorf("Expected to get %v followers, got %v", len(followersCorrect), len(followers))
+		}
+
+		followerIds := make([]int, len(followers), len(followers))
+		for i, v := range followers {
+			followerIds[i] = v.Id
+		}
+
+		if !isSortedArrayEquivalentToArray(followersCorrect, followerIds) {
+			t.Errorf("Followers are not equal %v %v", followersCorrect, followerIds)
+		}
+	}
+
+	tableWrong := []int{0, 16, 52, -1}
+	for _, id := range tableWrong {
+		followers, err, code := GetFollowers(id)
+		if len(followers) != 0 || err != nil || code != errorCodes.DbNothingToReport {
+			t.Errorf("Should receive empty array with no errors. Received %v %v %v", followers, err, code)
+		}
+	}
+
+	followers, _, _ := GetFollowers(7)
+	u := followers[0]
+	if u.Nickname != "Albert Einstein" || u.About != "" || u.Expertise != 0 || u.Followers_num != 0 {
+		t.Errorf("Information about follower is not right %v", u)
+	}
+}
+
+func TestGetFollowing(t *testing.T) {
+	cleanUpDb()
+
+	tableCorrect := map[int][]int{
+		1: []int{2, 4, 7},
+		2: []int{},
+		3: []int{},
+		4: []int{},
+		5: []int{},
+		6: []int{2},
+		7: []int{},
+	}
+	for id, followingCorrect := range tableCorrect {
+		following, err, code := GetFollowing(id)
+		if err != nil || code != errorCodes.DbNothingToReport {
+			t.Errorf("Expected to get following, got a mistake %v %v", err, code)
+		}
+
+		if len(following) != len(followingCorrect) {
+			t.Errorf("Expected to get %v following, got %v", len(followingCorrect), len(following))
+		}
+
+		followingIds := make([]int, len(following), len(following))
+		for i, v := range following {
+			followingIds[i] = v.Id
+		}
+
+		if !isSortedArrayEquivalentToArray(followingCorrect, followingIds) {
+			t.Errorf("Followers are not equal %v %v", followingCorrect, followingIds)
+		}
+	}
+
+	tableWrong := []int{0, 16, 52, -1}
+	for _, id := range tableWrong {
+		followers, err, code := GetFollowing(id)
+		if len(followers) != 0 || err != nil || code != errorCodes.DbNothingToReport {
+			t.Errorf("Should receive empty array with no errors. Received %v %v %v", followers, err, code)
+		}
+	}
+
+	following, _, _ := GetFollowing(6)
+	u := following[0]
+	if u.Nickname != "Isaac Newton" || u.About != "" || u.Expertise != 0 || u.Followers_num != 0 {
+		t.Errorf("Information about following is not right %v", u)
 	}
 }
