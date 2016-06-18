@@ -47,6 +47,7 @@ func TestMain(m *testing.M) {
 	os.Exit(retCode)
 }
 
+// --- Brands tests ---
 func TestGetAllBrands(t *testing.T) {
 	brands, err, code := GetAllBrands()
 	if err != nil || code != errorCodes.DbNothingToReport {
@@ -195,6 +196,32 @@ func TestUpdateBrand(t *testing.T) {
 			if brand.Name != val.name {
 				t.Errorf("Expected value %v after update, got %v", val.name, brand.Name)
 			}
+		}
+	}
+}
+
+// --- Tags tests ---
+func TestGetAllTags(t *testing.T) {
+	tags, err, code := GetAllTags()
+	if err != nil || code != errorCodes.DbNothingToReport {
+		t.Error("Should finish without no error")
+	}
+
+	if len(tags) != 6 {
+		t.Errorf("Expect 6 tags, got %v", len(tags))
+	}
+
+	expected := []structs.Tag{
+		structs.Tag{1, "dress", "", nil},
+		structs.Tag{2, "drone", "", nil},
+		structs.Tag{3, "cosmetics", "", nil},
+		structs.Tag{4, "car", "", nil},
+		structs.Tag{5, "hat", "", nil},
+		structs.Tag{6, "phone", "", nil},
+	}
+	for i, tag := range tags {
+		if tag.Id != expected[i].Id || tag.Name != expected[i].Name || tag.Issued_at != expected[i].Issued_at || tag.Description != expected[i].Description {
+			t.Errorf("Expect %v , got %v", expected[i], tag)
 		}
 	}
 }
