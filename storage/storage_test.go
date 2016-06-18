@@ -225,3 +225,40 @@ func TestGetAllTags(t *testing.T) {
 		}
 	}
 }
+
+func TestGetTag(t *testing.T) {
+	type testEl struct {
+		res_is_error bool
+		res_code     int
+		res          structs.Tag
+	}
+
+	table := map[int]testEl{
+		1:   testEl{false, errorCodes.DbNothingToReport, structs.Tag{1, "dress", "nice dresses", nil}},
+		2:   testEl{false, errorCodes.DbNothingToReport, structs.Tag{2, "drone", "cool flying machines that do stuff", nil}},
+		3:   testEl{false, errorCodes.DbNothingToReport, structs.Tag{3, "cosmetics", "Known as make-up, are substances or products used to enhance the appearance or scent of the body", nil}},
+		6:   testEl{false, errorCodes.DbNothingToReport, structs.Tag{6, "phone", "People use it to speak with other people", nil}},
+		0:   testEl{true, errorCodes.DbNoElement, structs.Tag{}},
+		-1:  testEl{true, errorCodes.DbNoElement, structs.Tag{}},
+		123: testEl{true, errorCodes.DbNoElement, structs.Tag{}},
+		43:  testEl{true, errorCodes.DbNoElement, structs.Tag{}},
+	}
+
+	for id, val := range table {
+		tag, err, code := GetTag(id)
+		if val.res_is_error && err == nil {
+			t.Errorf("Wrong result for case %v. Expected error, did not get it", id)
+		}
+
+		if !val.res_is_error && err != nil {
+			t.Errorf("Wrong result for case %v. Expected nil, got error", id)
+		}
+
+		if code != val.res_code || tag.Id != val.res.Id || tag.Name != val.res.Name || tag.Description != val.res.Description {
+			t.Errorf("Wrong result for case %v: \n Expected %v \n Got %v %v %v", id, val, err, code, tag)
+		}
+		if tag.Id != 0 && tag.Issued_at == nil {
+			t.Errorf("Wrong result for case %v: Real Brand has an Issued_at date", id)
+		}
+	}
+}
