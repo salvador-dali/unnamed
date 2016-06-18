@@ -153,7 +153,7 @@ func TestCreateBrand(t *testing.T) {
 
 	brands, _, _ := GetAllBrands()
 	if len(brands) != 10 {
-		t.Error("It looks like a couple of brands were created, but they should not")
+		t.Errorf("Should have 10 brands, have %v", len(brands))
 	}
 }
 
@@ -260,5 +260,55 @@ func TestGetTag(t *testing.T) {
 		if tag.Id != 0 && tag.Issued_at == nil {
 			t.Errorf("Wrong result for case %v: Real Brand has an Issued_at date", id)
 		}
+	}
+}
+
+func TestCreateTag(t *testing.T) {
+	type testEl struct {
+		name   string
+		descr  string
+		res_id int
+	}
+
+	correct_table := []testEl{
+		testEl{randomString(1), randomString(23), 7},
+		testEl{randomString(6), randomString(245), 8},
+		testEl{randomString(16), randomString(643), 9},
+		testEl{randomString(40), randomString(1000), 10},
+		testEl{randomString(39), randomString(1), 11},
+	}
+
+	for _, val := range correct_table {
+		id, err, code := CreateTag(val.name, val.descr)
+		if id != val.res_id || err != nil || code != errorCodes.DbNothingToReport {
+			t.Errorf("Expected to create a tag. Got %v %v %v", id, err, code)
+		}
+
+		tag, _, _ := GetTag(id)
+		if tag.Name != val.name || tag.Description != val.descr {
+			t.Errorf("Expected to create a tag with a name %v, got %v", tag.Name, val.name)
+		}
+	}
+
+	wrong_table := []testEl{
+		testEl{randomString(41), randomString(41), errorCodes.DbValueTooLong},
+		testEl{randomString(6), randomString(1001), errorCodes.DbValueTooLong},
+		testEl{randomString(64), randomString(1201), errorCodes.DbValueTooLong},
+		testEl{correct_table[0].name, "", errorCodes.DbDuplicate},
+		testEl{correct_table[1].name, "", errorCodes.DbDuplicate},
+		testEl{correct_table[2].name, "", errorCodes.DbDuplicate},
+		testEl{correct_table[3].name, "", errorCodes.DbDuplicate},
+	}
+
+	for _, val := range wrong_table {
+		id, err, code := CreateTag(val.name, val.descr)
+		if err == nil || id != 0 || code != val.res_id {
+			t.Errorf("New tag should not be created %v, %v", id, code)
+		}
+	}
+
+	tags, _, _ := GetAllTags()
+	if len(tags) != 11 {
+		t.Errorf("Should have 11 tags, have %v", len(tags))
 	}
 }
