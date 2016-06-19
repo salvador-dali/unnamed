@@ -972,3 +972,55 @@ func TestLikePurchase(t *testing.T) {
 		}
 	}
 }
+
+func TestUnlikePurchase(t *testing.T) {
+	cleanUpDb()
+
+	tableSuccess := []struct {
+		purchaseId int
+		userId     int
+		likesNum   int
+	}{
+		{3, 4, 2},
+		{4, 2, 0},
+		{3, 9, 1},
+	}
+	for _, v := range tableSuccess {
+		err, code := UnlikePurchase(v.purchaseId, v.userId)
+		if err != nil || code != errorCodes.DbNothingToReport {
+			t.Errorf("Expect correct execution. Got %v %v", err, code)
+		}
+
+		p, _, _ := GetPurchase(v.purchaseId)
+		if p.Likes_num != v.likesNum {
+			t.Errorf("Expect to see %v likes. Got %v", v.likesNum, p.Likes_num)
+		}
+	}
+
+	tableFail := []struct {
+		purchaseId int
+		userId     int
+		code       int
+		likesNum   int
+	}{
+		{3, 1, errorCodes.DbVoteForOwnStuff, 1},
+		{3, 4, errorCodes.DbNothingUpdated, 1},
+		{1, 7, errorCodes.DbNothingUpdated, 0},
+		{3, 9, errorCodes.DbNothingUpdated, 1},
+		{2, 3, errorCodes.DbNothingUpdated, 0},
+		{-2, -1, errorCodes.DbNoPurchase, 0},
+		{9, 2, errorCodes.DbNoPurchase, 0},
+		{3, -1, errorCodes.DbNothingUpdated, 1},
+	}
+	for _, v := range tableFail {
+		err, code := UnlikePurchase(v.purchaseId, v.userId)
+		if err == nil || code != v.code {
+			t.Errorf("Expect to fail. Got %v %v", err, code)
+		}
+
+		p, _, _ := GetPurchase(v.purchaseId)
+		if p.Likes_num != v.likesNum {
+			t.Errorf("Expect to see %v likes. Got %v", v.likesNum, p.Likes_num)
+		}
+	}
+}
