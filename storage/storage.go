@@ -530,10 +530,14 @@ func GetAllPurchases() ([]*structs.Purchase, error, int) {
 }
 
 func GetAllPurchasesWithBrand(brandId int) ([]*structs.Purchase, error, int) {
+	if brandId <= 0 {
+		return []*structs.Purchase{}, nil, errorCodes.DbNothingToReport
+	}
+
 	rows, err := Db.Query(`
 		SELECT id, image, description, user_id, issued_at, brand_id, likes_num
 		FROM purchases
-		WHERE brand = $1
+		WHERE brand_id = $1
 		ORDER BY issued_at DESC`, brandId)
 
 	return getPurchases(rows, err)

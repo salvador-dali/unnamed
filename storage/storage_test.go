@@ -20,6 +20,13 @@ const (
 	maxLenB     = 1000
 )
 
+var AllPurchases = map[int]structs.Purchase{
+	1: structs.Purchase{1, "some_img", "Look at my new drone", 1, nil, []int{}, 0, 0},
+	2: structs.Purchase{2, "some_img", "How cool am I?", 4, nil, []int{}, 5, 0},
+	3: structs.Purchase{3, "some_img", "I really like drones", 1, nil, []int{}, 0, 3},
+	4: structs.Purchase{4, "some_img", "Now I am fond of cars", 1, nil, []int{}, 4, 1},
+}
+
 // randomString generates a random string of a specific length
 // This length can be bigger or smaller than you predefined. Also you can ask it to be on the edge
 // of the allowed values. For example if you want a value bigger than X, it will generate you
@@ -792,21 +799,13 @@ func TestGetAllPurchases(t *testing.T) {
 		t.Errorf("Expect to see 4 purchases. Got %v", len(purchases))
 	}
 
-	res := map[int]structs.Purchase{
-		1: structs.Purchase{1, "some_img", "Look at my new drone", 1, nil, []int{}, 0, 0},
-		2: structs.Purchase{2, "some_img", "How cool am I?", 4, nil, []int{}, 5, 0},
-		3: structs.Purchase{3, "some_img", "I really like drones", 1, nil, []int{}, 0, 3},
-		4: structs.Purchase{4, "some_img", "Now I am fond of cars", 1, nil, []int{}, 4, 1},
-	}
-
 	for _, v := range purchases {
-		p := res[v.Id]
+		p := AllPurchases[v.Id]
 		if p.Image != v.Image || p.Description != v.Description || p.User_id != v.User_id ||
 			p.Brand != v.Brand || p.Likes_num != v.Likes_num {
 			t.Errorf("Purchase %v does not look right. Expect %v, got %v", v.Id, v, p)
 		}
 	}
-
 }
 
 func TestGetPurchase(t *testing.T) {
@@ -816,9 +815,10 @@ func TestGetPurchase(t *testing.T) {
 		id int
 		p  structs.Purchase
 	}{
-		{1, structs.Purchase{1, "some_img", "Look at my new drone", 1, nil, []int{}, 0, 0}},
-		{2, structs.Purchase{2, "some_img", "How cool am I?", 4, nil, []int{}, 5, 0}},
-		{4, structs.Purchase{4, "some_img", "Now I am fond of cars", 1, nil, []int{}, 4, 1}},
+		{1, AllPurchases[1]},
+		{2, AllPurchases[2]},
+		{3, AllPurchases[3]},
+		{4, AllPurchases[4]},
 	}
 
 	for _, v := range tableCorrect {
@@ -837,6 +837,45 @@ func TestGetPurchase(t *testing.T) {
 		p, err, code := GetPurchase(v)
 		if err == nil || code != errorCodes.DbNoElement || p.Id != 0 || p.Image != "" {
 			t.Errorf("Expected to get error. Got %v, %v, %v", err, code, p)
+		}
+	}
+}
+
+func TestGetAllPurchasesWithBrand(t *testing.T) {
+	cleanUpDb()
+
+	tableCorrect := []struct {
+		brandId     int
+		purchaseIds map[int]bool
+	}{
+		{5, map[int]bool{2: true}},
+		{4, map[int]bool{4: true}},
+		{0, map[int]bool{}},
+		{-1, map[int]bool{}},
+		{9, map[int]bool{}},
+	}
+
+	for _, v := range tableCorrect {
+		purchases, err, code := GetAllPurchasesWithBrand(v.brandId)
+		if err != nil || code != errorCodes.DbNothingToReport {
+			t.Errorf("Expect correct execution. Got %v %v", err, code)
+		}
+
+		if len(purchases) != len(v.purchaseIds) {
+			t.Errorf("Expected %v purchases. Got %v", len(v.purchaseIds), len(purchases))
+		}
+
+		if len(purchases) > 0 {
+			for _, p := range purchases {
+				expected := AllPurchases[p.Id]
+				if !v.purchaseIds[p.Id] {
+					t.Errorf("Not expected purchase with Id %v", p.Id)
+				}
+				if expected.Id != p.Id || expected.Image != p.Image || expected.Description != p.Description ||
+					expected.Likes_num != p.Likes_num || expected.Brand != p.Brand {
+					t.Errorf("Expected %v. Got %v", expected, p)
+				}
+			}
 		}
 	}
 }
