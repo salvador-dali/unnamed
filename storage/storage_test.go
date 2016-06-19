@@ -88,7 +88,7 @@ func TestMain(m *testing.M) {
 	retCode := m.Run()
 
 	defer Db.Close()
-	cleanUpDb()
+	//cleanUpDb()
 	os.Exit(retCode)
 }
 
@@ -672,6 +672,59 @@ func TestFollow(t *testing.T) {
 		} else {
 			if err != nil || code != val.res_code {
 				t.Errorf("Expect follow to happen, got %v, %v", err, code)
+			}
+		}
+
+		followers, _, _ := GetFollowers(val.whomId)
+		following, _, _ := GetFollowing(val.whoId)
+
+		if len(followers) != val.followers_num || len(following) != val.following_num {
+			t.Errorf("Number of followers and following in FOLLOWERS table is not right. Expect (%v, %v), got (%v, %v)", val.followers_num, val.following_num, len(followers), len(following))
+		}
+
+		u1, _, _ := GetUser(val.whoId)
+		u2, _, _ := GetUser(val.whomId)
+		if u2.Followers_num != val.followers_num || u1.Following_num != val.following_num {
+			t.Errorf("Number of followers and following in USERS table is not right. Expect (%v, %v), got (%v, %v)", val.followers_num, val.following_num, u2.Followers_num, u1.Following_num)
+		}
+	}
+}
+
+func TestUnfollow(t *testing.T) {
+	cleanUpDb()
+
+	type testEl struct {
+		whoId         int
+		whomId        int
+		res_is_error  int
+		res_code      int
+		followers_num int
+		following_num int
+	}
+	table := []testEl{
+		testEl{1, 1, 1, errorCodes.FollowYourself, 0, 3},
+		testEl{1, 5, 1, errorCodes.DbNothingUpdated, 0, 3},
+		testEl{6, 3, 1, errorCodes.DbNothingUpdated, 0, 1},
+		testEl{5, 4, 1, errorCodes.DbNothingUpdated, 1, 0},
+		testEl{-1, 4, 1, errorCodes.DbNothingUpdated, 1, 0},
+		testEl{10, 9, 1, errorCodes.DbNothingUpdated, 0, 0},
+		testEl{11, 19, 1, errorCodes.DbNothingUpdated, 0, 0},
+		testEl{1, 6, 1, errorCodes.DbNothingUpdated, 0, 3},
+		testEl{6, 2, 0, errorCodes.DbNothingToReport, 1, 0},
+		testEl{1, 4, 0, errorCodes.DbNothingToReport, 0, 2},
+		testEl{1, 7, 0, errorCodes.DbNothingToReport, 0, 1},
+		testEl{1, 2, 0, errorCodes.DbNothingToReport, 0, 0},
+	}
+
+	for _, val := range table {
+		err, code := Unfollow(val.whoId, val.whomId)
+		if val.res_is_error == 1 {
+			if err == nil || code != val.res_code {
+				t.Errorf("Expect unfollow to fail, got %v, %v", err, code)
+			}
+		} else {
+			if err != nil || code != val.res_code {
+				t.Errorf("Expect unfollow to happen, got %v, %v", err, code)
 			}
 		}
 
