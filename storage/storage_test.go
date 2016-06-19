@@ -779,3 +779,32 @@ func TestGetUserPurchases(t *testing.T) {
 		t.Errorf("Purchase does not look right %v", p)
 	}
 }
+
+func TestGetAllPurchases(t *testing.T) {
+	cleanUpDb()
+
+	purchases, err, code := GetAllPurchases()
+	if err != nil || code != errorCodes.DbNothingToReport {
+		t.Errorf("GetAllPurchases should succeed. Got %v %v", err, code)
+	}
+
+	if len(purchases) != 4 {
+		t.Errorf("Expect to see 4 purchases. Got %v", len(purchases))
+	}
+
+	res := map[int]structs.Purchase{
+		1: structs.Purchase{1, "some_img", "Look at my new drone", 1, nil, []int{}, 0, 0},
+		2: structs.Purchase{2, "some_img", "How cool am I?", 4, nil, []int{}, 5, 0},
+		3: structs.Purchase{3, "some_img", "I really like drones", 1, nil, []int{}, 0, 3},
+		4: structs.Purchase{4, "some_img", "Now I am fond of cars", 1, nil, []int{}, 4, 1},
+	}
+
+	for _, v := range purchases {
+		p := res[v.Id]
+		if p.Image != v.Image || p.Description != v.Description || p.User_id != v.User_id ||
+			p.Brand != v.Brand || p.Likes_num != v.Likes_num {
+			t.Errorf("Purchase %v does not look right. Expect %v, got %v", v.Id, v, p)
+		}
+	}
+
+}
