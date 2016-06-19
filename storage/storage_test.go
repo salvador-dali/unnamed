@@ -88,7 +88,7 @@ func TestMain(m *testing.M) {
 	retCode := m.Run()
 
 	defer Db.Close()
-	//cleanUpDb()
+	cleanUpDb()
 	os.Exit(retCode)
 }
 
@@ -807,4 +807,36 @@ func TestGetAllPurchases(t *testing.T) {
 		}
 	}
 
+}
+
+func TestGetPurchase(t *testing.T) {
+	cleanUpDb()
+
+	tableCorrect := []struct {
+		id int
+		p  structs.Purchase
+	}{
+		{1, structs.Purchase{1, "some_img", "Look at my new drone", 1, nil, []int{}, 0, 0}},
+		{2, structs.Purchase{2, "some_img", "How cool am I?", 4, nil, []int{}, 5, 0}},
+		{4, structs.Purchase{4, "some_img", "Now I am fond of cars", 1, nil, []int{}, 4, 1}},
+	}
+
+	for _, v := range tableCorrect {
+		p, err, code := GetPurchase(v.id)
+		if err != nil || code != errorCodes.DbNothingToReport {
+			t.Errorf("Expected correct execution. Got %v %v", err, code)
+		}
+
+		if p.Id != v.p.Id || p.Image != v.p.Image || p.Description != v.p.Description ||
+			p.User_id != v.p.User_id || p.Brand != v.p.Brand || p.Likes_num != v.p.Likes_num {
+			t.Errorf("Purchase looks different %v, %v", p, v.p)
+		}
+	}
+
+	for _, v := range []int{0, -1, 6, 10} {
+		p, err, code := GetPurchase(v)
+		if err == nil || code != errorCodes.DbNoElement || p.Id != 0 || p.Image != "" {
+			t.Errorf("Expected to get error. Got %v, %v, %v", err, code, p)
+		}
+	}
 }
