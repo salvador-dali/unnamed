@@ -51,7 +51,7 @@ type Purchase struct {
 	Id          int    `json:"id,omitempty"`
 	Image       string `json:"image,omitempty"`
 	Description string `json:"description,omitempty"`
-	User_id     string `json:"user_id,omitempty"`
+	User_id     int    `json:"user_id,omitempty"`
 	Issued_at   string `json:"issued_at,omitempty"`
 	Tags        []int  `json:"tags,omitempty"`
 	Brand       int    `json:"brand,omitempty"`

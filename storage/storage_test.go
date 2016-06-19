@@ -742,3 +742,40 @@ func TestUnfollow(t *testing.T) {
 		}
 	}
 }
+
+// --- Purchases tests ---
+func TestGetUserPurchases(t *testing.T) {
+	cleanUpDb()
+
+	type testEl struct {
+		userId       int
+		numPurchases int
+	}
+	tableSuccess := []testEl{
+		testEl{1, 3},
+		testEl{2, 0},
+		testEl{3, 0},
+		testEl{4, 1},
+		testEl{5, 0},
+		testEl{6, 0},
+		testEl{7, 0},
+		testEl{8, 0},
+		testEl{9, 0},
+		testEl{-1, 0},
+		testEl{10, 0},
+	}
+
+	for _, v := range tableSuccess {
+		purchases, err, code := GetUserPurchases(v.userId)
+		if err != nil || code != errorCodes.DbNothingToReport || len(purchases) != v.numPurchases {
+			t.Errorf("Expected to see no errors and %v purchases. Got %v %v %v", v.numPurchases, err, code, len(purchases))
+		}
+	}
+
+	purchases, _, _ := GetUserPurchases(4)
+	p := purchases[0]
+	if p.Id != 2 || p.Image != "some_img" || p.Description != "How cool am I?" ||
+		p.Likes_num != 0 || p.User_id != 4 || p.Brand != 5 {
+		t.Errorf("Purchase does not look right %v", p)
+	}
+}
