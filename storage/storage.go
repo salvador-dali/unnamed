@@ -547,7 +547,7 @@ func GetAllPurchasesWithTag(tagId int) ([]*structs.Purchase, error, int) {
 	rows, err := Db.Query(`
 		SELECT id, image, description, user_id, issued_at, brand_id, likes_num
 		FROM purchases
-		WHERE $1 = ANY (tags)
+		WHERE $1 = ANY (tag_ids)
 		ORDER BY issued_at DESC`, tagId)
 
 	return getPurchases(rows, err)

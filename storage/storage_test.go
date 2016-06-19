@@ -879,3 +879,44 @@ func TestGetAllPurchasesWithBrand(t *testing.T) {
 		}
 	}
 }
+
+func TestGetAllPurchasesWithTag(t *testing.T) {
+	cleanUpDb()
+
+	tableCorrect := []struct {
+		tagId       int
+		purchaseIds map[int]bool
+	}{
+		{1, map[int]bool{}},
+		{2, map[int]bool{1: true, 4: true}},
+		{3, map[int]bool{2: true}},
+		{4, map[int]bool{3: true}},
+		{5, map[int]bool{2: true}},
+		{9, map[int]bool{}},
+		{-1, map[int]bool{}},
+	}
+
+	for _, v := range tableCorrect {
+		purchases, err, code := GetAllPurchasesWithTag(v.tagId)
+		if err != nil || code != errorCodes.DbNothingToReport {
+			t.Errorf("Expect correct execution. Got %v %v", err, code)
+		}
+
+		if len(purchases) != len(v.purchaseIds) {
+			t.Errorf("Expected %v purchases. Got %v", len(v.purchaseIds), len(purchases))
+		}
+
+		if len(purchases) > 0 {
+			for _, p := range purchases {
+				expected := AllPurchases[p.Id]
+				if !v.purchaseIds[p.Id] {
+					t.Errorf("Not expected purchase with Id %v", p.Id)
+				}
+				if expected.Id != p.Id || expected.Image != p.Image || expected.Description != p.Description ||
+					expected.Likes_num != p.Likes_num || expected.Brand != p.Brand {
+					t.Errorf("Expected %v. Got %v", expected, p)
+				}
+			}
+		}
+	}
+}
