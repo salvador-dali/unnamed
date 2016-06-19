@@ -21,10 +21,18 @@ const (
 )
 
 var AllPurchases = map[int]structs.Purchase{
-	1: structs.Purchase{1, "some_img", "Look at my new drone", 1, nil, []int{}, 0, 0},
-	2: structs.Purchase{2, "some_img", "How cool am I?", 4, nil, []int{}, 5, 0},
-	3: structs.Purchase{3, "some_img", "I really like drones", 1, nil, []int{}, 0, 3},
-	4: structs.Purchase{4, "some_img", "Now I am fond of cars", 1, nil, []int{}, 4, 1},
+	1: {1, "some_img", "Look at my new drone", 1, nil, []int{}, 0, 0},
+	2: {2, "some_img", "How cool am I?", 4, nil, []int{}, 5, 0},
+	3: {3, "some_img", "I really like drones", 1, nil, []int{}, 0, 3},
+	4: {4, "some_img", "Now I am fond of cars", 1, nil, []int{}, 4, 1},
+}
+
+var AllBrands = map[int]structs.Brand{
+	1: {1, "Apple", nil},
+	2: {2, "BMW", nil},
+	3: {3, "Playstation", nil},
+	4: {4, "Ferrari", nil},
+	5: {5, "Gucci", nil},
 }
 
 // randomString generates a random string of a specific length
@@ -144,20 +152,14 @@ func TestGetAllBrands(t *testing.T) {
 		t.Error("Should finish without no error")
 	}
 
-	if len(brands) != 5 {
-		t.Errorf("Expect 5 brands, got %v", len(brands))
+	if len(brands) != len(AllBrands) {
+		t.Errorf("Expect %v brands, got %v", len(AllBrands), len(brands))
 	}
 
-	expected := []structs.Brand{
-		structs.Brand{1, "Apple", nil},
-		structs.Brand{2, "BMW", nil},
-		structs.Brand{3, "Playstation", nil},
-		structs.Brand{4, "Ferrari", nil},
-		structs.Brand{5, "Gucci", nil},
-	}
-	for i, brand := range brands {
-		if brand.Id != expected[i].Id || brand.Name != expected[i].Name || brand.Issued_at != expected[i].Issued_at {
-			t.Errorf("Expect %v , got %v", expected[i], brand)
+	for _, brand := range brands {
+		b := AllBrands[brand.Id]
+		if brand.Id != b.Id || brand.Name != b.Name || brand.Issued_at != b.Issued_at {
+			t.Errorf("Expect %v , got %v", b, brand)
 		}
 	}
 }
@@ -172,14 +174,14 @@ func TestGetBrand(t *testing.T) {
 	}
 
 	table := map[int]testEl{
-		1:   testEl{0, errorCodes.DbNothingToReport, structs.Brand{1, "Apple", nil}},
-		2:   testEl{0, errorCodes.DbNothingToReport, structs.Brand{2, "BMW", nil}},
-		3:   testEl{0, errorCodes.DbNothingToReport, structs.Brand{3, "Playstation", nil}},
-		5:   testEl{0, errorCodes.DbNothingToReport, structs.Brand{5, "Gucci", nil}},
-		0:   testEl{1, errorCodes.DbNoElement, structs.Brand{}},
-		-1:  testEl{1, errorCodes.DbNoElement, structs.Brand{}},
-		123: testEl{1, errorCodes.DbNoElement, structs.Brand{}},
-		43:  testEl{1, errorCodes.DbNoElement, structs.Brand{}},
+		1:   {0, errorCodes.DbNothingToReport, structs.Brand{1, "Apple", nil}},
+		2:   {0, errorCodes.DbNothingToReport, structs.Brand{2, "BMW", nil}},
+		3:   {0, errorCodes.DbNothingToReport, structs.Brand{3, "Playstation", nil}},
+		5:   {0, errorCodes.DbNothingToReport, structs.Brand{5, "Gucci", nil}},
+		0:   {1, errorCodes.DbNoElement, structs.Brand{}},
+		-1:  {1, errorCodes.DbNoElement, structs.Brand{}},
+		123: {1, errorCodes.DbNoElement, structs.Brand{}},
+		43:  {1, errorCodes.DbNoElement, structs.Brand{}},
 	}
 
 	for id, val := range table {
@@ -209,7 +211,7 @@ func TestCreateBrand(t *testing.T) {
 		res_id int
 	}
 
-	correct_table := []testEl{
+	tableSuccess := []testEl{
 		testEl{randomString(maxLenS, 0, 1), 6},
 		testEl{randomString(maxLenS, 0, 0), 7},
 		testEl{randomString(maxLenS, 0, 0), 8},
@@ -217,17 +219,17 @@ func TestCreateBrand(t *testing.T) {
 		testEl{randomString(maxLenS, 0, 0), 10},
 	}
 
-	wrong_table := []testEl{
+	tableFail := []testEl{
 		testEl{randomString(maxLenS, 1, 1), errorCodes.DbValueTooLong},
 		testEl{randomString(maxLenS, 1, 0), errorCodes.DbValueTooLong},
 		testEl{randomString(maxLenS, 1, 0), errorCodes.DbValueTooLong},
-		testEl{correct_table[0].name, errorCodes.DbDuplicate},
-		testEl{correct_table[1].name, errorCodes.DbDuplicate},
-		testEl{correct_table[2].name, errorCodes.DbDuplicate},
-		testEl{correct_table[3].name, errorCodes.DbDuplicate},
+		testEl{tableSuccess[0].name, errorCodes.DbDuplicate},
+		testEl{tableSuccess[1].name, errorCodes.DbDuplicate},
+		testEl{tableSuccess[2].name, errorCodes.DbDuplicate},
+		testEl{tableSuccess[3].name, errorCodes.DbDuplicate},
 	}
 
-	for _, val := range correct_table {
+	for _, val := range tableSuccess {
 		id, err, code := CreateBrand(val.name)
 		if id != val.res_id || err != nil || code != errorCodes.DbNothingToReport {
 			t.Errorf("Expected to create a brand. Got %v %v %v", id, err, code)
@@ -239,7 +241,7 @@ func TestCreateBrand(t *testing.T) {
 		}
 	}
 
-	for _, val := range wrong_table {
+	for _, val := range tableFail {
 		id, err, code := CreateBrand(val.name)
 		if err == nil || id != 0 || code != val.res_id {
 			t.Error("New brand should not be created")
