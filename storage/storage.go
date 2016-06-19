@@ -57,6 +57,8 @@ func checkSpecificDriverErrors(err error) (error, int) {
 			return err, errorCodes.DbDuplicate
 		case s == "22001":
 			return err, errorCodes.DbValueTooLong
+		case s == "23503":
+			return err, errorCodes.DbForeignKeyViolation
 		}
 	}
 

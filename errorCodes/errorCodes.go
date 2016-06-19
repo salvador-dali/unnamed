@@ -24,4 +24,5 @@ const (
 	DbNotAllTagsCorrect         = 607 // a one or more tags are not in the database
 	DbNoPurchaseForQuestion     = 608 // purchase for this question ID does not exist
 	DbCannotAnswerOtherPurchase = 609 // user can answer only question about his purchase
+	DbForeignKeyViolation       = 610 // foreign key violation
 )

@@ -638,3 +638,54 @@ func TestGetFollowing(t *testing.T) {
 		t.Errorf("Information about following is not right %v", u)
 	}
 }
+
+func TestFollow(t *testing.T) {
+	cleanUpDb()
+
+	type testEl struct {
+		whoId         int
+		whomId        int
+		res_is_error  int
+		res_code      int
+		followers_num int
+		following_num int
+	}
+	table := []testEl{
+		testEl{1, 1, 1, errorCodes.FollowYourself, 0, 3},
+		testEl{1, 2, 1, errorCodes.DbDuplicate, 2, 3},
+		testEl{6, 2, 1, errorCodes.DbDuplicate, 2, 1},
+		testEl{0, 2, 1, errorCodes.DbForeignKeyViolation, 2, 0},
+		testEl{6, -1, 1, errorCodes.DbForeignKeyViolation, 0, 1},
+		testEl{10, 54, 1, errorCodes.DbForeignKeyViolation, 0, 0},
+		testEl{1, 6, 0, errorCodes.DbNothingToReport, 1, 4},
+		testEl{6, 1, 0, errorCodes.DbNothingToReport, 1, 2},
+		testEl{2, 4, 0, errorCodes.DbNothingToReport, 2, 1},
+		testEl{2, 6, 0, errorCodes.DbNothingToReport, 2, 2},
+	}
+
+	for _, val := range table {
+		err, code := Follow(val.whoId, val.whomId)
+		if val.res_is_error == 1 {
+			if err == nil || code != val.res_code {
+				t.Errorf("Expect follow to fail, got %v, %v", err, code)
+			}
+		} else {
+			if err != nil || code != val.res_code {
+				t.Errorf("Expect follow to happen, got %v, %v", err, code)
+			}
+		}
+
+		followers, _, _ := GetFollowers(val.whomId)
+		following, _, _ := GetFollowing(val.whoId)
+
+		if len(followers) != val.followers_num || len(following) != val.following_num {
+			t.Errorf("Number of followers and following in FOLLOWERS table is not right. Expect (%v, %v), got (%v, %v)", val.followers_num, val.following_num, len(followers), len(following))
+		}
+
+		u1, _, _ := GetUser(val.whoId)
+		u2, _, _ := GetUser(val.whomId)
+		if u2.Followers_num != val.followers_num || u1.Following_num != val.following_num {
+			t.Errorf("Number of followers and following in USERS table is not right. Expect (%v, %v), got (%v, %v)", val.followers_num, val.following_num, u2.Followers_num, u1.Following_num)
+		}
+	}
+}
