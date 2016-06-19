@@ -35,6 +35,21 @@ var AllBrands = map[int]structs.Brand{
 	5: {5, "Gucci", nil},
 }
 
+var AllTags = map[int]structs.Tag{
+	1: {1, "dress", "nice dresses", nil},
+	2: {2, "drone", "cool flying machines that do stuff", nil},
+	3: {3, "cosmetics", "Known as make-up, are substances or products used to enhance the appearance or scent of the body", nil},
+	4: {4, "car", "Vehicles that people use to move faster", nil},
+	5: {5, "hat", "Stuff people put on their heads", nil},
+	6: {6, "phone", "People use it to speak with other people", nil},
+}
+
+var AllUsers = map[int]structs.User{
+	1: {1, "Albert Einstein", "", "Developed the general theory of relativity.", 0, 0, 3, 3, 0, 1, nil},
+	2: {2, "Isaac Newton", "", "Mechanics, laws of motion", 0, 2, 0, 0, 0, 0, nil},
+	// actually there are more of them
+}
+
 // randomString generates a random string of a specific length
 // This length can be bigger or smaller than you predefined. Also you can ask it to be on the edge
 // of the allowed values. For example if you want a value bigger than X, it will generate you
@@ -158,7 +173,7 @@ func TestGetAllBrands(t *testing.T) {
 
 	for _, brand := range brands {
 		b := AllBrands[brand.Id]
-		if brand.Id != b.Id || brand.Name != b.Name || brand.Issued_at != b.Issued_at {
+		if brand.Id != b.Id || brand.Name != b.Name || brand.Issued_at != nil {
 			t.Errorf("Expect %v , got %v", b, brand)
 		}
 	}
@@ -167,38 +182,37 @@ func TestGetAllBrands(t *testing.T) {
 func TestGetBrand(t *testing.T) {
 	cleanUpDb()
 
-	type testEl struct {
+	table := []struct {
+		brandId      int
 		res_is_error int
 		res_code     int
 		res          structs.Brand
+	}{
+		{1, 0, errorCodes.DbNothingToReport, AllBrands[1]},
+		{2, 0, errorCodes.DbNothingToReport, AllBrands[2]},
+		{3, 0, errorCodes.DbNothingToReport, AllBrands[3]},
+		{5, 0, errorCodes.DbNothingToReport, AllBrands[5]},
+		{0, 1, errorCodes.DbNoElement, structs.Brand{}},
+		{-1, 1, errorCodes.DbNoElement, structs.Brand{}},
+		{123, 1, errorCodes.DbNoElement, structs.Brand{}},
+		{43, 1, errorCodes.DbNoElement, structs.Brand{}},
 	}
 
-	table := map[int]testEl{
-		1:   {0, errorCodes.DbNothingToReport, structs.Brand{1, "Apple", nil}},
-		2:   {0, errorCodes.DbNothingToReport, structs.Brand{2, "BMW", nil}},
-		3:   {0, errorCodes.DbNothingToReport, structs.Brand{3, "Playstation", nil}},
-		5:   {0, errorCodes.DbNothingToReport, structs.Brand{5, "Gucci", nil}},
-		0:   {1, errorCodes.DbNoElement, structs.Brand{}},
-		-1:  {1, errorCodes.DbNoElement, structs.Brand{}},
-		123: {1, errorCodes.DbNoElement, structs.Brand{}},
-		43:  {1, errorCodes.DbNoElement, structs.Brand{}},
-	}
-
-	for id, val := range table {
-		brand, err, code := GetBrand(id)
-		if val.res_is_error == 1 && err == nil {
-			t.Errorf("Wrong result for case %v. Expected error, did not get it", id)
+	for _, v := range table {
+		brand, err, code := GetBrand(v.brandId)
+		if v.res_is_error == 1 && err == nil {
+			t.Errorf("Wrong result for case %v. Expected error, did not get it", v.brandId)
 		}
 
-		if val.res_is_error == 0 && err != nil {
-			t.Errorf("Wrong result for case %v. Expected nil, got error", id)
+		if v.res_is_error == 0 && err != nil {
+			t.Errorf("Wrong result for case %v. Expected nil, got error", v.brandId)
 		}
 
-		if code != val.res_code || brand.Id != val.res.Id || brand.Name != val.res.Name {
-			t.Errorf("Wrong result for case %v: \n Expected %v \n Got %v %v %v", id, val, err, code, brand)
+		if code != v.res_code || brand.Id != v.res.Id || brand.Name != v.res.Name {
+			t.Errorf("Wrong result for case %v: \n Expected %v \n Got %v %v %v", v.brandId, v, err, code, brand)
 		}
 		if brand.Id != 0 && brand.Issued_at == nil {
-			t.Errorf("Wrong result for case %v: Real Brand has an Issued_at date", id)
+			t.Errorf("Wrong result for case %v: Real Brand has an Issued_at date", v.brandId)
 		}
 	}
 }
@@ -206,93 +220,90 @@ func TestGetBrand(t *testing.T) {
 func TestCreateBrand(t *testing.T) {
 	cleanUpDb()
 
-	type testEl struct {
+	tableSuccess := []struct {
 		name   string
 		res_id int
+	}{
+		{randomString(maxLenS, 0, 1), 6},
+		{randomString(maxLenS, 0, 0), 7},
+		{randomString(maxLenS, 0, 0), 8},
 	}
 
-	tableSuccess := []testEl{
-		testEl{randomString(maxLenS, 0, 1), 6},
-		testEl{randomString(maxLenS, 0, 0), 7},
-		testEl{randomString(maxLenS, 0, 0), 8},
-		testEl{randomString(maxLenS, 0, 0), 9},
-		testEl{randomString(maxLenS, 0, 0), 10},
+	tableFail := []struct {
+		name string
+		code int
+	}{
+		{randomString(maxLenS, 1, 1), errorCodes.DbValueTooLong},
+		{randomString(maxLenS, 1, 0), errorCodes.DbValueTooLong},
+		{randomString(maxLenS, 1, 0), errorCodes.DbValueTooLong},
+		{tableSuccess[0].name, errorCodes.DbDuplicate},
+		{tableSuccess[1].name, errorCodes.DbDuplicate},
+		{tableSuccess[2].name, errorCodes.DbDuplicate},
 	}
 
-	tableFail := []testEl{
-		testEl{randomString(maxLenS, 1, 1), errorCodes.DbValueTooLong},
-		testEl{randomString(maxLenS, 1, 0), errorCodes.DbValueTooLong},
-		testEl{randomString(maxLenS, 1, 0), errorCodes.DbValueTooLong},
-		testEl{tableSuccess[0].name, errorCodes.DbDuplicate},
-		testEl{tableSuccess[1].name, errorCodes.DbDuplicate},
-		testEl{tableSuccess[2].name, errorCodes.DbDuplicate},
-		testEl{tableSuccess[3].name, errorCodes.DbDuplicate},
-	}
-
-	for _, val := range tableSuccess {
-		id, err, code := CreateBrand(val.name)
-		if id != val.res_id || err != nil || code != errorCodes.DbNothingToReport {
+	for _, v := range tableSuccess {
+		id, err, code := CreateBrand(v.name)
+		if id != v.res_id || err != nil || code != errorCodes.DbNothingToReport {
 			t.Errorf("Expected to create a brand. Got %v %v %v", id, err, code)
 		}
 
 		brand, err, code := GetBrand(id)
-		if brand.Name != val.name {
-			t.Errorf("Expected to create a brand with a name %v, got %v", brand.Name, val.name)
+		if brand.Name != v.name {
+			t.Errorf("Expected to create a brand with a name %v, got %v", brand.Name, v.name)
 		}
 	}
 
-	for _, val := range tableFail {
-		id, err, code := CreateBrand(val.name)
-		if err == nil || id != 0 || code != val.res_id {
+	for _, v := range tableFail {
+		id, err, code := CreateBrand(v.name)
+		if err == nil || id != 0 || code != v.code {
 			t.Error("New brand should not be created")
 		}
 	}
 
 	brands, _, _ := GetAllBrands()
-	if len(brands) != 10 {
-		t.Errorf("Should have 10 brands, have %v", len(brands))
+	brandsNum := len(AllBrands) + len(tableSuccess)
+	if len(brands) != brandsNum {
+		t.Errorf("Should have %v brands, have %v", brandsNum, len(brands))
 	}
 }
 
 func TestUpdateBrand(t *testing.T) {
 	cleanUpDb()
 
-	type testEl struct {
+	randStr := randomString(maxLenS, 0, 0)
+	table := []struct {
 		id           int
 		name         string
 		res_is_error int
 		res_code     int
+	}{
+		{2, "Playstation", 1, errorCodes.DbDuplicate},
+		{3, "Ferrari", 1, errorCodes.DbDuplicate},
+		{3, randStr, 0, errorCodes.DbNothingToReport},
+		{4, randStr, 1, errorCodes.DbDuplicate},
+		{1, randomString(maxLenS, 0, 0), 0, errorCodes.DbNothingToReport},
+		{2, randomString(maxLenS, 0, 1), 0, errorCodes.DbNothingToReport},
+		{2, randomString(maxLenS, 1, 0), 1, errorCodes.DbValueTooLong},
+		{5, randomString(maxLenS, 1, 1), 1, errorCodes.DbValueTooLong},
+		{0, randomString(maxLenS, 0, 0), 1, errorCodes.DbNothingUpdated},
+		{-1, randomString(maxLenS, 0, 0), 1, errorCodes.DbNothingUpdated},
+		{43, randomString(maxLenS, 0, 0), 1, errorCodes.DbNothingUpdated},
 	}
 
-	randStr := randomString(maxLenS, 0, 0)
-	table := []testEl{
-		testEl{2, "Playstation", 1, errorCodes.DbDuplicate},
-		testEl{3, "Ferrari", 1, errorCodes.DbDuplicate},
-		testEl{3, randStr, 0, errorCodes.DbNothingToReport},
-		testEl{4, randStr, 1, errorCodes.DbDuplicate},
-		testEl{1, randomString(maxLenS, 0, 0), 0, errorCodes.DbNothingToReport},
-		testEl{2, randomString(maxLenS, 0, 1), 0, errorCodes.DbNothingToReport},
-		testEl{2, randomString(maxLenS, 1, 0), 1, errorCodes.DbValueTooLong},
-		testEl{5, randomString(maxLenS, 1, 1), 1, errorCodes.DbValueTooLong},
-		testEl{0, randomString(maxLenS, 0, 0), 1, errorCodes.DbNothingUpdated},
-		testEl{-1, randomString(maxLenS, 0, 0), 1, errorCodes.DbNothingUpdated},
-		testEl{43, randomString(maxLenS, 0, 0), 1, errorCodes.DbNothingUpdated},
-	}
-
-	for _, val := range table {
-		err, code := UpdateBrand(val.id, val.name)
-		if val.res_is_error == 1 {
-			if err == nil || code != val.res_code {
-				t.Errorf("The brand %v should not be updated, but it was: %v, %v", val.id, err, code)
+	for _, v := range table {
+		err, code := UpdateBrand(v.id, v.name)
+		if v.res_is_error == 1 {
+			if err == nil || code != v.res_code {
+				t.Errorf("The brand %v should not be updated, but it was: %v, %v", v.id, err, code)
 			}
 		} else {
-			if err != nil || code != val.res_code {
-				t.Errorf("The brand %v should have been updated, but was not", val.id)
+			if err != nil || code != v.res_code {
+				t.Errorf("The brand %v should have been updated, but was not", v.id)
 			}
 
-			brand, _, _ := GetBrand(val.id)
-			if brand.Name != val.name {
-				t.Errorf("Expected value %v after update, got %v", val.name, brand.Name)
+			brand, _, _ := GetBrand(v.id)
+			if brand.Name != v.name {
+				t.Errorf("Expected value %v after update, got %v", v.name, brand.Name)
 			}
 		}
 	}
@@ -307,21 +318,14 @@ func TestGetAllTags(t *testing.T) {
 		t.Error("Should finish without no error")
 	}
 
-	if len(tags) != 6 {
-		t.Errorf("Expect 6 tags, got %v", len(tags))
+	if len(tags) != len(AllTags) {
+		t.Errorf("Expect %v tags, got %v", len(AllTags), len(tags))
 	}
 
-	expected := []structs.Tag{
-		structs.Tag{1, "dress", "", nil},
-		structs.Tag{2, "drone", "", nil},
-		structs.Tag{3, "cosmetics", "", nil},
-		structs.Tag{4, "car", "", nil},
-		structs.Tag{5, "hat", "", nil},
-		structs.Tag{6, "phone", "", nil},
-	}
-	for i, tag := range tags {
-		if tag.Id != expected[i].Id || tag.Name != expected[i].Name || tag.Issued_at != expected[i].Issued_at || tag.Description != expected[i].Description {
-			t.Errorf("Expect %v , got %v", expected[i], tag)
+	for _, tag := range tags {
+		el := AllTags[tag.Id]
+		if tag.Id != el.Id || tag.Name != el.Name || tag.Issued_at != nil || tag.Description != "" {
+			t.Errorf("Expect %v , got %v", el, tag)
 		}
 	}
 }
@@ -329,38 +333,37 @@ func TestGetAllTags(t *testing.T) {
 func TestGetTag(t *testing.T) {
 	cleanUpDb()
 
-	type testEl struct {
+	table := []struct {
+		tagId        int
 		res_is_error int
 		res_code     int
 		res          structs.Tag
+	}{
+		{1, 0, errorCodes.DbNothingToReport, AllTags[1]},
+		{2, 0, errorCodes.DbNothingToReport, AllTags[2]},
+		{3, 0, errorCodes.DbNothingToReport, AllTags[3]},
+		{6, 0, errorCodes.DbNothingToReport, AllTags[6]},
+		{0, 1, errorCodes.DbNoElement, structs.Tag{}},
+		{-1, 1, errorCodes.DbNoElement, structs.Tag{}},
+		{23, 1, errorCodes.DbNoElement, structs.Tag{}},
+		{43, 1, errorCodes.DbNoElement, structs.Tag{}},
 	}
 
-	table := map[int]testEl{
-		1:   testEl{0, errorCodes.DbNothingToReport, structs.Tag{1, "dress", "nice dresses", nil}},
-		2:   testEl{0, errorCodes.DbNothingToReport, structs.Tag{2, "drone", "cool flying machines that do stuff", nil}},
-		3:   testEl{0, errorCodes.DbNothingToReport, structs.Tag{3, "cosmetics", "Known as make-up, are substances or products used to enhance the appearance or scent of the body", nil}},
-		6:   testEl{0, errorCodes.DbNothingToReport, structs.Tag{6, "phone", "People use it to speak with other people", nil}},
-		0:   testEl{1, errorCodes.DbNoElement, structs.Tag{}},
-		-1:  testEl{1, errorCodes.DbNoElement, structs.Tag{}},
-		123: testEl{1, errorCodes.DbNoElement, structs.Tag{}},
-		43:  testEl{1, errorCodes.DbNoElement, structs.Tag{}},
-	}
-
-	for id, val := range table {
-		tag, err, code := GetTag(id)
-		if val.res_is_error == 1 && err == nil {
-			t.Errorf("Wrong result for case %v. Expected error, did not get it", id)
+	for _, v := range table {
+		tag, err, code := GetTag(v.tagId)
+		if v.res_is_error == 1 && err == nil {
+			t.Errorf("Wrong result for case %v. Expected error, did not get it", v.tagId)
 		}
 
-		if val.res_is_error == 0 && err != nil {
-			t.Errorf("Wrong result for case %v. Expected nil, got error", id)
+		if v.res_is_error == 0 && err != nil {
+			t.Errorf("Wrong result for case %v. Expected nil, got error", v.tagId)
 		}
 
-		if code != val.res_code || tag.Id != val.res.Id || tag.Name != val.res.Name || tag.Description != val.res.Description {
-			t.Errorf("Wrong result for case %v: \n Expected %v \n Got %v %v %v", id, val, err, code, tag)
+		if code != v.res_code || tag.Id != v.res.Id || tag.Name != v.res.Name || tag.Description != v.res.Description {
+			t.Errorf("Wrong result for case %v: \n Expected %v \n Got %v %v %v", v.tagId, v, err, code, tag)
 		}
 		if tag.Id != 0 && tag.Issued_at == nil {
-			t.Errorf("Wrong result for case %v: Real Brand has an Issued_at date", id)
+			t.Errorf("Wrong result for case %v: Real Brand has an Issued_at date", v.tagId)
 		}
 	}
 }
@@ -368,99 +371,99 @@ func TestGetTag(t *testing.T) {
 func TestCreateTag(t *testing.T) {
 	cleanUpDb()
 
-	type testEl struct {
+	tableSuccess := []struct {
 		name   string
 		descr  string
 		res_id int
+	}{
+		{randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 7},
+		{randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 1), 8},
+		{randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 0), 9},
+		{randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 1), 10},
 	}
-
-	correct_table := []testEl{
-		testEl{randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 7},
-		testEl{randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 1), 8},
-		testEl{randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 0), 9},
-		testEl{randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 1), 10},
-	}
-
-	wrong_table := []testEl{
-		testEl{randomString(maxLenS, 1, 0), randomString(maxLenB, 1, 0), errorCodes.DbValueTooLong},
-		testEl{randomString(maxLenS, 1, 0), randomString(maxLenB, 1, 1), errorCodes.DbValueTooLong},
-		testEl{randomString(maxLenS, 1, 1), randomString(maxLenB, 1, 0), errorCodes.DbValueTooLong},
-		testEl{randomString(maxLenS, 1, 1), randomString(maxLenB, 1, 1), errorCodes.DbValueTooLong},
-		testEl{correct_table[0].name, "", errorCodes.DbDuplicate},
-		testEl{correct_table[1].name, "", errorCodes.DbDuplicate},
-		testEl{correct_table[2].name, "", errorCodes.DbDuplicate},
-		testEl{correct_table[3].name, "", errorCodes.DbDuplicate},
-	}
-
-	for _, val := range correct_table {
-		id, err, code := CreateTag(val.name, val.descr)
-		if id != val.res_id || err != nil || code != errorCodes.DbNothingToReport {
+	for _, v := range tableSuccess {
+		id, err, code := CreateTag(v.name, v.descr)
+		if id != v.res_id || err != nil || code != errorCodes.DbNothingToReport {
 			t.Errorf("Expected to create a tag. Got %v %v %v", id, err, code)
 		}
 
 		tag, _, _ := GetTag(id)
-		if tag.Name != val.name || tag.Description != val.descr {
-			t.Errorf("Expected to create a tag with a name %v, got %v", tag.Name, val.name)
+		if tag.Name != v.name || tag.Description != v.descr {
+			t.Errorf("Expected to create a tag with a name %v, got %v", tag.Name, v.name)
 		}
 	}
 
-	for _, val := range wrong_table {
-		id, err, code := CreateTag(val.name, val.descr)
-		if err == nil || id != 0 || code != val.res_id {
+	tableFail := []struct {
+		name  string
+		descr string
+		code  int
+	}{
+		{randomString(maxLenS, 1, 0), randomString(maxLenB, 1, 0), errorCodes.DbValueTooLong},
+		{randomString(maxLenS, 1, 0), randomString(maxLenB, 1, 1), errorCodes.DbValueTooLong},
+		{randomString(maxLenS, 1, 1), randomString(maxLenB, 1, 0), errorCodes.DbValueTooLong},
+		{randomString(maxLenS, 1, 1), randomString(maxLenB, 1, 1), errorCodes.DbValueTooLong},
+		{tableSuccess[0].name, "", errorCodes.DbDuplicate},
+		{tableSuccess[1].name, "", errorCodes.DbDuplicate},
+		{tableSuccess[2].name, "", errorCodes.DbDuplicate},
+		{tableSuccess[3].name, "", errorCodes.DbDuplicate},
+	}
+
+	for _, v := range tableFail {
+		id, err, code := CreateTag(v.name, v.descr)
+		if err == nil || id != 0 || code != v.code {
 			t.Errorf("New tag should not be created %v, %v", id, code)
 		}
 	}
 
 	tags, _, _ := GetAllTags()
-	if len(tags) != 10 {
-		t.Errorf("Should have 11 tags, have %v", len(tags))
+	tagsNum := len(AllTags) + len(tableSuccess)
+	if len(tags) != tagsNum {
+		t.Errorf("Should have %v tags, have %v", tagsNum, len(tags))
 	}
 }
 
 func TestUpdateTag(t *testing.T) {
 	cleanUpDb()
 
-	type testEl struct {
+	randStr := randomString(maxLenS, 0, 0)
+	table := []struct {
 		id           int
 		name         string
 		descr        string
 		res_is_error int
 		res_code     int
+	}{
+		{2, "car", randomString(maxLenB, 0, 0), 1, errorCodes.DbDuplicate},
+		{3, "phone", randomString(maxLenB, 0, 0), 1, errorCodes.DbDuplicate},
+		{3, randStr, randomString(maxLenB, 0, 0), 0, errorCodes.DbNothingToReport},
+		{4, randStr, randomString(maxLenB, 0, 0), 1, errorCodes.DbDuplicate},
+		{1, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 0, errorCodes.DbNothingToReport},
+		{2, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 1), 0, errorCodes.DbNothingToReport},
+		{2, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 0), 0, errorCodes.DbNothingToReport},
+		{2, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 1), 0, errorCodes.DbNothingToReport},
+		{5, randomString(maxLenS, 1, 1), randomString(maxLenB, 0, 0), 1, errorCodes.DbValueTooLong},
+		{5, randomString(maxLenS, 1, 0), randomString(maxLenB, 0, 0), 1, errorCodes.DbValueTooLong},
+		{5, randomString(maxLenS, 0, 0), randomString(maxLenB, 1, 1), 1, errorCodes.DbValueTooLong},
+		{5, randomString(maxLenS, 0, 0), randomString(maxLenB, 1, 0), 1, errorCodes.DbValueTooLong},
+		{0, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 1, errorCodes.DbNothingUpdated},
+		{-1, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 1, errorCodes.DbNothingUpdated},
+		{43, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 1, errorCodes.DbNothingUpdated},
 	}
 
-	randStr := randomString(maxLenS, 0, 0)
-	table := []testEl{
-		testEl{2, "car", randomString(maxLenB, 0, 0), 1, errorCodes.DbDuplicate},
-		testEl{3, "phone", randomString(maxLenB, 0, 0), 1, errorCodes.DbDuplicate},
-		testEl{3, randStr, randomString(maxLenB, 0, 0), 0, errorCodes.DbNothingToReport},
-		testEl{4, randStr, randomString(maxLenB, 0, 0), 1, errorCodes.DbDuplicate},
-		testEl{1, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 0, errorCodes.DbNothingToReport},
-		testEl{2, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 1), 0, errorCodes.DbNothingToReport},
-		testEl{2, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 0), 0, errorCodes.DbNothingToReport},
-		testEl{2, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 1), 0, errorCodes.DbNothingToReport},
-		testEl{5, randomString(maxLenS, 1, 1), randomString(maxLenB, 0, 0), 1, errorCodes.DbValueTooLong},
-		testEl{5, randomString(maxLenS, 1, 0), randomString(maxLenB, 0, 0), 1, errorCodes.DbValueTooLong},
-		testEl{5, randomString(maxLenS, 0, 0), randomString(maxLenB, 1, 1), 1, errorCodes.DbValueTooLong},
-		testEl{5, randomString(maxLenS, 0, 0), randomString(maxLenB, 1, 0), 1, errorCodes.DbValueTooLong},
-		testEl{0, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 1, errorCodes.DbNothingUpdated},
-		testEl{-1, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 1, errorCodes.DbNothingUpdated},
-		testEl{43, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 1, errorCodes.DbNothingUpdated},
-	}
-
-	for _, val := range table {
-		err, code := UpdateTag(val.id, val.name, val.descr)
-		if val.res_is_error == 1 {
-			if err == nil || code != val.res_code {
-				t.Errorf("The tag %v should not be updated, but it was: %v, %v", val.id, err, code)
+	for _, v := range table {
+		err, code := UpdateTag(v.id, v.name, v.descr)
+		if v.res_is_error == 1 {
+			if err == nil || code != v.res_code {
+				t.Errorf("The tag %v should not be updated, but it was: %v, %v", v.id, err, code)
 			}
 		} else {
-			if err != nil || code != val.res_code {
-				t.Errorf("The tag %v should have been updated, but was not", val.id)
+			if err != nil || code != v.res_code {
+				t.Errorf("The tag %v should have been updated, but was not", v.id)
 			}
 
-			tag, _, _ := GetTag(val.id)
-			if tag.Name != val.name || tag.Description != val.descr {
-				t.Errorf("Expected value %v after update, got %v", val.name, tag.Name)
+			tag, _, _ := GetTag(v.id)
+			if tag.Name != v.name || tag.Description != v.descr {
+				t.Errorf("Expected value %v after update, got %v", v.name, tag.Name)
 			}
 		}
 	}
@@ -470,40 +473,39 @@ func TestUpdateTag(t *testing.T) {
 func TestGetUser(t *testing.T) {
 	cleanUpDb()
 
-	type testEl struct {
+	table := []struct {
+		userId       int
 		res_is_error int
 		res_code     int
 		res          structs.User
+	}{
+		{1, 0, errorCodes.DbNothingToReport, AllUsers[1]},
+		{2, 0, errorCodes.DbNothingToReport, AllUsers[2]},
+		{0, 1, errorCodes.DbNoElement, structs.User{}},
+		{-1, 1, errorCodes.DbNoElement, structs.User{}},
+		{23, 1, errorCodes.DbNoElement, structs.User{}},
+		{43, 1, errorCodes.DbNoElement, structs.User{}},
 	}
 
-	table := map[int]testEl{
-		1:   testEl{0, errorCodes.DbNothingToReport, structs.User{1, "Albert Einstein", "", "Developed the general theory of relativity.", 0, 0, 3, 3, 0, 1, nil}},
-		2:   testEl{0, errorCodes.DbNothingToReport, structs.User{2, "Isaac Newton", "", "Mechanics, laws of motion", 0, 2, 0, 0, 0, 0, nil}},
-		0:   testEl{1, errorCodes.DbNoElement, structs.User{}},
-		-1:  testEl{1, errorCodes.DbNoElement, structs.User{}},
-		123: testEl{1, errorCodes.DbNoElement, structs.User{}},
-		43:  testEl{1, errorCodes.DbNoElement, structs.User{}},
-	}
-
-	for id, val := range table {
-		user, err, code := GetUser(id)
-		if val.res_is_error == 1 && err == nil {
-			t.Errorf("Wrong result for case %v. Expected error, did not get it", id)
+	for _, v := range table {
+		user, err, code := GetUser(v.userId)
+		if v.res_is_error == 1 && err == nil {
+			t.Errorf("Wrong result for case %v. Expected error, did not get it", v.userId)
 		}
 
-		if val.res_is_error == 0 && err != nil {
-			t.Errorf("Wrong result for case %v. Expected nil, got error", id)
+		if v.res_is_error == 0 && err != nil {
+			t.Errorf("Wrong result for case %v. Expected nil, got error", v.userId)
 		}
 
-		if code != val.res_code || user.Id != val.res.Id || user.Nickname != val.res.Nickname ||
-			user.Image != val.res.Image || user.About != val.res.About || user.Expertise != val.res.Expertise ||
-			user.Followers_num != val.res.Followers_num || user.Following_num != val.res.Following_num ||
-			user.Purchases_num != val.res.Purchases_num || user.Questions_num != val.res.Questions_num ||
-			user.Answers_num != val.res.Answers_num {
-			t.Errorf("Wrong result for case %v: \n Expected %v \n Got %v %v %v", id, val, err, code, user)
+		if code != v.res_code || user.Id != v.res.Id || user.Nickname != v.res.Nickname ||
+			user.Image != v.res.Image || user.About != v.res.About || user.Expertise != v.res.Expertise ||
+			user.Followers_num != v.res.Followers_num || user.Following_num != v.res.Following_num ||
+			user.Purchases_num != v.res.Purchases_num || user.Questions_num != v.res.Questions_num ||
+			user.Answers_num != v.res.Answers_num {
+			t.Errorf("Wrong result for case %v: \n Expected %v \n Got %v %v %v", v.userId, v, err, code, user)
 		}
 		if user.Id != 0 && user.Issued_at == nil {
-			t.Errorf("Wrong result for case %v: Real User has an Issued_at date", id)
+			t.Errorf("Wrong result for case %v: Real User has an Issued_at date", v.userId)
 		}
 	}
 }
@@ -511,46 +513,44 @@ func TestGetUser(t *testing.T) {
 func TestUpdateUser(t *testing.T) {
 	cleanUpDb()
 
-	type testEl struct {
+	randStr := randomString(maxLenS, 0, 0)
+	table := []struct {
 		id           int
 		nickname     string
 		about        string
 		res_is_error int
 		res_code     int
+	}{
+		{2, "Marie Curie", randomString(maxLenB, 0, 0), 1, errorCodes.DbDuplicate},
+		{3, "Nikola Tesla", randomString(maxLenB, 0, 0), 1, errorCodes.DbDuplicate},
+		{3, randStr, randomString(maxLenB, 0, 0), 0, errorCodes.DbNothingToReport},
+		{4, randStr, randomString(maxLenB, 0, 0), 1, errorCodes.DbDuplicate},
+		{1, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 0, errorCodes.DbNothingToReport},
+		{2, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 1), 0, errorCodes.DbNothingToReport},
+		{3, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 0), 0, errorCodes.DbNothingToReport},
+		{4, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 1), 0, errorCodes.DbNothingToReport},
+		{2, randomString(maxLenS, 1, 0), randomString(maxLenB, 0, 0), 1, errorCodes.DbValueTooLong},
+		{5, randomString(maxLenS, 0, 0), randomString(maxLenB, 1, 0), 1, errorCodes.DbValueTooLong},
+		{5, randomString(maxLenS, 1, 0), randomString(maxLenB, 1, 0), 1, errorCodes.DbValueTooLong},
+		{0, randomString(maxLenS, 0, 0), randomString(maxLenS, 0, 0), 1, errorCodes.DbNothingUpdated},
+		{-1, randomString(maxLenS, 0, 0), randomString(maxLenS, 0, 0), 1, errorCodes.DbNothingUpdated},
+		{43, randomString(maxLenS, 0, 0), randomString(maxLenS, 0, 0), 1, errorCodes.DbNothingUpdated},
 	}
 
-	randStr := randomString(maxLenS, 0, 0)
-	table := []testEl{
-		testEl{2, "Marie Curie", randomString(maxLenB, 0, 0), 1, errorCodes.DbDuplicate},
-		testEl{3, "Nikola Tesla", randomString(maxLenB, 0, 0), 1, errorCodes.DbDuplicate},
-		testEl{3, randStr, randomString(maxLenB, 0, 0), 0, errorCodes.DbNothingToReport},
-		testEl{4, randStr, randomString(maxLenB, 0, 0), 1, errorCodes.DbDuplicate},
-		testEl{1, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 0, errorCodes.DbNothingToReport},
-		testEl{2, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 1), 0, errorCodes.DbNothingToReport},
-		testEl{3, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 0), 0, errorCodes.DbNothingToReport},
-		testEl{4, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 1), 0, errorCodes.DbNothingToReport},
-		testEl{2, randomString(maxLenS, 1, 0), randomString(maxLenB, 0, 0), 1, errorCodes.DbValueTooLong},
-		testEl{5, randomString(maxLenS, 0, 0), randomString(maxLenB, 1, 0), 1, errorCodes.DbValueTooLong},
-		testEl{5, randomString(maxLenS, 1, 0), randomString(maxLenB, 1, 0), 1, errorCodes.DbValueTooLong},
-		testEl{0, randomString(maxLenS, 0, 0), randomString(maxLenS, 0, 0), 1, errorCodes.DbNothingUpdated},
-		testEl{-1, randomString(maxLenS, 0, 0), randomString(maxLenS, 0, 0), 1, errorCodes.DbNothingUpdated},
-		testEl{43, randomString(maxLenS, 0, 0), randomString(maxLenS, 0, 0), 1, errorCodes.DbNothingUpdated},
-	}
-
-	for _, val := range table {
-		err, code := UpdateUser(val.id, val.nickname, val.about)
-		if val.res_is_error == 1 {
-			if err == nil || code != val.res_code {
-				t.Errorf("User %v should not be updated, but it was: %v, %v", val.id, err, code)
+	for _, v := range table {
+		err, code := UpdateUser(v.id, v.nickname, v.about)
+		if v.res_is_error == 1 {
+			if err == nil || code != v.res_code {
+				t.Errorf("User %v should not be updated, but it was: %v, %v", v.id, err, code)
 			}
 		} else {
-			if err != nil || code != val.res_code {
-				t.Errorf("User %v should have been updated, but was not", val.id)
+			if err != nil || code != v.res_code {
+				t.Errorf("User %v should have been updated, but was not", v.id)
 			}
 
-			user, _, _ := GetUser(val.id)
-			if user.Nickname != val.nickname || user.About != val.about {
-				t.Errorf("Expected value %v after update, got %v", val.nickname, user.Nickname)
+			user, _, _ := GetUser(v.id)
+			if user.Nickname != v.nickname || user.About != v.about {
+				t.Errorf("Expected value %v after update, got %v", v.nickname, user.Nickname)
 			}
 		}
 	}
@@ -559,21 +559,24 @@ func TestUpdateUser(t *testing.T) {
 func TestGetFollowers(t *testing.T) {
 	cleanUpDb()
 
-	tableCorrect := map[int][]int{
-		1: []int{},
-		2: []int{1, 6},
-		3: []int{},
-		4: []int{1},
-		7: []int{1},
+	tableSuccess := []struct {
+		id        int
+		followers []int
+	}{
+		{1, []int{}},
+		{2, []int{1, 6}},
+		{3, []int{}},
+		{4, []int{1}},
+		{7, []int{1}},
 	}
-	for id, followersCorrect := range tableCorrect {
-		followers, err, code := GetFollowers(id)
+	for _, v := range tableSuccess {
+		followers, err, code := GetFollowers(v.id)
 		if err != nil || code != errorCodes.DbNothingToReport {
 			t.Errorf("Expected to get followers, got a mistake %v %v", err, code)
 		}
 
-		if len(followers) != len(followersCorrect) {
-			t.Errorf("Expected to get %v followers, got %v", len(followersCorrect), len(followers))
+		if len(followers) != len(v.followers) {
+			t.Errorf("Expected to get %v followers, got %v", len(v.followers), len(followers))
 		}
 
 		followerIds := make([]int, len(followers), len(followers))
@@ -581,13 +584,12 @@ func TestGetFollowers(t *testing.T) {
 			followerIds[i] = v.Id
 		}
 
-		if !isSortedArrayEquivalentToArray(followersCorrect, followerIds) {
-			t.Errorf("Followers are not equal %v %v", followersCorrect, followerIds)
+		if !isSortedArrayEquivalentToArray(v.followers, followerIds) {
+			t.Errorf("Followers are not equal %v %v", v.followers, followerIds)
 		}
 	}
 
-	tableWrong := []int{0, 16, 52, -1}
-	for _, id := range tableWrong {
+	for _, id := range []int{0, 16, 52, -1} {
 		followers, err, code := GetFollowers(id)
 		if len(followers) != 0 || err != nil || code != errorCodes.DbNothingToReport {
 			t.Errorf("Should receive empty array with no errors. Received %v %v %v", followers, err, code)
@@ -596,7 +598,7 @@ func TestGetFollowers(t *testing.T) {
 
 	followers, _, _ := GetFollowers(7)
 	u := followers[0]
-	if u.Nickname != "Albert Einstein" || u.About != "" || u.Expertise != 0 || u.Followers_num != 0 {
+	if u.Nickname != AllUsers[1].Nickname || u.About != "" || u.Expertise != 0 || u.Followers_num != 0 {
 		t.Errorf("Information about follower is not right %v", u)
 	}
 }
@@ -604,23 +606,23 @@ func TestGetFollowers(t *testing.T) {
 func TestGetFollowing(t *testing.T) {
 	cleanUpDb()
 
-	tableCorrect := map[int][]int{
-		1: []int{2, 4, 7},
-		2: []int{},
-		3: []int{},
-		4: []int{},
-		5: []int{},
-		6: []int{2},
-		7: []int{},
+	tableSuccess := []struct {
+		id        int
+		following []int
+	}{
+		{1, []int{2, 4, 7}},
+		{2, []int{}},
+		{6, []int{2}},
+		{7, []int{}},
 	}
-	for id, followingCorrect := range tableCorrect {
-		following, err, code := GetFollowing(id)
+	for _, v := range tableSuccess {
+		following, err, code := GetFollowing(v.id)
 		if err != nil || code != errorCodes.DbNothingToReport {
 			t.Errorf("Expected to get following, got a mistake %v %v", err, code)
 		}
 
-		if len(following) != len(followingCorrect) {
-			t.Errorf("Expected to get %v following, got %v", len(followingCorrect), len(following))
+		if len(following) != len(v.following) {
+			t.Errorf("Expected to get %v following, got %v", len(v.following), len(following))
 		}
 
 		followingIds := make([]int, len(following), len(following))
@@ -628,13 +630,12 @@ func TestGetFollowing(t *testing.T) {
 			followingIds[i] = v.Id
 		}
 
-		if !isSortedArrayEquivalentToArray(followingCorrect, followingIds) {
-			t.Errorf("Followers are not equal %v %v", followingCorrect, followingIds)
+		if !isSortedArrayEquivalentToArray(v.following, followingIds) {
+			t.Errorf("Followers are not equal %v %v", v.following, followingIds)
 		}
 	}
 
-	tableWrong := []int{0, 16, 52, -1}
-	for _, id := range tableWrong {
+	for _, id := range []int{0, 16, 52, -1} {
 		followers, err, code := GetFollowing(id)
 		if len(followers) != 0 || err != nil || code != errorCodes.DbNothingToReport {
 			t.Errorf("Should receive empty array with no errors. Received %v %v %v", followers, err, code)
@@ -643,7 +644,7 @@ func TestGetFollowing(t *testing.T) {
 
 	following, _, _ := GetFollowing(6)
 	u := following[0]
-	if u.Nickname != "Isaac Newton" || u.About != "" || u.Expertise != 0 || u.Followers_num != 0 {
+	if u.Nickname != AllUsers[2].Nickname || u.About != "" || u.Expertise != 0 || u.Followers_num != 0 {
 		t.Errorf("Information about following is not right %v", u)
 	}
 }
@@ -651,50 +652,49 @@ func TestGetFollowing(t *testing.T) {
 func TestFollow(t *testing.T) {
 	cleanUpDb()
 
-	type testEl struct {
+	table := []struct {
 		whoId         int
 		whomId        int
 		res_is_error  int
 		res_code      int
 		followers_num int
 		following_num int
-	}
-	table := []testEl{
-		testEl{1, 1, 1, errorCodes.FollowYourself, 0, 3},
-		testEl{1, 2, 1, errorCodes.DbDuplicate, 2, 3},
-		testEl{6, 2, 1, errorCodes.DbDuplicate, 2, 1},
-		testEl{0, 2, 1, errorCodes.DbForeignKeyViolation, 2, 0},
-		testEl{6, -1, 1, errorCodes.DbForeignKeyViolation, 0, 1},
-		testEl{10, 54, 1, errorCodes.DbForeignKeyViolation, 0, 0},
-		testEl{1, 6, 0, errorCodes.DbNothingToReport, 1, 4},
-		testEl{6, 1, 0, errorCodes.DbNothingToReport, 1, 2},
-		testEl{2, 4, 0, errorCodes.DbNothingToReport, 2, 1},
-		testEl{2, 6, 0, errorCodes.DbNothingToReport, 2, 2},
+	}{
+		{1, 1, 1, errorCodes.FollowYourself, 0, 3},
+		{1, 2, 1, errorCodes.DbDuplicate, 2, 3},
+		{6, 2, 1, errorCodes.DbDuplicate, 2, 1},
+		{0, 2, 1, errorCodes.DbForeignKeyViolation, 2, 0},
+		{6, -1, 1, errorCodes.DbForeignKeyViolation, 0, 1},
+		{10, 54, 1, errorCodes.DbForeignKeyViolation, 0, 0},
+		{1, 6, 0, errorCodes.DbNothingToReport, 1, 4},
+		{6, 1, 0, errorCodes.DbNothingToReport, 1, 2},
+		{2, 4, 0, errorCodes.DbNothingToReport, 2, 1},
+		{2, 6, 0, errorCodes.DbNothingToReport, 2, 2},
 	}
 
-	for _, val := range table {
-		err, code := Follow(val.whoId, val.whomId)
-		if val.res_is_error == 1 {
-			if err == nil || code != val.res_code {
+	for _, v := range table {
+		err, code := Follow(v.whoId, v.whomId)
+		if v.res_is_error == 1 {
+			if err == nil || code != v.res_code {
 				t.Errorf("Expect follow to fail, got %v, %v", err, code)
 			}
 		} else {
-			if err != nil || code != val.res_code {
+			if err != nil || code != v.res_code {
 				t.Errorf("Expect follow to happen, got %v, %v", err, code)
 			}
 		}
 
-		followers, _, _ := GetFollowers(val.whomId)
-		following, _, _ := GetFollowing(val.whoId)
+		followers, _, _ := GetFollowers(v.whomId)
+		following, _, _ := GetFollowing(v.whoId)
 
-		if len(followers) != val.followers_num || len(following) != val.following_num {
-			t.Errorf("Number of followers and following in FOLLOWERS table is not right. Expect (%v, %v), got (%v, %v)", val.followers_num, val.following_num, len(followers), len(following))
+		if len(followers) != v.followers_num || len(following) != v.following_num {
+			t.Errorf("Number of followers and following in FOLLOWERS table is not right. Expect (%v, %v), got (%v, %v)", v.followers_num, v.following_num, len(followers), len(following))
 		}
 
-		u1, _, _ := GetUser(val.whoId)
-		u2, _, _ := GetUser(val.whomId)
-		if u2.Followers_num != val.followers_num || u1.Following_num != val.following_num {
-			t.Errorf("Number of followers and following in USERS table is not right. Expect (%v, %v), got (%v, %v)", val.followers_num, val.following_num, u2.Followers_num, u1.Following_num)
+		u1, _, _ := GetUser(v.whoId)
+		u2, _, _ := GetUser(v.whomId)
+		if u2.Followers_num != v.followers_num || u1.Following_num != v.following_num {
+			t.Errorf("Number of followers and following in USERS table is not right. Expect (%v, %v), got (%v, %v)", v.followers_num, v.following_num, u2.Followers_num, u1.Following_num)
 		}
 	}
 }
@@ -702,52 +702,51 @@ func TestFollow(t *testing.T) {
 func TestUnfollow(t *testing.T) {
 	cleanUpDb()
 
-	type testEl struct {
+	table := []struct {
 		whoId         int
 		whomId        int
 		res_is_error  int
 		res_code      int
 		followers_num int
 		following_num int
-	}
-	table := []testEl{
-		testEl{1, 1, 1, errorCodes.FollowYourself, 0, 3},
-		testEl{1, 5, 1, errorCodes.DbNothingUpdated, 0, 3},
-		testEl{6, 3, 1, errorCodes.DbNothingUpdated, 0, 1},
-		testEl{5, 4, 1, errorCodes.DbNothingUpdated, 1, 0},
-		testEl{-1, 4, 1, errorCodes.DbNothingUpdated, 1, 0},
-		testEl{10, 9, 1, errorCodes.DbNothingUpdated, 0, 0},
-		testEl{11, 19, 1, errorCodes.DbNothingUpdated, 0, 0},
-		testEl{1, 6, 1, errorCodes.DbNothingUpdated, 0, 3},
-		testEl{6, 2, 0, errorCodes.DbNothingToReport, 1, 0},
-		testEl{1, 4, 0, errorCodes.DbNothingToReport, 0, 2},
-		testEl{1, 7, 0, errorCodes.DbNothingToReport, 0, 1},
-		testEl{1, 2, 0, errorCodes.DbNothingToReport, 0, 0},
+	}{
+		{1, 1, 1, errorCodes.FollowYourself, 0, 3},
+		{1, 5, 1, errorCodes.DbNothingUpdated, 0, 3},
+		{6, 3, 1, errorCodes.DbNothingUpdated, 0, 1},
+		{5, 4, 1, errorCodes.DbNothingUpdated, 1, 0},
+		{-1, 4, 1, errorCodes.DbNothingUpdated, 1, 0},
+		{10, 9, 1, errorCodes.DbNothingUpdated, 0, 0},
+		{11, 19, 1, errorCodes.DbNothingUpdated, 0, 0},
+		{1, 6, 1, errorCodes.DbNothingUpdated, 0, 3},
+		{6, 2, 0, errorCodes.DbNothingToReport, 1, 0},
+		{1, 4, 0, errorCodes.DbNothingToReport, 0, 2},
+		{1, 7, 0, errorCodes.DbNothingToReport, 0, 1},
+		{1, 2, 0, errorCodes.DbNothingToReport, 0, 0},
 	}
 
-	for _, val := range table {
-		err, code := Unfollow(val.whoId, val.whomId)
-		if val.res_is_error == 1 {
-			if err == nil || code != val.res_code {
+	for _, v := range table {
+		err, code := Unfollow(v.whoId, v.whomId)
+		if v.res_is_error == 1 {
+			if err == nil || code != v.res_code {
 				t.Errorf("Expect unfollow to fail, got %v, %v", err, code)
 			}
 		} else {
-			if err != nil || code != val.res_code {
+			if err != nil || code != v.res_code {
 				t.Errorf("Expect unfollow to happen, got %v, %v", err, code)
 			}
 		}
 
-		followers, _, _ := GetFollowers(val.whomId)
-		following, _, _ := GetFollowing(val.whoId)
+		followers, _, _ := GetFollowers(v.whomId)
+		following, _, _ := GetFollowing(v.whoId)
 
-		if len(followers) != val.followers_num || len(following) != val.following_num {
-			t.Errorf("Number of followers and following in FOLLOWERS table is not right. Expect (%v, %v), got (%v, %v)", val.followers_num, val.following_num, len(followers), len(following))
+		if len(followers) != v.followers_num || len(following) != v.following_num {
+			t.Errorf("Number of followers and following in FOLLOWERS table is not right. Expect (%v, %v), got (%v, %v)", v.followers_num, v.following_num, len(followers), len(following))
 		}
 
-		u1, _, _ := GetUser(val.whoId)
-		u2, _, _ := GetUser(val.whomId)
-		if u2.Followers_num != val.followers_num || u1.Following_num != val.following_num {
-			t.Errorf("Number of followers and following in USERS table is not right. Expect (%v, %v), got (%v, %v)", val.followers_num, val.following_num, u2.Followers_num, u1.Following_num)
+		u1, _, _ := GetUser(v.whoId)
+		u2, _, _ := GetUser(v.whomId)
+		if u2.Followers_num != v.followers_num || u1.Following_num != v.following_num {
+			t.Errorf("Number of followers and following in USERS table is not right. Expect (%v, %v), got (%v, %v)", v.followers_num, v.following_num, u2.Followers_num, u1.Following_num)
 		}
 	}
 }
@@ -756,22 +755,21 @@ func TestUnfollow(t *testing.T) {
 func TestGetUserPurchases(t *testing.T) {
 	cleanUpDb()
 
-	type testEl struct {
+	tableSuccess := []struct {
 		userId       int
 		numPurchases int
-	}
-	tableSuccess := []testEl{
-		testEl{1, 3},
-		testEl{2, 0},
-		testEl{3, 0},
-		testEl{4, 1},
-		testEl{5, 0},
-		testEl{6, 0},
-		testEl{7, 0},
-		testEl{8, 0},
-		testEl{9, 0},
-		testEl{-1, 0},
-		testEl{10, 0},
+	}{
+		{1, 3},
+		{2, 0},
+		{3, 0},
+		{4, 1},
+		{5, 0},
+		{6, 0},
+		{7, 0},
+		{8, 0},
+		{9, 0},
+		{-1, 0},
+		{10, 0},
 	}
 
 	for _, v := range tableSuccess {
@@ -782,9 +780,8 @@ func TestGetUserPurchases(t *testing.T) {
 	}
 
 	purchases, _, _ := GetUserPurchases(4)
-	p := purchases[0]
-	if p.Id != 2 || p.Image != "some_img" || p.Description != "How cool am I?" ||
-		p.Likes_num != 0 || p.User_id != 4 || p.Brand != 5 {
+	p, o := purchases[0], AllPurchases[2]
+	if p.Id != o.Id || p.Image != o.Image || p.Description != o.Description || p.Likes_num != o.Likes_num || p.User_id != o.User_id || p.Brand != o.Brand {
 		t.Errorf("Purchase does not look right %v", p)
 	}
 }
@@ -797,8 +794,8 @@ func TestGetAllPurchases(t *testing.T) {
 		t.Errorf("GetAllPurchases should succeed. Got %v %v", err, code)
 	}
 
-	if len(purchases) != 4 {
-		t.Errorf("Expect to see 4 purchases. Got %v", len(purchases))
+	if len(purchases) != len(AllPurchases) {
+		t.Errorf("Expect to see %v purchases. Got %v", len(AllPurchases), len(purchases))
 	}
 
 	for _, v := range purchases {
@@ -846,7 +843,7 @@ func TestGetPurchase(t *testing.T) {
 func TestGetAllPurchasesWithBrand(t *testing.T) {
 	cleanUpDb()
 
-	tableCorrect := []struct {
+	tableSuccess := []struct {
 		brandId     int
 		purchaseIds map[int]bool
 	}{
@@ -857,7 +854,7 @@ func TestGetAllPurchasesWithBrand(t *testing.T) {
 		{9, map[int]bool{}},
 	}
 
-	for _, v := range tableCorrect {
+	for _, v := range tableSuccess {
 		purchases, err, code := GetAllPurchasesWithBrand(v.brandId)
 		if err != nil || code != errorCodes.DbNothingToReport {
 			t.Errorf("Expect correct execution. Got %v %v", err, code)
@@ -885,7 +882,7 @@ func TestGetAllPurchasesWithBrand(t *testing.T) {
 func TestGetAllPurchasesWithTag(t *testing.T) {
 	cleanUpDb()
 
-	tableCorrect := []struct {
+	tableSuccess := []struct {
 		tagId       int
 		purchaseIds map[int]bool
 	}{
@@ -898,7 +895,7 @@ func TestGetAllPurchasesWithTag(t *testing.T) {
 		{-1, map[int]bool{}},
 	}
 
-	for _, v := range tableCorrect {
+	for _, v := range tableSuccess {
 		purchases, err, code := GetAllPurchasesWithTag(v.tagId)
 		if err != nil || code != errorCodes.DbNothingToReport {
 			t.Errorf("Expect correct execution. Got %v %v", err, code)
