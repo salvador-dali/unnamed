@@ -15,18 +15,25 @@ type Config struct {
 	DbPass   string
 	DbPort   int
 	HttpPort int
+	Secret   []byte
+	ExpDays  int
 }
 
+var Cfg Config
+
 // Init extracts all environment variables for further use
-func Init() Config {
-	return Config{
+func Init() {
+	cfg := Config{
 		GetEnvStr("PROJ_DB_NAME"),
 		GetEnvStr("PROJ_DB_USER"),
 		GetEnvStr("PROJ_DB_HOST"),
 		GetEnvStr("PROJ_DB_PWD"),
 		GetEnvInt("PROJ_DB_PORT"),
 		GetEnvInt("PROJ_HTTP_PORT"),
+		[]byte(GetEnvStr("PROJ_SECRET")),
+		GetEnvInt("PROJ_JWT_EXP_DAYS"),
 	}
+	Cfg = cfg
 }
 
 // GetEnvStr returns a environment variable as a string. Panics if it does not exist

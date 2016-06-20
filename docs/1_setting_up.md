@@ -14,6 +14,8 @@ Set up the following env variables (all DB variables are related to your psql da
     export PROJ_DB_PWD=
     export PROJ_DB_PORT=
     export PROJ_HTTP_PORT=8080
+    export PROJ_SECRET=
+    export PROJ_JWT_EXP_DAYS=
     
 Set up GOPATH equal to a working directory of this repo.
     

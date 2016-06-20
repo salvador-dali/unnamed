@@ -12,8 +12,8 @@ import (
 
 func main() {
 	// Initializes config and a database
-	Cfg := config.Init()
-	storage.Init(Cfg.DbUser, Cfg.DbPass, Cfg.DbHost, Cfg.DbName, Cfg.DbPort)
+	config.Init()
+	storage.Init(config.Cfg.DbUser, config.Cfg.DbPass, config.Cfg.DbHost, config.Cfg.DbName, config.Cfg.DbPort)
 	defer storage.Db.Close()
 
 	// Creates a router
@@ -60,5 +60,5 @@ func main() {
 	//api.POST("/answer/:id/vote", routes.UpvoteAnswer)
 	//api.DELETE("/answer/:id/vote", routes.DownvoteAnswer)
 
-	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", Cfg.HttpPort), router))
+	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Cfg.HttpPort), router))
 }

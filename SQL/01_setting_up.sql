@@ -8,8 +8,21 @@ DROP TABLE IF EXISTS questions;
 DROP TABLE IF EXISTS tags;
 DROP TABLE IF EXISTS purchases;
 DROP TABLE IF EXISTS brands;
+DROP TABLE IF EXISTS users_login;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS timeseries;
+
+
+CREATE TABLE "users_login" (
+    "id" serial,
+    "email" varchar(256) NOT NULL,
+    "password" varchar NOT NULL,
+    PRIMARY KEY ("id")
+);
+COMMENT ON TABLE "users_login" IS 'Separate table that stores all the information a user needs to log in to a service';
+COMMENT ON COLUMN "users_login"."id" IS 'The same as ID in users';
+COMMENT ON COLUMN "users_login"."email" IS 'Email address of a person';
+COMMENT ON COLUMN "users_login"."password" IS 'This is only temporary. Will change it to something better';
 
 -- Users
 CREATE TABLE "users" (

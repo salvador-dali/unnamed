@@ -98,8 +98,8 @@ func isSortedArrayEquivalentToArray(arrSorted, arr []int) bool {
 
 func initializeDb() {
 	// initialize Db connection
-	cnf := config.Init()
-	Init(cnf.DbUser, cnf.DbPass, cnf.DbHost, cnf.DbName, cnf.DbPort)
+	config.Init()
+	Init(config.Cfg.DbUser, config.Cfg.DbPass, config.Cfg.DbHost, config.Cfg.DbName, config.Cfg.DbPort)
 }
 
 func cleanUpDb() {
