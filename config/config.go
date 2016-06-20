@@ -17,6 +17,7 @@ type Config struct {
 	HttpPort int
 	Secret   []byte
 	ExpDays  int
+	SaltLen  int
 }
 
 var Cfg Config
@@ -32,6 +33,7 @@ func Init() {
 		GetEnvInt("PROJ_HTTP_PORT"),
 		[]byte(GetEnvStr("PROJ_SECRET")),
 		GetEnvInt("PROJ_JWT_EXP_DAYS"),
+		GetEnvInt("PROJ_SALT_LEN_BYTE"),
 	}
 	Cfg = cfg
 }

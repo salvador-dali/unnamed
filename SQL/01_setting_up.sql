@@ -12,18 +12,6 @@ DROP TABLE IF EXISTS users_login;
 DROP TABLE IF EXISTS users;
 DROP TABLE IF EXISTS timeseries;
 
-
-CREATE TABLE "users_login" (
-    "id" serial,
-    "email" varchar(256) NOT NULL,
-    "password" varchar NOT NULL,
-    PRIMARY KEY ("id")
-);
-COMMENT ON TABLE "users_login" IS 'Separate table that stores all the information a user needs to log in to a service';
-COMMENT ON COLUMN "users_login"."id" IS 'The same as ID in users';
-COMMENT ON COLUMN "users_login"."email" IS 'Email address of a person';
-COMMENT ON COLUMN "users_login"."password" IS 'This is only temporary. Will change it to something better';
-
 -- Users
 CREATE TABLE "users" (
     "id" serial,
@@ -41,6 +29,10 @@ CREATE TABLE "users" (
     "tags_ignore" integer[]  NOT NULL DEFAULT '{}',
     "brands_like" integer[]  NOT NULL DEFAULT '{}',
     "brands_ignore" integer[]  NOT NULL DEFAULT '{}',
+    "email" varchar(256) NOT NULL,
+    "password" bytea NOT NULL,
+    "salt" bytea NOT NULL,
+    "verified" boolean NOT NULL DEFAULT '0',
     PRIMARY KEY ("id"),
     UNIQUE ("nickname")
 );
@@ -60,6 +52,10 @@ COMMENT ON COLUMN "users"."tags_like" IS 'Array of tags, the person likes';
 COMMENT ON COLUMN "users"."tags_ignore" IS 'Array of tags, the person wishes to ignore';
 COMMENT ON COLUMN "users"."brands_like" IS 'Array of brands, the person likes';
 COMMENT ON COLUMN "users"."brands_ignore" IS 'Array of brands, the person wishes to ignore';
+COMMENT ON COLUMN "users"."email" IS 'Email address of a person';
+COMMENT ON COLUMN "users"."password" IS 'Scrypt of a password';
+COMMENT ON COLUMN "users"."salt" IS 'Salt for a password';
+COMMENT ON COLUMN "users"."verified" IS 'Whether a person verified email address';
 
 -- Followers
 CREATE TABLE "followers" (

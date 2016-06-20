@@ -1,13 +1,13 @@
--- create a couple of users
-INSERT INTO users (nickname, about) VALUES('Albert Einstein', 'Developed the general theory of relativity.');
-INSERT INTO users (nickname, about) VALUES('Isaac Newton', 'Mechanics, laws of motion');
-INSERT INTO users (nickname, about) VALUES('Marie Curie', 'Research on radioactivity');
-INSERT INTO users (nickname, about) VALUES('Galileo Galilei', 'Astronomy, heliocentrism, dynamics');
-INSERT INTO users (nickname, about) VALUES('Nikola Tesla', 'Alternating current. Die Edison!');
-INSERT INTO users (nickname, about) VALUES('Louis Pasteur', 'Cool microbiologist. Now you know why the milk is pasteurized');
-INSERT INTO users (nickname, about) VALUES('Stephen Hawking', 'Too hard for most people to understand');
-INSERT INTO users (nickname, about) VALUES('Charles Darwin', 'Evolution theory says that you are kind of a monkey');
-INSERT INTO users (nickname, about) VALUES('Michael Faraday', 'Electromagnetism, electromagnetic induction and electrolysis');
+-- create a couple of users (everyone has password: password)
+INSERT INTO users (nickname, about, email, password, salt) VALUES('Albert Einstein', 'Developed the general theory of relativity.', 'albert@gmail.com', decode('59488705fcf1dac7a41eb1641da649d9407e3009e72db57f0da3d67dd75df4c2', 'hex'), decode('43dc7dd85c0ed7afbe7c29f0b4b769ba', 'hex'));
+INSERT INTO users (nickname, about, email, password, salt) VALUES('Isaac Newton', 'Mechanics, laws of motion', 'isaac@gmail.com', decode('5efe84f98f592f663e5c59d01cb0827522969de3bad278f5ef6cc98f07ccabdf', 'hex'), decode('3dab762cde874b110763b4e4326830cc', 'hex'));
+INSERT INTO users (nickname, about, email, password, salt) VALUES('Marie Curie', 'Research on radioactivity', 'marie@gmail.com', decode('c8c955257a8d2b24347bb8590e080ee4cd0f2a3f844911d18268148ac682f3b9', 'hex'), decode('26f4b81a4f9a777e0f395398aa4b0661', 'hex'));
+INSERT INTO users (nickname, about, email, password, salt) VALUES('Galileo Galilei', 'Astronomy, heliocentrism, dynamics', 'galileo@gmail.com', decode('050783af9a98fdc30924d1abf187fe6d67b1323e4f456fb30901295da560c6e6', 'hex'), decode('5e5615bb87eeeb9daf9aed89839640d2', 'hex'));
+INSERT INTO users (nickname, about, email, password, salt) VALUES('Nikola Tesla', 'Alternating current. Die Edison!', 'nikola@gmail.com', decode('94bbc94b8a5df0dfc17175c7d7bcd417b029a3e27f7e780453aa868e9367d694', 'hex'), decode('8a377ca8c07b995749b7a71aed3dfcd4', 'hex'));
+INSERT INTO users (nickname, about, email, password, salt) VALUES('Louis Pasteur', 'Cool microbiologist. Now you know why the milk is pasteurized', 'louis@gmail.com', decode('e17e05dce423ddcd768b254a228b88a491ed0d1f62a045573c68a6a3a62a9899', 'hex'), decode('aafc0f0021cc1f5d2c31037ff693463a', 'hex'));
+INSERT INTO users (nickname, about, email, password, salt) VALUES('Stephen Hawking', 'Too hard for most people to understand', 'stephen@gmail.com', decode('81d2d3f3eca47df640b4531a870821ed30345a6aa4cc0ba090193cca18059756', 'hex'), decode('f8adb5a3506faa1d46e968d6c13d8935', 'hex'));
+INSERT INTO users (nickname, about, email, password, salt) VALUES('Charles Darwin', 'Evolution theory says that you are kind of a monkey', 'charles@gmail.com', decode('b4e50b1416dc3b0c340a3ddeb61172f37153aaecf345aecadaecff47fc3b3a9b', 'hex'), decode('8256e8aeaada26c692dc581db5a7e218', 'hex'));
+INSERT INTO users (nickname, about, email, password, salt) VALUES('Michael Faraday', 'Electromagnetism, electromagnetic induction and electrolysis', 'michael@gmail.com', decode('1931376ad6311162aae24b34a8cd3db296c37c6778278a41f359fe7284b052ef', 'hex'), decode('1856fca014621b7da833f403357a0e30', 'hex'));
 
 -- create a couple of tags
 INSERT INTO tags (name, description) VALUES('dress', 'nice dresses');
