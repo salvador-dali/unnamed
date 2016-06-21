@@ -118,7 +118,7 @@ func TestMain(m *testing.M) {
 	retCode := m.Run()
 
 	defer Db.Close()
-	cleanUpDb()
+	//cleanUpDb()
 	os.Exit(retCode)
 }
 
@@ -747,6 +747,88 @@ func TestUnfollow(t *testing.T) {
 		u2, _, _ := GetUser(v.whomId)
 		if u2.Followers_num != v.followers_num || u1.Following_num != v.following_num {
 			t.Errorf("Number of followers and following in USERS table is not right. Expect (%v, %v), got (%v, %v)", v.followers_num, v.following_num, u2.Followers_num, u1.Following_num)
+		}
+	}
+}
+
+func TestCreateUser(t *testing.T) {
+	cleanUpDb()
+
+	tableSuccess := []struct {
+		nickname string
+		email    string
+		password string
+		userId   int
+	}{
+		{"User_134", "email@gmail.com", "just_some_password", 10},
+		{"stuff", "email@somemail.com", "anotherPa$$W0rt", 11},
+		{"another", "random@yahoo.com", "anotherPa$$W0rt", 12},
+	}
+	for _, v := range tableSuccess {
+		userId, err, code := CreateUser(v.nickname, v.email, v.password)
+		if err != nil || code != errorCodes.DbNothingToReport || userId != v.userId {
+			t.Errorf("Expected to create users. Got %v, %v, %v", userId, err, code)
+		}
+	}
+
+	tableFail := []struct {
+		nickname string
+		email    string
+		password string
+		code     int
+	}{
+		{"exist", "albert@gmail.com", "password", errorCodes.DbDuplicate},
+		{AllUsers[2].Nickname, "good@mail.com", "password", errorCodes.DbDuplicate},
+		{tableSuccess[2].nickname, "amail@mail.com", "password", errorCodes.DbDuplicate},
+		{"random", tableSuccess[2].email, "password", errorCodes.DbDuplicate},
+	}
+	for _, v := range tableFail {
+		userId, err, code := CreateUser(v.nickname, v.email, v.password)
+		if err == nil || code != v.code || userId != 0 {
+			t.Errorf("Expected to fail. Got %v, %v, %v", userId, err, code)
+		}
+	}
+
+	user, err, _ := GetUser(tableSuccess[0].userId)
+	if err != nil || user.Nickname != tableSuccess[0].nickname || user.Id != tableSuccess[0].userId {
+		t.Errorf("Expected to get user. Got %v, %v", err, user)
+	}
+}
+
+func TestLogin(t *testing.T) {
+	cleanUpDb()
+
+	email, pass := "some_strange_mail@gmail.com", "very_new_password"
+	CreateUser("username", email, pass)
+
+	tableSuccess := []struct {
+		email    string
+		password string
+	}{
+		{"albert@gmail.com", "password"},
+		{"isaac@gmail.com", "password"},
+		{"michael@gmail.com", "password"},
+		{email, pass},
+	}
+	for _, v := range tableSuccess {
+		jwt, ok := Login(v.email, v.password)
+		if !ok || len(jwt) < 10 {
+			t.Errorf("Expected to log in. Got %v, %v", ok, jwt)
+		}
+	}
+
+	tableFail := []struct {
+		email    string
+		password string
+	}{
+		{tableSuccess[0].email, tableSuccess[0].email},
+		{"a" + tableSuccess[1].email, tableSuccess[1].password},
+		{tableSuccess[2].email, tableSuccess[2].password + "a"},
+	}
+	for _, v := range tableFail {
+		jwt, ok := Login(v.email, v.password)
+		if ok || jwt != "" {
+			t.Errorf("Expected to fail. Got %v, %v", ok, jwt)
 		}
 	}
 }

@@ -9,6 +9,7 @@ const (
 	FollowYourself = 103 // user can't follow himself
 	TooManyTags    = 104 // user provided more tags that allowed
 	NoTags         = 105 // user has not provided any tags
+	NoSalt         = 106 // system does not have enough randomness
 )
 
 // Errors related to a database operations

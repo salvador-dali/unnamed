@@ -2,6 +2,7 @@
 package storage
 
 import (
+	"../../unnamed/auth"
 	"../../unnamed/errorCodes"
 	"../../unnamed/structs"
 	"database/sql"
@@ -9,6 +10,7 @@ import (
 	"fmt"
 	"github.com/lib/pq"
 	"log"
+	"reflect"
 	"strconv"
 	"strings"
 )
@@ -413,6 +415,58 @@ func GetFollowers(userId int) ([]*structs.User, error, int) {
 	}
 
 	return users, nil, errorCodes.DbNothingToReport
+}
+
+func CreateUser(nickname, email, password string) (int, error, int) {
+	salt, err := auth.GenerateSalt()
+	if err != nil {
+		return 0, err, errorCodes.NoSalt
+	}
+
+	hash, err := auth.PasswordHash(password, salt)
+	if err != nil {
+		return 0, err, errorCodes.DbNothingToReport
+	}
+
+	userId := 0
+	err = Db.QueryRow(`
+		INSERT INTO users (nickname, email, password, salt)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id`, nickname, email, hash, salt,
+	).Scan(&userId)
+	if err == nil {
+		return userId, nil, errorCodes.DbNothingToReport
+	}
+
+	err, code := checkSpecificDriverErrors(err)
+	return 0, err, code
+}
+
+func Login(email, password string) (string, bool) {
+	userId, hash, salt := 0, make([]byte, 32), make([]byte, 16)
+
+	if err := Db.QueryRow(`
+		SELECT id, password, salt
+		FROM users
+		WHERE email = $1`, email,
+	).Scan(&userId, &hash, &salt); err != nil {
+		return "", false
+	}
+
+	hashAttempt, err := auth.PasswordHash(password, salt)
+	if err != nil {
+		return "", false
+	}
+
+	if !reflect.DeepEqual(hashAttempt, hash) {
+		return "", false
+	}
+
+	jwt, err := auth.CreateJWT(userId)
+	if err != nil {
+		return "", false
+	}
+	return jwt, true
 }
 
 // --- Purchases ---

@@ -17,7 +17,7 @@ CREATE TABLE "users" (
     "id" serial,
     "nickname" varchar(40) NOT NULL,
     "image" varchar(100) NOT NULL DEFAULT '',
-    "about" varchar(1000)  NOT NULL,
+    "about" varchar(1000)  NOT NULL DEFAULT '',
     "expertise" int  NOT NULL DEFAULT 0,
     "followers_num" int  NOT NULL DEFAULT 0,
     "following_num" int  NOT NULL DEFAULT 0,
@@ -32,9 +32,10 @@ CREATE TABLE "users" (
     "email" varchar(256) NOT NULL,
     "password" bytea NOT NULL,
     "salt" bytea NOT NULL,
-    "verified" boolean NOT NULL DEFAULT '0',
+    "verified" boolean NOT NULL DEFAULT FALSE,
     PRIMARY KEY ("id"),
-    UNIQUE ("nickname")
+    UNIQUE ("nickname"),
+    UNIQUE ("email")
 );
 COMMENT ON TABLE "users" IS 'All users in the system';
 COMMENT ON COLUMN "users"."id" IS 'ID of a user';
