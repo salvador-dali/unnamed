@@ -2,6 +2,7 @@ package auth
 
 import (
 	"../../unnamed/config"
+	"../../unnamed/structs"
 	"crypto/rand"
 	"fmt"
 	jwt "github.com/dgrijalva/jwt-go"
@@ -26,7 +27,7 @@ func CreateJWT(userId int) (string, error) {
 	return token.SignedString(config.Cfg.Secret)
 }
 
-func ParseJWT(jwtToken string) {
+func ValidateJWT(jwtToken string) (structs.JwtToken, error) {
 	token, err := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
 		// Don't forget to validate the alg is what you expect:
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
@@ -35,11 +36,14 @@ func ParseJWT(jwtToken string) {
 		return config.Cfg.Secret, nil
 	})
 
+	var jwtJson structs.JwtToken
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		fmt.Println(claims["foo"], claims["nbf"])
-	} else {
-		fmt.Println(err)
+		jwtJson.UserId = int(claims["id"].(float64))
+		jwtJson.Exp = int(claims["exp"].(float64))
+		return jwtJson, nil
 	}
+
+	return structs.JwtToken{}, err
 }
 
 func GenerateSalt() ([]byte, error) {

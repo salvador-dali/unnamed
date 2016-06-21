@@ -118,7 +118,7 @@ func TestMain(m *testing.M) {
 	retCode := m.Run()
 
 	defer Db.Close()
-	//cleanUpDb()
+	cleanUpDb()
 	os.Exit(retCode)
 }
 

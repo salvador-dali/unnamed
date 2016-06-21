@@ -57,3 +57,9 @@ type Purchase struct {
 	Brand       int        `json:"brand,omitempty"`
 	Likes_num   int        `json:"likes_num,omitempty"`
 }
+
+// JwtToken stores authorization information about a user
+type JwtToken struct {
+	UserId int
+	Exp    int
+}
