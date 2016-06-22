@@ -1,9 +1,9 @@
 package main
 
 import (
-	"../unnamed/config"
-	"../unnamed/routes"
-	"../unnamed/storage"
+	"./config"
+	"./routes"
+	"./storage"
 	"fmt"
 	"github.com/dimfeld/httptreemux"
 	"log"

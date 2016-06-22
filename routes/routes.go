@@ -2,9 +2,8 @@
 package routes
 
 import (
-	"../../unnamed/errorCodes"
-	"../../unnamed/storage"
-	"../../unnamed/structs"
+	"../misc"
+	"../storage"
 	"encoding/json"
 	"log"
 	"net/http"
@@ -39,11 +38,11 @@ func isErrorReasonSerious(err error, reason int, w http.ResponseWriter) bool {
 		return false
 	}
 
-	if reason == errorCodes.DbNoElement {
-		sendJSON(w, structs.ErrorCode{reason}, http.StatusNotFound)
+	if reason == misc.DbNoElement {
+		sendJSON(w, misc.ErrorCode{reason}, http.StatusNotFound)
 		return true
 	} else if reason > 0 {
-		sendJSON(w, structs.ErrorCode{reason}, http.StatusBadRequest)
+		sendJSON(w, misc.ErrorCode{reason}, http.StatusBadRequest)
 		return true
 	}
 
@@ -56,7 +55,7 @@ func isErrorReasonSerious(err error, reason int, w http.ResponseWriter) bool {
 func validateId(w http.ResponseWriter, id string) int {
 	id_valid, err := strconv.Atoi(id)
 	if err != nil || id_valid <= 0 {
-		sendJSON(w, structs.ErrorCode{errorCodes.IdNotNatural}, http.StatusNotFound)
+		sendJSON(w, misc.ErrorCode{misc.IdNotNatural}, http.StatusNotFound)
 		return 0
 	}
 	return id_valid
@@ -67,7 +66,7 @@ func validateId(w http.ResponseWriter, id string) int {
 func validateName(w http.ResponseWriter, name string, maxLen int) (string, bool) {
 	name = strings.TrimSpace(name)
 	if len(name) == 0 || len(name) > maxLen {
-		sendJSON(w, structs.ErrorCode{errorCodes.NameIsNotValid}, http.StatusBadRequest)
+		sendJSON(w, misc.ErrorCode{misc.NameIsNotValid}, http.StatusBadRequest)
 		return "", false
 	}
 
@@ -82,12 +81,12 @@ func isValidFormLength(w http.ResponseWriter, r *http.Request, validLen int) boo
 		return true
 	}
 
-	sendJSON(w, structs.ErrorCode{errorCodes.WrongNumParams}, http.StatusBadRequest)
+	sendJSON(w, misc.ErrorCode{misc.WrongNumParams}, http.StatusBadRequest)
 	return false
 }
 
 // extractPurchasesWithIdSendJSON simplifies extracting many purchases knowing some id
-type getPurchasesWithId func(int) ([]*structs.Purchase, error, int)
+type getPurchasesWithId func(int) ([]*misc.Purchase, error, int)
 
 func extractPurchasesWithIdSendJSON(getData getPurchasesWithId, w http.ResponseWriter, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
@@ -153,7 +152,7 @@ func CreateBrand(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		return
 	}
 
-	sendJSON(w, structs.Id{int(id)}, http.StatusCreated)
+	sendJSON(w, misc.Id{int(id)}, http.StatusCreated)
 }
 
 // UpdateBrand changes the brand's name for a specific brandID
@@ -233,7 +232,7 @@ func CreateTag(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		return
 	}
 
-	sendJSON(w, structs.Id{int(id)}, http.StatusCreated)
+	sendJSON(w, misc.Id{int(id)}, http.StatusCreated)
 }
 
 // UpdateTag changes the tag's name for a specific tagID
@@ -449,7 +448,7 @@ func CreatePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string
 		return
 	}
 
-	sendJSON(w, structs.Id{int(id)}, http.StatusCreated)
+	sendJSON(w, misc.Id{int(id)}, http.StatusCreated)
 }
 
 // LikePurchase allows current user to like a particular purchase
@@ -509,7 +508,7 @@ func AskQuestion(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	sendJSON(w, structs.Id{int(id)}, http.StatusCreated)
+	sendJSON(w, misc.Id{int(id)}, http.StatusCreated)
 }
 
 // AnswerQuestion allows current user to answer a question about his own purchase
@@ -535,5 +534,5 @@ func AnswerQuestion(w http.ResponseWriter, r *http.Request, ps map[string]string
 		return
 	}
 
-	sendJSON(w, structs.Id{int(id)}, http.StatusCreated)
+	sendJSON(w, misc.Id{int(id)}, http.StatusCreated)
 }

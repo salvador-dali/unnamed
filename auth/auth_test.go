@@ -1,7 +1,7 @@
 package auth
 
 import (
-	"../../unnamed/config"
+	"../config"
 	"encoding/base64"
 	"encoding/json"
 	"os"

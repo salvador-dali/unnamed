@@ -1,6 +1,7 @@
 .idea
 docs/readme_explanation.md
 docs/lectures_startup.md
+src
 tmp/
 .env
 
