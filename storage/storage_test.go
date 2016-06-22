@@ -162,7 +162,7 @@ func TestGetAllBrands(t *testing.T) {
 	cleanUpDb()
 
 	brands, err, code := GetAllBrands()
-	if err != nil || code != misc.DbNothingToReport {
+	if err != nil || code != misc.NothingToReport {
 		t.Error("Should finish without no error")
 	}
 
@@ -187,14 +187,14 @@ func TestGetBrand(t *testing.T) {
 		res_code     int
 		res          misc.Brand
 	}{
-		{1, 0, misc.DbNothingToReport, AllBrands[1]},
-		{2, 0, misc.DbNothingToReport, AllBrands[2]},
-		{3, 0, misc.DbNothingToReport, AllBrands[3]},
-		{5, 0, misc.DbNothingToReport, AllBrands[5]},
-		{0, 1, misc.DbNoElement, misc.Brand{}},
-		{-1, 1, misc.DbNoElement, misc.Brand{}},
-		{123, 1, misc.DbNoElement, misc.Brand{}},
-		{43, 1, misc.DbNoElement, misc.Brand{}},
+		{1, 0, misc.NothingToReport, AllBrands[1]},
+		{2, 0, misc.NothingToReport, AllBrands[2]},
+		{3, 0, misc.NothingToReport, AllBrands[3]},
+		{5, 0, misc.NothingToReport, AllBrands[5]},
+		{0, 1, misc.NoElement, misc.Brand{}},
+		{-1, 1, misc.NoElement, misc.Brand{}},
+		{123, 1, misc.NoElement, misc.Brand{}},
+		{43, 1, misc.NoElement, misc.Brand{}},
 	}
 
 	for _, v := range table {
@@ -232,9 +232,9 @@ func TestCreateBrand(t *testing.T) {
 		name string
 		code int
 	}{
-		{randomString(maxLenS, 1, 1), misc.DbValueTooLong},
-		{randomString(maxLenS, 1, 0), misc.DbValueTooLong},
-		{randomString(maxLenS, 1, 0), misc.DbValueTooLong},
+		{randomString(maxLenS, 1, 1), misc.WrongName},
+		{randomString(maxLenS, 1, 0), misc.WrongName},
+		{randomString(maxLenS, 1, 0), misc.WrongName},
 		{tableSuccess[0].name, misc.DbDuplicate},
 		{tableSuccess[1].name, misc.DbDuplicate},
 		{tableSuccess[2].name, misc.DbDuplicate},
@@ -242,7 +242,7 @@ func TestCreateBrand(t *testing.T) {
 
 	for _, v := range tableSuccess {
 		id, err, code := CreateBrand(v.name)
-		if id != v.res_id || err != nil || code != misc.DbNothingToReport {
+		if id != v.res_id || err != nil || code != misc.NothingToReport {
 			t.Errorf("Expected to create a brand. Got %v %v %v", id, err, code)
 		}
 
@@ -278,15 +278,15 @@ func TestUpdateBrand(t *testing.T) {
 	}{
 		{2, "Playstation", 1, misc.DbDuplicate},
 		{3, "Ferrari", 1, misc.DbDuplicate},
-		{3, randStr, 0, misc.DbNothingToReport},
+		{3, randStr, 0, misc.NothingToReport},
 		{4, randStr, 1, misc.DbDuplicate},
-		{1, randomString(maxLenS, 0, 0), 0, misc.DbNothingToReport},
-		{2, randomString(maxLenS, 0, 1), 0, misc.DbNothingToReport},
-		{2, randomString(maxLenS, 1, 0), 1, misc.DbValueTooLong},
-		{5, randomString(maxLenS, 1, 1), 1, misc.DbValueTooLong},
-		{0, randomString(maxLenS, 0, 0), 1, misc.DbNothingUpdated},
-		{-1, randomString(maxLenS, 0, 0), 1, misc.DbNothingUpdated},
-		{43, randomString(maxLenS, 0, 0), 1, misc.DbNothingUpdated},
+		{1, randomString(maxLenS, 0, 0), 0, misc.NothingToReport},
+		{2, randomString(maxLenS, 0, 1), 0, misc.NothingToReport},
+		{2, randomString(maxLenS, 1, 0), 1, misc.WrongName},
+		{5, randomString(maxLenS, 1, 1), 1, misc.WrongName},
+		{0, randomString(maxLenS, 0, 0), 1, misc.NothingUpdated},
+		{-1, randomString(maxLenS, 0, 0), 1, misc.NothingUpdated},
+		{43, randomString(maxLenS, 0, 0), 1, misc.NothingUpdated},
 	}
 
 	for _, v := range table {
@@ -313,7 +313,7 @@ func TestGetAllTags(t *testing.T) {
 	cleanUpDb()
 
 	tags, err, code := GetAllTags()
-	if err != nil || code != misc.DbNothingToReport {
+	if err != nil || code != misc.NothingToReport {
 		t.Error("Should finish without no error")
 	}
 
@@ -338,14 +338,14 @@ func TestGetTag(t *testing.T) {
 		res_code     int
 		res          misc.Tag
 	}{
-		{1, 0, misc.DbNothingToReport, AllTags[1]},
-		{2, 0, misc.DbNothingToReport, AllTags[2]},
-		{3, 0, misc.DbNothingToReport, AllTags[3]},
-		{6, 0, misc.DbNothingToReport, AllTags[6]},
-		{0, 1, misc.DbNoElement, misc.Tag{}},
-		{-1, 1, misc.DbNoElement, misc.Tag{}},
-		{23, 1, misc.DbNoElement, misc.Tag{}},
-		{43, 1, misc.DbNoElement, misc.Tag{}},
+		{1, 0, misc.NothingToReport, AllTags[1]},
+		{2, 0, misc.NothingToReport, AllTags[2]},
+		{3, 0, misc.NothingToReport, AllTags[3]},
+		{6, 0, misc.NothingToReport, AllTags[6]},
+		{0, 1, misc.NoElement, misc.Tag{}},
+		{-1, 1, misc.NoElement, misc.Tag{}},
+		{23, 1, misc.NoElement, misc.Tag{}},
+		{43, 1, misc.NoElement, misc.Tag{}},
 	}
 
 	for _, v := range table {
@@ -382,7 +382,7 @@ func TestCreateTag(t *testing.T) {
 	}
 	for _, v := range tableSuccess {
 		id, err, code := CreateTag(v.name, v.descr)
-		if id != v.res_id || err != nil || code != misc.DbNothingToReport {
+		if id != v.res_id || err != nil || code != misc.NothingToReport {
 			t.Errorf("Expected to create a tag. Got %v %v %v", id, err, code)
 		}
 
@@ -397,10 +397,10 @@ func TestCreateTag(t *testing.T) {
 		descr string
 		code  int
 	}{
-		{randomString(maxLenS, 1, 0), randomString(maxLenB, 1, 0), misc.DbValueTooLong},
-		{randomString(maxLenS, 1, 0), randomString(maxLenB, 1, 1), misc.DbValueTooLong},
-		{randomString(maxLenS, 1, 1), randomString(maxLenB, 1, 0), misc.DbValueTooLong},
-		{randomString(maxLenS, 1, 1), randomString(maxLenB, 1, 1), misc.DbValueTooLong},
+		{randomString(maxLenS, 1, 0), randomString(maxLenB, 1, 0), misc.WrongName},
+		{randomString(maxLenS, 1, 0), randomString(maxLenB, 1, 1), misc.WrongName},
+		{randomString(maxLenS, 1, 1), randomString(maxLenB, 1, 0), misc.WrongName},
+		{randomString(maxLenS, 1, 1), randomString(maxLenB, 1, 1), misc.WrongName},
 		{tableSuccess[0].name, "", misc.DbDuplicate},
 		{tableSuccess[1].name, "", misc.DbDuplicate},
 		{tableSuccess[2].name, "", misc.DbDuplicate},
@@ -434,19 +434,19 @@ func TestUpdateTag(t *testing.T) {
 	}{
 		{2, "car", randomString(maxLenB, 0, 0), 1, misc.DbDuplicate},
 		{3, "phone", randomString(maxLenB, 0, 0), 1, misc.DbDuplicate},
-		{3, randStr, randomString(maxLenB, 0, 0), 0, misc.DbNothingToReport},
+		{3, randStr, randomString(maxLenB, 0, 0), 0, misc.NothingToReport},
 		{4, randStr, randomString(maxLenB, 0, 0), 1, misc.DbDuplicate},
-		{1, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 0, misc.DbNothingToReport},
-		{2, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 1), 0, misc.DbNothingToReport},
-		{2, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 0), 0, misc.DbNothingToReport},
-		{2, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 1), 0, misc.DbNothingToReport},
-		{5, randomString(maxLenS, 1, 1), randomString(maxLenB, 0, 0), 1, misc.DbValueTooLong},
-		{5, randomString(maxLenS, 1, 0), randomString(maxLenB, 0, 0), 1, misc.DbValueTooLong},
-		{5, randomString(maxLenS, 0, 0), randomString(maxLenB, 1, 1), 1, misc.DbValueTooLong},
-		{5, randomString(maxLenS, 0, 0), randomString(maxLenB, 1, 0), 1, misc.DbValueTooLong},
-		{0, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 1, misc.DbNothingUpdated},
-		{-1, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 1, misc.DbNothingUpdated},
-		{43, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 1, misc.DbNothingUpdated},
+		{1, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 0, misc.NothingToReport},
+		{2, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 1), 0, misc.NothingToReport},
+		{2, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 0), 0, misc.NothingToReport},
+		{2, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 1), 0, misc.NothingToReport},
+		{5, randomString(maxLenS, 1, 1), randomString(maxLenB, 0, 0), 1, misc.WrongName},
+		{5, randomString(maxLenS, 1, 0), randomString(maxLenB, 0, 0), 1, misc.WrongName},
+		{5, randomString(maxLenS, 0, 0), randomString(maxLenB, 1, 1), 1, misc.WrongName},
+		{5, randomString(maxLenS, 0, 0), randomString(maxLenB, 1, 0), 1, misc.WrongName},
+		{0, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 1, misc.NothingUpdated},
+		{-1, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 1, misc.NothingUpdated},
+		{43, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 1, misc.NothingUpdated},
 	}
 
 	for _, v := range table {
@@ -478,12 +478,12 @@ func TestGetUser(t *testing.T) {
 		res_code     int
 		res          misc.User
 	}{
-		{1, 0, misc.DbNothingToReport, AllUsers[1]},
-		{2, 0, misc.DbNothingToReport, AllUsers[2]},
-		{0, 1, misc.DbNoElement, misc.User{}},
-		{-1, 1, misc.DbNoElement, misc.User{}},
-		{23, 1, misc.DbNoElement, misc.User{}},
-		{43, 1, misc.DbNoElement, misc.User{}},
+		{1, 0, misc.NothingToReport, AllUsers[1]},
+		{2, 0, misc.NothingToReport, AllUsers[2]},
+		{0, 1, misc.NoElement, misc.User{}},
+		{-1, 1, misc.NoElement, misc.User{}},
+		{23, 1, misc.NoElement, misc.User{}},
+		{43, 1, misc.NoElement, misc.User{}},
 	}
 
 	for _, v := range table {
@@ -522,18 +522,18 @@ func TestUpdateUser(t *testing.T) {
 	}{
 		{2, "Marie Curie", randomString(maxLenB, 0, 0), 1, misc.DbDuplicate},
 		{3, "Nikola Tesla", randomString(maxLenB, 0, 0), 1, misc.DbDuplicate},
-		{3, randStr, randomString(maxLenB, 0, 0), 0, misc.DbNothingToReport},
+		{3, randStr, randomString(maxLenB, 0, 0), 0, misc.NothingToReport},
 		{4, randStr, randomString(maxLenB, 0, 0), 1, misc.DbDuplicate},
-		{1, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 0, misc.DbNothingToReport},
-		{2, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 1), 0, misc.DbNothingToReport},
-		{3, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 0), 0, misc.DbNothingToReport},
-		{4, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 1), 0, misc.DbNothingToReport},
-		{2, randomString(maxLenS, 1, 0), randomString(maxLenB, 0, 0), 1, misc.DbValueTooLong},
-		{5, randomString(maxLenS, 0, 0), randomString(maxLenB, 1, 0), 1, misc.DbValueTooLong},
-		{5, randomString(maxLenS, 1, 0), randomString(maxLenB, 1, 0), 1, misc.DbValueTooLong},
-		{0, randomString(maxLenS, 0, 0), randomString(maxLenS, 0, 0), 1, misc.DbNothingUpdated},
-		{-1, randomString(maxLenS, 0, 0), randomString(maxLenS, 0, 0), 1, misc.DbNothingUpdated},
-		{43, randomString(maxLenS, 0, 0), randomString(maxLenS, 0, 0), 1, misc.DbNothingUpdated},
+		{1, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 0, misc.NothingToReport},
+		{2, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 1), 0, misc.NothingToReport},
+		{3, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 0), 0, misc.NothingToReport},
+		{4, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 1), 0, misc.NothingToReport},
+		{2, randomString(maxLenS, 1, 0), randomString(maxLenB, 0, 0), 1, misc.WrongName},
+		{5, randomString(maxLenS, 0, 0), randomString(maxLenB, 1, 0), 1, misc.WrongName},
+		{5, randomString(maxLenS, 1, 0), randomString(maxLenB, 1, 0), 1, misc.WrongName},
+		{0, randomString(maxLenS, 0, 0), randomString(maxLenS, 0, 0), 1, misc.NothingUpdated},
+		{-1, randomString(maxLenS, 0, 0), randomString(maxLenS, 0, 0), 1, misc.NothingUpdated},
+		{43, randomString(maxLenS, 0, 0), randomString(maxLenS, 0, 0), 1, misc.NothingUpdated},
 	}
 
 	for _, v := range table {
@@ -570,7 +570,7 @@ func TestGetFollowers(t *testing.T) {
 	}
 	for _, v := range tableSuccess {
 		followers, err, code := GetFollowers(v.id)
-		if err != nil || code != misc.DbNothingToReport {
+		if err != nil || code != misc.NothingToReport {
 			t.Errorf("Expected to get followers, got a mistake %v %v", err, code)
 		}
 
@@ -590,7 +590,7 @@ func TestGetFollowers(t *testing.T) {
 
 	for _, id := range []int{0, 16, 52, -1} {
 		followers, err, code := GetFollowers(id)
-		if len(followers) != 0 || err != nil || code != misc.DbNothingToReport {
+		if len(followers) != 0 || err != nil || code != misc.NothingToReport {
 			t.Errorf("Should receive empty array with no errors. Received %v %v %v", followers, err, code)
 		}
 	}
@@ -616,7 +616,7 @@ func TestGetFollowing(t *testing.T) {
 	}
 	for _, v := range tableSuccess {
 		following, err, code := GetFollowing(v.id)
-		if err != nil || code != misc.DbNothingToReport {
+		if err != nil || code != misc.NothingToReport {
 			t.Errorf("Expected to get following, got a mistake %v %v", err, code)
 		}
 
@@ -636,7 +636,7 @@ func TestGetFollowing(t *testing.T) {
 
 	for _, id := range []int{0, 16, 52, -1} {
 		followers, err, code := GetFollowing(id)
-		if len(followers) != 0 || err != nil || code != misc.DbNothingToReport {
+		if len(followers) != 0 || err != nil || code != misc.NothingToReport {
 			t.Errorf("Should receive empty array with no errors. Received %v %v %v", followers, err, code)
 		}
 	}
@@ -665,10 +665,10 @@ func TestFollow(t *testing.T) {
 		{0, 2, 1, misc.DbForeignKeyViolation, 2, 0},
 		{6, -1, 1, misc.DbForeignKeyViolation, 0, 1},
 		{10, 54, 1, misc.DbForeignKeyViolation, 0, 0},
-		{1, 6, 0, misc.DbNothingToReport, 1, 4},
-		{6, 1, 0, misc.DbNothingToReport, 1, 2},
-		{2, 4, 0, misc.DbNothingToReport, 2, 1},
-		{2, 6, 0, misc.DbNothingToReport, 2, 2},
+		{1, 6, 0, misc.NothingToReport, 1, 4},
+		{6, 1, 0, misc.NothingToReport, 1, 2},
+		{2, 4, 0, misc.NothingToReport, 2, 1},
+		{2, 6, 0, misc.NothingToReport, 2, 2},
 	}
 
 	for _, v := range table {
@@ -710,17 +710,17 @@ func TestUnfollow(t *testing.T) {
 		following_num int
 	}{
 		{1, 1, 1, misc.FollowYourself, 0, 3},
-		{1, 5, 1, misc.DbNothingUpdated, 0, 3},
-		{6, 3, 1, misc.DbNothingUpdated, 0, 1},
-		{5, 4, 1, misc.DbNothingUpdated, 1, 0},
-		{-1, 4, 1, misc.DbNothingUpdated, 1, 0},
-		{10, 9, 1, misc.DbNothingUpdated, 0, 0},
-		{11, 19, 1, misc.DbNothingUpdated, 0, 0},
-		{1, 6, 1, misc.DbNothingUpdated, 0, 3},
-		{6, 2, 0, misc.DbNothingToReport, 1, 0},
-		{1, 4, 0, misc.DbNothingToReport, 0, 2},
-		{1, 7, 0, misc.DbNothingToReport, 0, 1},
-		{1, 2, 0, misc.DbNothingToReport, 0, 0},
+		{1, 5, 1, misc.NothingUpdated, 0, 3},
+		{6, 3, 1, misc.NothingUpdated, 0, 1},
+		{5, 4, 1, misc.NothingUpdated, 1, 0},
+		{-1, 4, 1, misc.NothingUpdated, 1, 0},
+		{10, 9, 1, misc.NothingUpdated, 0, 0},
+		{11, 19, 1, misc.NothingUpdated, 0, 0},
+		{1, 6, 1, misc.NothingUpdated, 0, 3},
+		{6, 2, 0, misc.NothingToReport, 1, 0},
+		{1, 4, 0, misc.NothingToReport, 0, 2},
+		{1, 7, 0, misc.NothingToReport, 0, 1},
+		{1, 2, 0, misc.NothingToReport, 0, 0},
 	}
 
 	for _, v := range table {
@@ -765,7 +765,7 @@ func TestCreateUser(t *testing.T) {
 	}
 	for _, v := range tableSuccess {
 		userId, err, code := CreateUser(v.nickname, v.email, v.password)
-		if err != nil || code != misc.DbNothingToReport || userId != v.userId {
+		if err != nil || code != misc.NothingToReport || userId != v.userId {
 			t.Errorf("Expected to create users. Got %v, %v, %v", userId, err, code)
 		}
 	}
@@ -855,7 +855,7 @@ func TestGetUserPurchases(t *testing.T) {
 
 	for _, v := range tableSuccess {
 		purchases, err, code := GetUserPurchases(v.userId)
-		if err != nil || code != misc.DbNothingToReport || len(purchases) != v.numPurchases {
+		if err != nil || code != misc.NothingToReport || len(purchases) != v.numPurchases {
 			t.Errorf("Expected to see no errors and %v purchases. Got %v %v %v", v.numPurchases, err, code, len(purchases))
 		}
 	}
@@ -871,7 +871,7 @@ func TestGetAllPurchases(t *testing.T) {
 	cleanUpDb()
 
 	purchases, err, code := GetAllPurchases()
-	if err != nil || code != misc.DbNothingToReport {
+	if err != nil || code != misc.NothingToReport {
 		t.Errorf("GetAllPurchases should succeed. Got %v %v", err, code)
 	}
 
@@ -903,7 +903,7 @@ func TestGetPurchase(t *testing.T) {
 
 	for _, v := range tableCorrect {
 		p, err, code := GetPurchase(v.id)
-		if err != nil || code != misc.DbNothingToReport {
+		if err != nil || code != misc.NothingToReport {
 			t.Errorf("Expected correct execution. Got %v %v", err, code)
 		}
 
@@ -915,7 +915,7 @@ func TestGetPurchase(t *testing.T) {
 
 	for _, v := range []int{0, -1, 6, 10} {
 		p, err, code := GetPurchase(v)
-		if err == nil || code != misc.DbNoElement || p.Id != 0 || p.Image != "" {
+		if err == nil || code != misc.NoElement || p.Id != 0 || p.Image != "" {
 			t.Errorf("Expected to get error. Got %v, %v, %v", err, code, p)
 		}
 	}
@@ -937,7 +937,7 @@ func TestGetAllPurchasesWithBrand(t *testing.T) {
 
 	for _, v := range tableSuccess {
 		purchases, err, code := GetAllPurchasesWithBrand(v.brandId)
-		if err != nil || code != misc.DbNothingToReport {
+		if err != nil || code != misc.NothingToReport {
 			t.Errorf("Expect correct execution. Got %v %v", err, code)
 		}
 
@@ -978,7 +978,7 @@ func TestGetAllPurchasesWithTag(t *testing.T) {
 
 	for _, v := range tableSuccess {
 		purchases, err, code := GetAllPurchasesWithTag(v.tagId)
-		if err != nil || code != misc.DbNothingToReport {
+		if err != nil || code != misc.NothingToReport {
 			t.Errorf("Expect correct execution. Got %v %v", err, code)
 		}
 
@@ -1017,7 +1017,7 @@ func TestLikePurchase(t *testing.T) {
 	}
 	for _, v := range tableSuccess {
 		err, code := LikePurchase(v.purchaseId, v.userId)
-		if err != nil || code != misc.DbNothingToReport {
+		if err != nil || code != misc.NothingToReport {
 			t.Errorf("Expect correct execution. Got %v %v", err, code)
 		}
 
@@ -1033,11 +1033,11 @@ func TestLikePurchase(t *testing.T) {
 		code       int
 		likesNum   int
 	}{
-		{1, 1, misc.DbVoteForOwnStuff, 3},
+		{1, 1, misc.VoteForYourself, 3},
 		{3, 4, misc.DbDuplicate, 4},
 		{3, 2, misc.DbDuplicate, 4},
-		{0, 2, misc.DbNoPurchase, 0},
-		{9, 1, misc.DbNoPurchase, 0},
+		{0, 2, misc.NoPurchase, 0},
+		{9, 1, misc.NoPurchase, 0},
 		{1, 10, misc.DbForeignKeyViolation, 3},
 	}
 	for _, v := range tableFail {
@@ -1067,7 +1067,7 @@ func TestUnlikePurchase(t *testing.T) {
 	}
 	for _, v := range tableSuccess {
 		err, code := UnlikePurchase(v.purchaseId, v.userId)
-		if err != nil || code != misc.DbNothingToReport {
+		if err != nil || code != misc.NothingToReport {
 			t.Errorf("Expect correct execution. Got %v %v", err, code)
 		}
 
@@ -1083,14 +1083,14 @@ func TestUnlikePurchase(t *testing.T) {
 		code       int
 		likesNum   int
 	}{
-		{3, 1, misc.DbVoteForOwnStuff, 1},
-		{3, 4, misc.DbNothingUpdated, 1},
-		{1, 7, misc.DbNothingUpdated, 0},
-		{3, 9, misc.DbNothingUpdated, 1},
-		{2, 3, misc.DbNothingUpdated, 0},
-		{-2, -1, misc.DbNoPurchase, 0},
-		{9, 2, misc.DbNoPurchase, 0},
-		{3, -1, misc.DbNothingUpdated, 1},
+		{3, 1, misc.VoteForYourself, 1},
+		{3, 4, misc.NothingUpdated, 1},
+		{1, 7, misc.NothingUpdated, 0},
+		{3, 9, misc.NothingUpdated, 1},
+		{2, 3, misc.NothingUpdated, 0},
+		{-2, -1, misc.NoPurchase, 0},
+		{9, 2, misc.NoPurchase, 0},
+		{3, -1, misc.NothingUpdated, 1},
 	}
 	for _, v := range tableFail {
 		err, code := UnlikePurchase(v.purchaseId, v.userId)

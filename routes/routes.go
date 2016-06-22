@@ -38,7 +38,7 @@ func isErrorReasonSerious(err error, reason int, w http.ResponseWriter) bool {
 		return false
 	}
 
-	if reason == misc.DbNoElement {
+	if reason == misc.NoElement {
 		sendJSON(w, misc.ErrorCode{reason}, http.StatusNotFound)
 		return true
 	} else if reason > 0 {
@@ -55,7 +55,7 @@ func isErrorReasonSerious(err error, reason int, w http.ResponseWriter) bool {
 func validateId(w http.ResponseWriter, id string) int {
 	id_valid, err := strconv.Atoi(id)
 	if err != nil || id_valid <= 0 {
-		sendJSON(w, misc.ErrorCode{misc.IdNotNatural}, http.StatusNotFound)
+		sendJSON(w, misc.ErrorCode{misc.WrongID}, http.StatusNotFound)
 		return 0
 	}
 	return id_valid
@@ -66,7 +66,7 @@ func validateId(w http.ResponseWriter, id string) int {
 func validateName(w http.ResponseWriter, name string, maxLen int) (string, bool) {
 	name = strings.TrimSpace(name)
 	if len(name) == 0 || len(name) > maxLen {
-		sendJSON(w, misc.ErrorCode{misc.NameIsNotValid}, http.StatusBadRequest)
+		sendJSON(w, misc.ErrorCode{misc.WrongName}, http.StatusBadRequest)
 		return "", false
 	}
 
@@ -81,7 +81,7 @@ func isValidFormLength(w http.ResponseWriter, r *http.Request, validLen int) boo
 		return true
 	}
 
-	sendJSON(w, misc.ErrorCode{misc.WrongNumParams}, http.StatusBadRequest)
+	sendJSON(w, misc.ErrorCode{misc.WrongParamsNum}, http.StatusBadRequest)
 	return false
 }
 

@@ -12,25 +12,24 @@ const (
 
 // Error codes
 const (
-	IdNotNatural                = 100 // ID should be a positive integer
-	NameIsNotValid              = 101 // name does not look right. Too long or empty
-	WrongNumParams              = 102 // number of parameters is not correct
-	FollowYourself              = 103 // user can't follow himself
-	TooManyTags                 = 104 // user provided more tags that allowed
-	NoTags                      = 105 // user has not provided any tags
-	NoSalt                      = 106 // system does not have enough randomness
-	DbNothingToReport           = 0   // either there is no error, or a client should not know about it
-	DbValueTooLong              = 600 // text value is too long. Tried to insert a string > X in Varchar(X)
-	DbDuplicate                 = 601 // duplicate constrain violation. Inserted X, where X already exists and should be unique
-	DbNoElement                 = 602 // searched for an element by ID. Have not found it
-	DbNothingUpdated            = 603 // wanted to update an element by ID. Element does not exist
-	DbNoPurchase                = 604 // purchase with such ID does not exist
-	DbVoteForOwnStuff           = 605 // a person should not vote for his own stuff
-	DbAskAboutOwnStuff          = 606 // a person should not ask questions about his purchase
-	DbNotAllTagsCorrect         = 607 // a one or more tags are not in the database
-	DbNoPurchaseForQuestion     = 608 // purchase for this question ID does not exist
-	DbCannotAnswerOtherPurchase = 609 // user can answer only question about his purchase
-	DbForeignKeyViolation       = 610 // foreign key violation
+	NothingToReport       = 0   // either there is no error, or a client should not know about it
+	NothingUpdated        = 100 // wanted to update an element by ID. Element does not exist
+	WrongID               = 101 // correct ID is a natural number
+	WrongName             = 102 // name is too long or empty
+	WrongParamsNum        = 103 // number of parameters is not correct
+	WrongTagsNum          = 104 // user provided more tags that allowed
+	WrongTags             = 105 // a one or more tags are not in the database
+	FollowYourself        = 106 // user can't follow himself
+	VoteForYourself       = 107 // a person should not vote for his own stuff
+	AskYourself           = 108 // a person should not ask questions about his purchase
+	AnswerOtherPurchase   = 109 // user can answer only question about his purchase
+	NoTags                = 110 // user has not provided any tags
+	NoSalt                = 111 // system does not have enough randomness
+	NoElement             = 112 // searched for an element by ID. Have not found it
+	NoPurchase            = 113 // purchase with such ID does not exist
+	DbDuplicate           = 114 // duplicate constrain violation. Inserted X, where X already exists and should be unique
+	DbForeignKeyViolation = 115 // foreign key violation
+	NoPurchaseForQuestion = 116 // purchase for this question ID does not exist
 )
 
 // ErrorCode stores code of a problem that happened while processing client's request.
