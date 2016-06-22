@@ -8,14 +8,19 @@ import (
 
 const (
 	passwordMinLen = 8
+	MaxTags        = 4		// maximum number of tags possible for a purchase
+	MaxLenS        = 40		// maximum length of the small field in SQL
+	MaxLenB        = 1000	// maximum length of the big field in SQL
 )
 
 // Error codes
 const (
 	NothingToReport       = 0   // either there is no error, or a client should not know about it
 	NothingUpdated        = 100 // wanted to update an element by ID. Element does not exist
-	WrongID               = 101 // correct ID is a natural number
-	WrongName             = 102 // name is too long or empty
+	WrongName             = 101 // name is too long or empty
+	WrongDescr            = 102 // description is too long or empty
+	WrongEmail            = 802 // email does not look right
+	WrongPassword         = 803 // password is too short
 	WrongParamsNum        = 103 // number of parameters is not correct
 	WrongTagsNum          = 104 // user provided more tags that allowed
 	WrongTags             = 105 // a one or more tags are not in the database
@@ -25,11 +30,10 @@ const (
 	AnswerOtherPurchase   = 109 // user can answer only question about his purchase
 	NoTags                = 110 // user has not provided any tags
 	NoSalt                = 111 // system does not have enough randomness
-	NoElement             = 112 // searched for an element by ID. Have not found it
+	NoElement             = 112 // searched for an element by ID. Have not found it.
 	NoPurchase            = 113 // purchase with such ID does not exist
 	DbDuplicate           = 114 // duplicate constrain violation. Inserted X, where X already exists and should be unique
 	DbForeignKeyViolation = 115 // foreign key violation
-	NoPurchaseForQuestion = 116 // purchase for this question ID does not exist
 )
 
 // ErrorCode stores code of a problem that happened while processing client's request.

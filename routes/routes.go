@@ -55,7 +55,7 @@ func isErrorReasonSerious(err error, reason int, w http.ResponseWriter) bool {
 func validateId(w http.ResponseWriter, id string) int {
 	id_valid, err := strconv.Atoi(id)
 	if err != nil || id_valid <= 0 {
-		sendJSON(w, misc.ErrorCode{misc.WrongID}, http.StatusNotFound)
+		sendJSON(w, misc.ErrorCode{misc.WrongTags}, http.StatusNotFound)
 		return 0
 	}
 	return id_valid

@@ -15,8 +15,6 @@ import (
 
 const (
 	letterBytes = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
-	maxLenS     = 40
-	maxLenB     = 1000
 )
 
 var AllPurchases = map[int]misc.Purchase{
@@ -223,18 +221,18 @@ func TestCreateBrand(t *testing.T) {
 		name   string
 		res_id int
 	}{
-		{randomString(maxLenS, 0, 1), 6},
-		{randomString(maxLenS, 0, 0), 7},
-		{randomString(maxLenS, 0, 0), 8},
+		{randomString(misc.MaxLenS, 0, 1), 6},
+		{randomString(misc.MaxLenS, 0, 0), 7},
+		{randomString(misc.MaxLenS, 0, 0), 8},
 	}
 
 	tableFail := []struct {
 		name string
 		code int
 	}{
-		{randomString(maxLenS, 1, 1), misc.WrongName},
-		{randomString(maxLenS, 1, 0), misc.WrongName},
-		{randomString(maxLenS, 1, 0), misc.WrongName},
+		{randomString(misc.MaxLenS, 1, 1), misc.WrongName},
+		{randomString(misc.MaxLenS, 1, 0), misc.WrongName},
+		{randomString(misc.MaxLenS, 1, 0), misc.WrongName},
 		{tableSuccess[0].name, misc.DbDuplicate},
 		{tableSuccess[1].name, misc.DbDuplicate},
 		{tableSuccess[2].name, misc.DbDuplicate},
@@ -269,7 +267,7 @@ func TestCreateBrand(t *testing.T) {
 func TestUpdateBrand(t *testing.T) {
 	cleanUpDb()
 
-	randStr := randomString(maxLenS, 0, 0)
+	randStr := randomString(misc.MaxLenS, 0, 0)
 	table := []struct {
 		id           int
 		name         string
@@ -280,13 +278,13 @@ func TestUpdateBrand(t *testing.T) {
 		{3, "Ferrari", 1, misc.DbDuplicate},
 		{3, randStr, 0, misc.NothingToReport},
 		{4, randStr, 1, misc.DbDuplicate},
-		{1, randomString(maxLenS, 0, 0), 0, misc.NothingToReport},
-		{2, randomString(maxLenS, 0, 1), 0, misc.NothingToReport},
-		{2, randomString(maxLenS, 1, 0), 1, misc.WrongName},
-		{5, randomString(maxLenS, 1, 1), 1, misc.WrongName},
-		{0, randomString(maxLenS, 0, 0), 1, misc.NothingUpdated},
-		{-1, randomString(maxLenS, 0, 0), 1, misc.NothingUpdated},
-		{43, randomString(maxLenS, 0, 0), 1, misc.NothingUpdated},
+		{1, randomString(misc.MaxLenS, 0, 0), 0, misc.NothingToReport},
+		{2, randomString(misc.MaxLenS, 0, 1), 0, misc.NothingToReport},
+		{2, randomString(misc.MaxLenS, 1, 0), 1, misc.WrongName},
+		{5, randomString(misc.MaxLenS, 1, 1), 1, misc.WrongName},
+		{0, randomString(misc.MaxLenS, 0, 0), 1, misc.NothingUpdated},
+		{-1, randomString(misc.MaxLenS, 0, 0), 1, misc.NothingUpdated},
+		{43, randomString(misc.MaxLenS, 0, 0), 1, misc.NothingUpdated},
 	}
 
 	for _, v := range table {
@@ -362,7 +360,7 @@ func TestGetTag(t *testing.T) {
 			t.Errorf("Wrong result for case %v: \n Expected %v \n Got %v %v %v", v.tagId, v, err, code, tag)
 		}
 		if tag.Id != 0 && tag.Issued_at == nil {
-			t.Errorf("Wrong result for case %v: Real Brand has an Issued_at date", v.tagId)
+			t.Errorf("Wrong result for case %v: Real Tag has an Issued_at date", v.tagId)
 		}
 	}
 }
@@ -375,10 +373,10 @@ func TestCreateTag(t *testing.T) {
 		descr  string
 		res_id int
 	}{
-		{randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 7},
-		{randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 1), 8},
-		{randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 0), 9},
-		{randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 1), 10},
+		{randomString(misc.MaxLenS, 0, 0), randomString(misc.MaxLenB, 0, 0), 7},
+		{randomString(misc.MaxLenS, 0, 0), randomString(misc.MaxLenB, 0, 1), 8},
+		{randomString(misc.MaxLenS, 0, 1), randomString(misc.MaxLenB, 0, 0), 9},
+		{randomString(misc.MaxLenS, 0, 1), randomString(misc.MaxLenB, 0, 1), 10},
 	}
 	for _, v := range tableSuccess {
 		id, err, code := CreateTag(v.name, v.descr)
@@ -397,20 +395,20 @@ func TestCreateTag(t *testing.T) {
 		descr string
 		code  int
 	}{
-		{randomString(maxLenS, 1, 0), randomString(maxLenB, 1, 0), misc.WrongName},
-		{randomString(maxLenS, 1, 0), randomString(maxLenB, 1, 1), misc.WrongName},
-		{randomString(maxLenS, 1, 1), randomString(maxLenB, 1, 0), misc.WrongName},
-		{randomString(maxLenS, 1, 1), randomString(maxLenB, 1, 1), misc.WrongName},
-		{tableSuccess[0].name, "", misc.DbDuplicate},
-		{tableSuccess[1].name, "", misc.DbDuplicate},
-		{tableSuccess[2].name, "", misc.DbDuplicate},
-		{tableSuccess[3].name, "", misc.DbDuplicate},
+		{randomString(misc.MaxLenS, 1, 0), randomString(misc.MaxLenB, 1, 0), misc.WrongName},
+		{randomString(misc.MaxLenS, 1, 0), randomString(misc.MaxLenB, 1, 1), misc.WrongName},
+		{randomString(misc.MaxLenS, 1, 1), randomString(misc.MaxLenB, 1, 0), misc.WrongName},
+		{randomString(misc.MaxLenS, 1, 1), randomString(misc.MaxLenB, 1, 1), misc.WrongName},
+		{tableSuccess[0].name, "d", misc.DbDuplicate},
+		{tableSuccess[1].name, "d", misc.DbDuplicate},
+		{tableSuccess[2].name, "d", misc.DbDuplicate},
+		{tableSuccess[3].name, "d", misc.DbDuplicate},
 	}
 
 	for _, v := range tableFail {
 		id, err, code := CreateTag(v.name, v.descr)
 		if err == nil || id != 0 || code != v.code {
-			t.Errorf("New tag should not be created %v, %v", id, code)
+			t.Errorf("New tag should not be created %v, %v, %v", err, id, code)
 		}
 	}
 
@@ -424,7 +422,7 @@ func TestCreateTag(t *testing.T) {
 func TestUpdateTag(t *testing.T) {
 	cleanUpDb()
 
-	randStr := randomString(maxLenS, 0, 0)
+	randStr := randomString(misc.MaxLenS, 0, 0)
 	table := []struct {
 		id           int
 		name         string
@@ -432,21 +430,21 @@ func TestUpdateTag(t *testing.T) {
 		res_is_error int
 		res_code     int
 	}{
-		{2, "car", randomString(maxLenB, 0, 0), 1, misc.DbDuplicate},
-		{3, "phone", randomString(maxLenB, 0, 0), 1, misc.DbDuplicate},
-		{3, randStr, randomString(maxLenB, 0, 0), 0, misc.NothingToReport},
-		{4, randStr, randomString(maxLenB, 0, 0), 1, misc.DbDuplicate},
-		{1, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 0, misc.NothingToReport},
-		{2, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 1), 0, misc.NothingToReport},
-		{2, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 0), 0, misc.NothingToReport},
-		{2, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 1), 0, misc.NothingToReport},
-		{5, randomString(maxLenS, 1, 1), randomString(maxLenB, 0, 0), 1, misc.WrongName},
-		{5, randomString(maxLenS, 1, 0), randomString(maxLenB, 0, 0), 1, misc.WrongName},
-		{5, randomString(maxLenS, 0, 0), randomString(maxLenB, 1, 1), 1, misc.WrongName},
-		{5, randomString(maxLenS, 0, 0), randomString(maxLenB, 1, 0), 1, misc.WrongName},
-		{0, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 1, misc.NothingUpdated},
-		{-1, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 1, misc.NothingUpdated},
-		{43, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 1, misc.NothingUpdated},
+		{2, "car", randomString(misc.MaxLenB, 0, 0), 1, misc.DbDuplicate},
+		{3, "phone", randomString(misc.MaxLenB, 0, 0), 1, misc.DbDuplicate},
+		{3, randStr, randomString(misc.MaxLenB, 0, 0), 0, misc.NothingToReport},
+		{4, randStr, randomString(misc.MaxLenB, 0, 0), 1, misc.DbDuplicate},
+		{1, randomString(misc.MaxLenS, 0, 0), randomString(misc.MaxLenB, 0, 0), 0, misc.NothingToReport},
+		{2, randomString(misc.MaxLenS, 0, 0), randomString(misc.MaxLenB, 0, 1), 0, misc.NothingToReport},
+		{2, randomString(misc.MaxLenS, 0, 1), randomString(misc.MaxLenB, 0, 0), 0, misc.NothingToReport},
+		{2, randomString(misc.MaxLenS, 0, 1), randomString(misc.MaxLenB, 0, 1), 0, misc.NothingToReport},
+		{5, randomString(misc.MaxLenS, 1, 1), randomString(misc.MaxLenB, 0, 0), 1, misc.WrongName},
+		{5, randomString(misc.MaxLenS, 1, 0), randomString(misc.MaxLenB, 0, 0), 1, misc.WrongName},
+		{5, randomString(misc.MaxLenS, 0, 0), randomString(misc.MaxLenB, 1, 1), 1, misc.WrongDescr},
+		{5, randomString(misc.MaxLenS, 0, 0), randomString(misc.MaxLenB, 1, 0), 1, misc.WrongDescr},
+		{0, randomString(misc.MaxLenS, 0, 0), randomString(misc.MaxLenB, 0, 0), 1, misc.NothingUpdated},
+		{-1, randomString(misc.MaxLenS, 0, 0), randomString(misc.MaxLenB, 0, 0), 1, misc.NothingUpdated},
+		{43, randomString(misc.MaxLenS, 0, 0), randomString(misc.MaxLenB, 0, 0), 1, misc.NothingUpdated},
 	}
 
 	for _, v := range table {
@@ -512,7 +510,7 @@ func TestGetUser(t *testing.T) {
 func TestUpdateUser(t *testing.T) {
 	cleanUpDb()
 
-	randStr := randomString(maxLenS, 0, 0)
+	randStr := randomString(misc.MaxLenS, 0, 0)
 	table := []struct {
 		id           int
 		nickname     string
@@ -520,20 +518,20 @@ func TestUpdateUser(t *testing.T) {
 		res_is_error int
 		res_code     int
 	}{
-		{2, "Marie Curie", randomString(maxLenB, 0, 0), 1, misc.DbDuplicate},
-		{3, "Nikola Tesla", randomString(maxLenB, 0, 0), 1, misc.DbDuplicate},
-		{3, randStr, randomString(maxLenB, 0, 0), 0, misc.NothingToReport},
-		{4, randStr, randomString(maxLenB, 0, 0), 1, misc.DbDuplicate},
-		{1, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 0), 0, misc.NothingToReport},
-		{2, randomString(maxLenS, 0, 0), randomString(maxLenB, 0, 1), 0, misc.NothingToReport},
-		{3, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 0), 0, misc.NothingToReport},
-		{4, randomString(maxLenS, 0, 1), randomString(maxLenB, 0, 1), 0, misc.NothingToReport},
-		{2, randomString(maxLenS, 1, 0), randomString(maxLenB, 0, 0), 1, misc.WrongName},
-		{5, randomString(maxLenS, 0, 0), randomString(maxLenB, 1, 0), 1, misc.WrongName},
-		{5, randomString(maxLenS, 1, 0), randomString(maxLenB, 1, 0), 1, misc.WrongName},
-		{0, randomString(maxLenS, 0, 0), randomString(maxLenS, 0, 0), 1, misc.NothingUpdated},
-		{-1, randomString(maxLenS, 0, 0), randomString(maxLenS, 0, 0), 1, misc.NothingUpdated},
-		{43, randomString(maxLenS, 0, 0), randomString(maxLenS, 0, 0), 1, misc.NothingUpdated},
+		{2, "Marie Curie", randomString(misc.MaxLenB, 0, 0), 1, misc.DbDuplicate},
+		{3, "Nikola Tesla", randomString(misc.MaxLenB, 0, 0), 1, misc.DbDuplicate},
+		{3, randStr, randomString(misc.MaxLenB, 0, 0), 0, misc.NothingToReport},
+		{4, randStr, randomString(misc.MaxLenB, 0, 0), 1, misc.DbDuplicate},
+		{1, randomString(misc.MaxLenS, 0, 0), randomString(misc.MaxLenB, 0, 0), 0, misc.NothingToReport},
+		{2, randomString(misc.MaxLenS, 0, 0), randomString(misc.MaxLenB, 0, 1), 0, misc.NothingToReport},
+		{3, randomString(misc.MaxLenS, 0, 1), randomString(misc.MaxLenB, 0, 0), 0, misc.NothingToReport},
+		{4, randomString(misc.MaxLenS, 0, 1), randomString(misc.MaxLenB, 0, 1), 0, misc.NothingToReport},
+		{2, randomString(misc.MaxLenS, 1, 0), randomString(misc.MaxLenB, 0, 0), 1, misc.WrongName},
+		{5, randomString(misc.MaxLenS, 0, 0), randomString(misc.MaxLenB, 1, 0), 1, misc.WrongDescr},
+		{5, randomString(misc.MaxLenS, 1, 0), randomString(misc.MaxLenB, 1, 0), 1, misc.WrongName},
+		{0, randomString(misc.MaxLenS, 0, 0), randomString(misc.MaxLenS, 0, 0), 1, misc.NothingUpdated},
+		{-1, randomString(misc.MaxLenS, 0, 0), randomString(misc.MaxLenS, 0, 0), 1, misc.NothingUpdated},
+		{43, randomString(misc.MaxLenS, 0, 0), randomString(misc.MaxLenS, 0, 0), 1, misc.NothingUpdated},
 	}
 
 	for _, v := range table {
@@ -663,7 +661,7 @@ func TestFollow(t *testing.T) {
 		{1, 2, 1, misc.DbDuplicate, 2, 3},
 		{6, 2, 1, misc.DbDuplicate, 2, 1},
 		{0, 2, 1, misc.DbForeignKeyViolation, 2, 0},
-		{6, -1, 1, misc.DbForeignKeyViolation, 0, 1},
+		{6, -1, 1, misc.NoElement, 0, 1},
 		{10, 54, 1, misc.DbForeignKeyViolation, 0, 0},
 		{1, 6, 0, misc.NothingToReport, 1, 4},
 		{6, 1, 0, misc.NothingToReport, 1, 2},

@@ -16,8 +16,6 @@ import (
 
 var Db *sql.DB
 
-const maxTags = 4 // maximum number of tags for a purchase
-
 // Init prepares the database abstraction for later use. It does not establish any connections to
 // the database, nor does it validate driver connection parameters. To do this call Ping
 // http://go-database-sql.org/accessing.html
@@ -95,7 +93,7 @@ func GetAllBrands() ([]*misc.Brand, error, int) {
 }
 
 func GetBrand(brandId int) (misc.Brand, error, int) {
-	if brandId <= 0 {
+	if !misc.IsIdValid(brandId) {
 		return misc.Brand{}, errors.New("Not positive id"), misc.NoElement
 	}
 
@@ -117,6 +115,11 @@ func GetBrand(brandId int) (misc.Brand, error, int) {
 }
 
 func CreateBrand(name string) (int, error, int) {
+	name, ok := misc.ValidateString(name, misc.MaxLenS)
+	if !ok {
+		return 0, errors.New("Wrong name"), misc.WrongName
+	}
+
 	brandId := 0
 	err := Db.QueryRow(`
 		INSERT INTO brands (name)
@@ -132,9 +135,15 @@ func CreateBrand(name string) (int, error, int) {
 }
 
 func UpdateBrand(brandId int, name string) (error, int) {
-	if brandId <= 0 {
-		return errors.New("nothing updated"), misc.NothingUpdated
+	if !misc.IsIdValid(brandId) {
+		return errors.New("Nothing updated"), misc.NothingUpdated
 	}
+
+	name, ok := misc.ValidateString(name, misc.MaxLenS)
+	if !ok {
+		return errors.New("Wrong name"), misc.WrongName
+	}
+
 	sqlResult, err := Db.Exec(`
 		UPDATE brands
 		SET name = $1
@@ -174,6 +183,10 @@ func GetAllTags() ([]*misc.Tag, error, int) {
 }
 
 func GetTag(tagId int) (misc.Tag, error, int) {
+	if !misc.IsIdValid(tagId) {
+		return misc.Tag{}, errors.New("Not positive id"), misc.NoElement
+	}
+
 	tag := misc.Tag{}
 	if err := Db.QueryRow(`
 		SELECT name, description, issued_at
@@ -192,6 +205,16 @@ func GetTag(tagId int) (misc.Tag, error, int) {
 }
 
 func CreateTag(name, descr string) (int, error, int) {
+	name, ok := misc.ValidateString(name, misc.MaxLenS)
+	if !ok {
+		return 0, errors.New("Wrong name"), misc.WrongName
+	}
+
+	descr, ok = misc.ValidateString(descr, misc.MaxLenB)
+	if !ok {
+		return 0, errors.New("Wrong description"), misc.WrongDescr
+	}
+
 	tagId := 0
 	err := Db.QueryRow(`
 		INSERT INTO tags (name, description)
@@ -207,6 +230,20 @@ func CreateTag(name, descr string) (int, error, int) {
 }
 
 func UpdateTag(tagId int, name, descr string) (error, int) {
+	if !misc.IsIdValid(tagId) {
+		return errors.New("Nothing updated"), misc.NothingUpdated
+	}
+
+	name, ok := misc.ValidateString(name, misc.MaxLenS)
+	if !ok {
+		return errors.New("Wrong name"), misc.WrongName
+	}
+
+	descr, ok = misc.ValidateString(descr, misc.MaxLenB)
+	if !ok {
+		return errors.New("Wrong description"), misc.WrongDescr
+	}
+
 	sqlResult, err := Db.Exec(`
 		UPDATE tags
 		SET name = $1, description = $2
@@ -223,13 +260,14 @@ func validateTags(tagIds []int) (error, int) {
 	if len(tagIds) == 0 {
 		return errors.New("no tags"), misc.NoTags
 	}
-	if len(tagIds) > maxTags {
+
+	if len(tagIds) > misc.MaxTags {
 		return errors.New("too many tags"), misc.WrongTagsNum
 	}
 
 	for _, v := range tagIds {
 		if v <= 0 {
-			return errors.New("tag is negative"), misc.WrongID
+			return errors.New("tag is negative"), misc.WrongTags
 		}
 	}
 
@@ -256,6 +294,10 @@ func validateTags(tagIds []int) (error, int) {
 // --- Users ---
 
 func GetUser(userId int) (misc.User, error, int) {
+	if !misc.IsIdValid(userId) {
+		return misc.User{}, errors.New("Not positive id"), misc.NoElement
+	}
+
 	user := misc.User{}
 	if err := Db.QueryRow(`
 		SELECT nickname, image, about, expertise, followers_num, following_num, purchases_num, questions_num, answers_num, issued_at
@@ -276,6 +318,20 @@ func GetUser(userId int) (misc.User, error, int) {
 }
 
 func UpdateUser(userId int, nickname, about string) (error, int) {
+	if !misc.IsIdValid(userId) {
+		return errors.New("Nothing updated"), misc.NothingUpdated
+	}
+
+	nickname, ok := misc.ValidateString(nickname, misc.MaxLenS)
+	if !ok {
+		return errors.New("Wrong name"), misc.WrongName
+	}
+
+	about, ok = misc.ValidateString(about, misc.MaxLenB)
+	if !ok {
+		return errors.New("Wrong about"), misc.WrongDescr
+	}
+
 	sqlResult, err := Db.Exec(`
 		UPDATE users
 		SET nickname = $1, about = $2
@@ -288,6 +344,10 @@ func UpdateUser(userId int, nickname, about string) (error, int) {
 }
 
 func Follow(whoId, whomId int) (error, int) {
+	if !misc.IsIdValid(whomId) {
+		return errors.New("Not positive id"), misc.NoElement
+	}
+
 	if whoId == whomId {
 		return errors.New("can't follow yourself"), misc.FollowYourself
 	}
@@ -322,6 +382,10 @@ func Follow(whoId, whomId int) (error, int) {
 }
 
 func Unfollow(whoId, whomId int) (error, int) {
+	if !misc.IsIdValid(whomId) {
+		return errors.New("Not positive id"), misc.NoElement
+	}
+
 	if whoId == whomId {
 		return errors.New("can't follow yourself"), misc.FollowYourself
 	}
@@ -357,6 +421,10 @@ func Unfollow(whoId, whomId int) (error, int) {
 }
 
 func GetFollowing(userId int) ([]*misc.User, error, int) {
+	if !misc.IsIdValid(userId) {
+		return []*misc.User{}, nil, misc.NothingToReport
+	}
+
 	rows, err := Db.Query(`
 		SELECT id, nickname, image
 		FROM users
@@ -387,6 +455,10 @@ func GetFollowing(userId int) ([]*misc.User, error, int) {
 }
 
 func GetFollowers(userId int) ([]*misc.User, error, int) {
+	if !misc.IsIdValid(userId) {
+		return []*misc.User{}, nil, misc.NothingToReport
+	}
+
 	rows, err := Db.Query(`
 		SELECT id, nickname, image
 		FROM users
@@ -417,6 +489,20 @@ func GetFollowers(userId int) ([]*misc.User, error, int) {
 }
 
 func CreateUser(nickname, email, password string) (int, error, int) {
+	nickname, ok := misc.ValidateString(nickname, misc.MaxLenS)
+	if !ok {
+		return 0, errors.New("Wrong name"), misc.WrongName
+	}
+
+	email, ok = misc.ValidateEmail(email)
+	if !ok {
+		return 0, errors.New("Wrong email"), misc.WrongEmail
+	}
+
+	if !misc.IsPasswordValid(password) {
+		return 0, errors.New("Wrong password"), misc.WrongPassword
+	}
+
 	salt, err := auth.GenerateSalt()
 	if err != nil {
 		return 0, err, misc.NoSalt
@@ -442,6 +528,11 @@ func CreateUser(nickname, email, password string) (int, error, int) {
 }
 
 func Login(email, password string) (string, bool) {
+	email, ok := misc.ValidateEmail(email)
+	if !ok || !misc.IsPasswordValid(password){
+		return "", false
+	}
+
 	userId, hash, salt := 0, make([]byte, 32), make([]byte, 16)
 
 	if err := Db.QueryRow(`
@@ -493,6 +584,10 @@ func getPurchases(rows *sql.Rows, err error) ([]*misc.Purchase, error, int) {
 }
 
 func whoCreatedPurchaseByPurchaseId(purchaseId int) (int, error, int) {
+	if !misc.IsIdValid(purchaseId) {
+		return 0, errors.New("No purchase"), misc.NoPurchase
+	}
+
 	whosePurchase := 0
 	if err := Db.QueryRow(`
 		SELECT user_id
@@ -510,6 +605,11 @@ func whoCreatedPurchaseByPurchaseId(purchaseId int) (int, error, int) {
 }
 
 func whoCreatedPurchaseByQuestionId(questionId int) (int, error, int) {
+	if !misc.IsIdValid(questionId) {
+		// if question does not exist, surely there is no purchase for this question
+		return 0, errors.New("No purchase"), misc.NoPurchase
+	}
+
 	whosePurchase := 0
 	if err := Db.QueryRow(`
 		SELECT user_id
@@ -520,7 +620,7 @@ func whoCreatedPurchaseByQuestionId(questionId int) (int, error, int) {
 			WHERE id = $1
 		)`, questionId).Scan(&whosePurchase); err != nil {
 		if err == sql.ErrNoRows {
-			return 0, err, misc.NoPurchaseForQuestion
+			return 0, err, misc.NoPurchase
 		}
 
 		return 0, err, misc.NothingToReport
@@ -530,6 +630,7 @@ func whoCreatedPurchaseByQuestionId(questionId int) (int, error, int) {
 }
 
 func GetUserPurchases(userId int) ([]*misc.Purchase, error, int) {
+	// userId is the current user and is always valid
 	rows, err := Db.Query(`
 		SELECT id, image, description, user_id, issued_at, brand_id, likes_num
 		FROM purchases
@@ -540,6 +641,16 @@ func GetUserPurchases(userId int) ([]*misc.Purchase, error, int) {
 }
 
 func CreatePurchase(userId int, description string, brandId int, tagsId []int) (int, error, int) {
+	// userID is the current user and should be valid
+	description, ok := misc.ValidateString(description, misc.MaxLenB)
+	if !ok {
+		return 0, errors.New("Wrong description"), misc.WrongDescr
+	}
+
+	if brandId < 0 {
+		return 0, errors.New("Not positive id"), misc.NoElement
+	}
+
 	if err, code := validateTags(tagsId); err != nil {
 		return 0, err, code
 	}
@@ -583,7 +694,7 @@ func GetAllPurchases() ([]*misc.Purchase, error, int) {
 }
 
 func GetAllPurchasesWithBrand(brandId int) ([]*misc.Purchase, error, int) {
-	if brandId <= 0 {
+	if !misc.IsIdValid(brandId) {
 		return []*misc.Purchase{}, nil, misc.NothingToReport
 	}
 
@@ -597,6 +708,10 @@ func GetAllPurchasesWithBrand(brandId int) ([]*misc.Purchase, error, int) {
 }
 
 func GetAllPurchasesWithTag(tagId int) ([]*misc.Purchase, error, int) {
+	if !misc.IsIdValid(tagId) {
+		return []*misc.Purchase{}, nil, misc.NothingToReport
+	}
+
 	rows, err := Db.Query(`
 		SELECT id, image, description, user_id, issued_at, brand_id, likes_num
 		FROM purchases
@@ -607,6 +722,10 @@ func GetAllPurchasesWithTag(tagId int) ([]*misc.Purchase, error, int) {
 }
 
 func GetPurchase(purchaseId int) (misc.Purchase, error, int) {
+	if !misc.IsIdValid(purchaseId) {
+		return misc.Purchase{}, errors.New("Not positive id"), misc.NoElement
+	}
+
 	p := misc.Purchase{}
 	if err := Db.QueryRow(`
 		SELECT image, description, user_id, issued_at, brand_id, likes_num
@@ -625,6 +744,10 @@ func GetPurchase(purchaseId int) (misc.Purchase, error, int) {
 }
 
 func LikePurchase(purchaseId, userId int) (error, int) {
+	if !misc.IsIdValid(purchaseId) {
+		return errors.New("Not positive id"), misc.NoPurchase
+	}
+
 	// check whose purchase it is
 	whosePurchase, err, code := whoCreatedPurchaseByPurchaseId(purchaseId)
 	if err != nil {
@@ -658,6 +781,10 @@ func LikePurchase(purchaseId, userId int) (error, int) {
 }
 
 func UnlikePurchase(purchaseId, userId int) (error, int) {
+	if !misc.IsIdValid(purchaseId) {
+		return errors.New("Not positive id"), misc.NoPurchase
+	}
+
 	// check whose purchase it is
 	whosePurchase, err, code := whoCreatedPurchaseByPurchaseId(purchaseId)
 	if err != nil {
@@ -690,6 +817,7 @@ func UnlikePurchase(purchaseId, userId int) (error, int) {
 }
 
 func AskQuestion(purchaseId, userId int, question string) (int, error, int) {
+	// TODO validate everything
 	whosePurchase, err, code := whoCreatedPurchaseByPurchaseId(purchaseId)
 	if err != nil {
 		return 0, err, code
@@ -723,6 +851,7 @@ func AskQuestion(purchaseId, userId int, question string) (int, error, int) {
 
 // --- Answers ---
 func AnswerQuestion(questionId, userId int, answer string) (int, error, int) {
+	// TODO validate everything
 	whosePurchase, err, code := whoCreatedPurchaseByQuestionId(questionId)
 	if err != nil {
 		return 0, err, code
