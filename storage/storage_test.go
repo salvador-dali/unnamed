@@ -5,13 +5,13 @@ package storage
 import (
 	"../config"
 	"../misc"
+	"io/ioutil"
 	"log"
 	"math/rand"
 	"os"
 	"os/exec"
 	"sort"
 	"testing"
-	"io/ioutil"
 )
 
 const (
