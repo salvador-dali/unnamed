@@ -8,9 +8,9 @@ import (
 
 const (
 	passwordMinLen = 8
-	MaxTags        = 4		// maximum number of tags possible for a purchase
-	MaxLenS        = 40		// maximum length of the small field in SQL
-	MaxLenB        = 1000	// maximum length of the big field in SQL
+	MaxTags        = 4    // maximum number of tags possible for a purchase
+	MaxLenS        = 40   // maximum length of the small field in SQL
+	MaxLenB        = 1000 // maximum length of the big field in SQL
 )
 
 // Error codes

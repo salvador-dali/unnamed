@@ -66,13 +66,14 @@ func checkSpecificDriverErrors(err error) (error, int) {
 
 // --- Brands ---
 
-func GetAllBrands() ([]*misc.Brand, error, int) {
+func GetAllBrands() ([]*misc.Brand, int) {
 	rows, err := Db.Query(`
 		SELECT id, name
 		FROM brands
 		WHERE id > 0`)
 	if err != nil {
-		return []*misc.Brand{}, err, misc.NothingToReport
+		log.Println(err)
+		return []*misc.Brand{}, misc.NothingToReport
 	}
 	defer rows.Close()
 
@@ -80,21 +81,24 @@ func GetAllBrands() ([]*misc.Brand, error, int) {
 	for rows.Next() {
 		brand := misc.Brand{}
 		if err := rows.Scan(&brand.Id, &brand.Name); err != nil {
-			return []*misc.Brand{}, err, misc.NothingToReport
+			log.Println(err)
+			return []*misc.Brand{}, misc.NothingToReport
 		}
 		brands = append(brands, &brand)
 	}
 
 	if err = rows.Err(); err != nil {
-		return []*misc.Brand{}, err, misc.NothingToReport
+		log.Println(err)
+		return []*misc.Brand{}, misc.NothingToReport
 	}
 
-	return brands, nil, misc.NothingToReport
+	return brands, misc.NothingToReport
 }
 
-func GetBrand(brandId int) (misc.Brand, error, int) {
+func GetBrand(brandId int) (misc.Brand, int) {
 	if !misc.IsIdValid(brandId) {
-		return misc.Brand{}, errors.New("Not positive id"), misc.NoElement
+		log.Println("BrandId is not correct", brandId)
+		return misc.Brand{}, misc.NoElement
 	}
 
 	brand := misc.Brand{}
@@ -104,20 +108,23 @@ func GetBrand(brandId int) (misc.Brand, error, int) {
 		WHERE id = $1`, brandId,
 	).Scan(&brand.Name, &brand.Issued_at); err != nil {
 		if err == sql.ErrNoRows {
-			return misc.Brand{}, err, misc.NoElement
+			log.Println(err)
+			return misc.Brand{}, misc.NoElement
 		}
 
-		return misc.Brand{}, err, misc.NothingToReport
+		log.Println(err)
+		return misc.Brand{}, misc.NothingToReport
 	}
 
 	brand.Id = brandId
-	return brand, nil, misc.NothingToReport
+	return brand, misc.NothingToReport
 }
 
-func CreateBrand(name string) (int, error, int) {
+func CreateBrand(name string) (int, int) {
 	name, ok := misc.ValidateString(name, misc.MaxLenS)
 	if !ok {
-		return 0, errors.New("Wrong name"), misc.WrongName
+		log.Println("Wrong name for a brand", name)
+		return 0, misc.WrongName
 	}
 
 	brandId := 0
@@ -127,21 +134,24 @@ func CreateBrand(name string) (int, error, int) {
 		RETURNING id`, name,
 	).Scan(&brandId)
 	if err == nil {
-		return brandId, nil, misc.NothingToReport
+		return brandId, misc.NothingToReport
 	}
 
 	err, code := checkSpecificDriverErrors(err)
-	return 0, err, code
+	log.Println("Error creating a brand", err)
+	return 0, code
 }
 
-func UpdateBrand(brandId int, name string) (error, int) {
+func UpdateBrand(brandId int, name string) int {
 	if !misc.IsIdValid(brandId) {
-		return errors.New("Nothing updated"), misc.NothingUpdated
+		log.Println("BrandId is not correct", brandId)
+		return misc.NothingUpdated
 	}
 
 	name, ok := misc.ValidateString(name, misc.MaxLenS)
 	if !ok {
-		return errors.New("Wrong name"), misc.WrongName
+		log.Println("Brand name is not correct", name)
+		return misc.WrongName
 	}
 
 	sqlResult, err := Db.Exec(`
@@ -149,20 +159,24 @@ func UpdateBrand(brandId int, name string) (error, int) {
 		SET name = $1
 		WHERE id = $2`, name, brandId)
 	if err, code := checkSpecificDriverErrors(err); err != nil {
-		return err, code
+		log.Println(err)
+		return code
 	}
 
-	return isAffectedOneRow(sqlResult)
+	err, code := isAffectedOneRow(sqlResult)
+	log.Println(err)
+	return code
 }
 
 // --- Tags ---
 
-func GetAllTags() ([]*misc.Tag, error, int) {
+func GetAllTags() ([]*misc.Tag, int) {
 	rows, err := Db.Query(`
 		SELECT id, name
 		FROM tags`)
 	if err != nil {
-		return []*misc.Tag{}, err, misc.NothingToReport
+		log.Println(err)
+		return []*misc.Tag{}, misc.NothingToReport
 	}
 	defer rows.Close()
 
@@ -170,21 +184,24 @@ func GetAllTags() ([]*misc.Tag, error, int) {
 	for rows.Next() {
 		tag := misc.Tag{}
 		if err := rows.Scan(&tag.Id, &tag.Name); err != nil {
-			return []*misc.Tag{}, err, misc.NothingToReport
+			log.Println(err)
+			return []*misc.Tag{}, misc.NothingToReport
 		}
 		tags = append(tags, &tag)
 	}
 
 	if err = rows.Err(); err != nil {
-		return []*misc.Tag{}, err, misc.NothingToReport
+		log.Println(err)
+		return []*misc.Tag{}, misc.NothingToReport
 	}
 
-	return tags, nil, misc.NothingToReport
+	return tags, misc.NothingToReport
 }
 
-func GetTag(tagId int) (misc.Tag, error, int) {
+func GetTag(tagId int) (misc.Tag, int) {
 	if !misc.IsIdValid(tagId) {
-		return misc.Tag{}, errors.New("Not positive id"), misc.NoElement
+		log.Println("TagId is not correct", tagId)
+		return misc.Tag{}, misc.NoElement
 	}
 
 	tag := misc.Tag{}
@@ -194,25 +211,29 @@ func GetTag(tagId int) (misc.Tag, error, int) {
 		WHERE id = $1`, tagId,
 	).Scan(&tag.Name, &tag.Description, &tag.Issued_at); err != nil {
 		if err == sql.ErrNoRows {
-			return misc.Tag{}, err, misc.NoElement
+			log.Println(err)
+			return misc.Tag{}, misc.NoElement
 		}
 
-		return misc.Tag{}, err, misc.NothingToReport
+		log.Println(err)
+		return misc.Tag{}, misc.NothingToReport
 	}
 
 	tag.Id = tagId
-	return tag, nil, misc.NothingToReport
+	return tag, misc.NothingToReport
 }
 
-func CreateTag(name, descr string) (int, error, int) {
+func CreateTag(name, descr string) (int, int) {
 	name, ok := misc.ValidateString(name, misc.MaxLenS)
 	if !ok {
-		return 0, errors.New("Wrong name"), misc.WrongName
+		log.Println("Wrong name for a tag", name)
+		return 0, misc.WrongName
 	}
 
 	descr, ok = misc.ValidateString(descr, misc.MaxLenB)
 	if !ok {
-		return 0, errors.New("Wrong description"), misc.WrongDescr
+		log.Println("Wrong descr for a tag", descr)
+		return 0, misc.WrongDescr
 	}
 
 	tagId := 0
@@ -222,26 +243,30 @@ func CreateTag(name, descr string) (int, error, int) {
 		RETURNING id`, name, descr,
 	).Scan(&tagId)
 	if err == nil {
-		return tagId, nil, misc.NothingToReport
+		return tagId, misc.NothingToReport
 	}
 
 	err, code := checkSpecificDriverErrors(err)
-	return 0, err, code
+	log.Println(err)
+	return 0, code
 }
 
-func UpdateTag(tagId int, name, descr string) (error, int) {
+func UpdateTag(tagId int, name, descr string) int {
 	if !misc.IsIdValid(tagId) {
-		return errors.New("Nothing updated"), misc.NothingUpdated
+		log.Println("Tag was not updated", tagId)
+		return misc.NothingUpdated
 	}
 
 	name, ok := misc.ValidateString(name, misc.MaxLenS)
 	if !ok {
-		return errors.New("Wrong name"), misc.WrongName
+		log.Println("Tag has wrong name", name)
+		return misc.WrongName
 	}
 
 	descr, ok = misc.ValidateString(descr, misc.MaxLenB)
 	if !ok {
-		return errors.New("Wrong description"), misc.WrongDescr
+		log.Println("Tag has wrong description", descr)
+		return misc.WrongDescr
 	}
 
 	sqlResult, err := Db.Exec(`
@@ -249,10 +274,13 @@ func UpdateTag(tagId int, name, descr string) (error, int) {
 		SET name = $1, description = $2
 		WHERE id = $3`, name, descr, tagId)
 	if err, code := checkSpecificDriverErrors(err); err != nil {
-		return err, code
+		log.Println(err)
+		return code
 	}
 
-	return isAffectedOneRow(sqlResult)
+	err, code := isAffectedOneRow(sqlResult)
+	log.Println(err)
+	return code
 }
 
 // validateTags makes sure that all the tags are in the database. psql does not support this http://dba.stackexchange.com/q/60132/15318
@@ -293,9 +321,10 @@ func validateTags(tagIds []int) (error, int) {
 
 // --- Users ---
 
-func GetUser(userId int) (misc.User, error, int) {
+func GetUser(userId int) (misc.User, int) {
 	if !misc.IsIdValid(userId) {
-		return misc.User{}, errors.New("Not positive id"), misc.NoElement
+		log.Println("UserId is not correct")
+		return misc.User{}, misc.NoElement
 	}
 
 	user := misc.User{}
@@ -308,28 +337,33 @@ func GetUser(userId int) (misc.User, error, int) {
 		&user.Issued_at,
 	); err != nil {
 		if err == sql.ErrNoRows {
-			return misc.User{}, err, misc.NoElement
+			log.Println(err)
+			return misc.User{}, misc.NoElement
 		}
 
-		return misc.User{}, err, misc.NothingToReport
+		log.Println(err)
+		return misc.User{}, misc.NothingToReport
 	}
 	user.Id = userId
-	return user, nil, misc.NothingToReport
+	return user, misc.NothingToReport
 }
 
-func UpdateUser(userId int, nickname, about string) (error, int) {
+func UpdateUser(userId int, nickname, about string) int {
 	if !misc.IsIdValid(userId) {
-		return errors.New("Nothing updated"), misc.NothingUpdated
+		log.Println("user was not updated", userId)
+		return misc.NothingUpdated
 	}
 
 	nickname, ok := misc.ValidateString(nickname, misc.MaxLenS)
 	if !ok {
-		return errors.New("Wrong name"), misc.WrongName
+		log.Println("Nickname is not correct", nickname)
+		return misc.WrongName
 	}
 
 	about, ok = misc.ValidateString(about, misc.MaxLenB)
 	if !ok {
-		return errors.New("Wrong about"), misc.WrongDescr
+		log.Println("About is not correct", about)
+		return misc.WrongDescr
 	}
 
 	sqlResult, err := Db.Exec(`
@@ -337,29 +371,36 @@ func UpdateUser(userId int, nickname, about string) (error, int) {
 		SET nickname = $1, about = $2
 		WHERE id = $3`, nickname, about, userId)
 	if err, code := checkSpecificDriverErrors(err); err != nil {
-		return err, code
+		log.Println(err)
+		return code
 	}
 
-	return isAffectedOneRow(sqlResult)
+	err, code := isAffectedOneRow(sqlResult)
+	log.Println(err)
+	return code
 }
 
-func Follow(whoId, whomId int) (error, int) {
+func Follow(whoId, whomId int) int {
 	if !misc.IsIdValid(whomId) {
-		return errors.New("Not positive id"), misc.NoElement
+		log.Println("User id is not correct", whomId)
+		return misc.NoElement
 	}
 
 	if whoId == whomId {
-		return errors.New("can't follow yourself"), misc.FollowYourself
+		log.Println("can't follow yourself")
+		return misc.FollowYourself
 	}
 
 	sqlResult, err := Db.Exec(`
 		INSERT INTO followers (who_id, whom_id)
 		VALUES ($1, $2)`, whoId, whomId)
 	if err, code := checkSpecificDriverErrors(err); err != nil {
-		return err, code
+		log.Println(err)
+		return code
 	}
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		return err, code
+		log.Println(err)
+		return code
 	}
 
 	sqlResult, err = Db.Exec(`
@@ -367,7 +408,8 @@ func Follow(whoId, whomId int) (error, int) {
 		SET followers_num = followers_num + 1
 		WHERE id = $1`, whomId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		return err, code
+		log.Println(err)
+		return code
 	}
 
 	sqlResult, err = Db.Exec(`
@@ -375,30 +417,35 @@ func Follow(whoId, whomId int) (error, int) {
 		SET following_num = following_num + 1
 		WHERE id = $1`, whoId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		return err, code
+		log.Println(err)
+		return code
 	}
 
-	return nil, misc.NothingToReport
+	return misc.NothingToReport
 }
 
-func Unfollow(whoId, whomId int) (error, int) {
+func Unfollow(whoId, whomId int) int {
 	if !misc.IsIdValid(whomId) {
-		return errors.New("Not positive id"), misc.NoElement
+		log.Println("User id is not correct", whomId)
+		return misc.NoElement
 	}
 
 	if whoId == whomId {
-		return errors.New("can't follow yourself"), misc.FollowYourself
+		log.Println("can't follow yourself")
+		return misc.FollowYourself
 	}
 
 	sqlResult, err := Db.Exec(`
 		DELETE FROM followers
 		WHERE who_id = $1 AND whom_id = $2`, whoId, whomId)
 	if err != nil {
-		return err, misc.NothingToReport
+		log.Println(err)
+		return misc.NothingToReport
 	}
 
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		return err, code
+		log.Println(err)
+		return code
 	}
 
 	sqlResult, err = Db.Exec(`
@@ -406,7 +453,8 @@ func Unfollow(whoId, whomId int) (error, int) {
 		SET followers_num = followers_num - 1
 		WHERE id = $1`, whomId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		return err, code
+		log.Println(err)
+		return code
 	}
 
 	sqlResult, err = Db.Exec(`
@@ -414,15 +462,16 @@ func Unfollow(whoId, whomId int) (error, int) {
 		SET following_num = following_num - 1
 		WHERE id = $1`, whoId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		return err, code
+		log.Println(err)
+		return code
 	}
 
-	return nil, misc.NothingToReport
+	return misc.NothingToReport
 }
 
-func GetFollowing(userId int) ([]*misc.User, error, int) {
+func GetFollowing(userId int) ([]*misc.User, int) {
 	if !misc.IsIdValid(userId) {
-		return []*misc.User{}, nil, misc.NothingToReport
+		return []*misc.User{}, misc.NothingToReport
 	}
 
 	rows, err := Db.Query(`
@@ -434,7 +483,8 @@ func GetFollowing(userId int) ([]*misc.User, error, int) {
 			WHERE who_id = $1
 		)`, userId)
 	if err != nil {
-		return []*misc.User{}, err, misc.NothingToReport
+		log.Println(err)
+		return []*misc.User{}, misc.NothingToReport
 	}
 	defer rows.Close()
 
@@ -442,21 +492,23 @@ func GetFollowing(userId int) ([]*misc.User, error, int) {
 	for rows.Next() {
 		user := misc.User{}
 		if err := rows.Scan(&user.Id, &user.Nickname, &user.Image); err != nil {
-			return []*misc.User{}, err, misc.NothingToReport
+			log.Println(err)
+			return []*misc.User{}, misc.NothingToReport
 		}
 		users = append(users, &user)
 	}
 
 	if err = rows.Err(); err != nil {
-		return []*misc.User{}, err, misc.NothingToReport
+		log.Println(err)
+		return []*misc.User{}, misc.NothingToReport
 	}
 
-	return users, nil, misc.NothingToReport
+	return users, misc.NothingToReport
 }
 
-func GetFollowers(userId int) ([]*misc.User, error, int) {
+func GetFollowers(userId int) ([]*misc.User, int) {
 	if !misc.IsIdValid(userId) {
-		return []*misc.User{}, nil, misc.NothingToReport
+		return []*misc.User{}, misc.NothingToReport
 	}
 
 	rows, err := Db.Query(`
@@ -468,7 +520,8 @@ func GetFollowers(userId int) ([]*misc.User, error, int) {
 			WHERE whom_id = $1
 		)`, userId)
 	if err != nil {
-		return []*misc.User{}, err, misc.NothingToReport
+		log.Println(err)
+		return []*misc.User{}, misc.NothingToReport
 	}
 	defer rows.Close()
 
@@ -476,41 +529,48 @@ func GetFollowers(userId int) ([]*misc.User, error, int) {
 	for rows.Next() {
 		user := misc.User{}
 		if err := rows.Scan(&user.Id, &user.Nickname, &user.Image); err != nil {
-			return []*misc.User{}, err, misc.NothingToReport
+			log.Println(err)
+			return []*misc.User{}, misc.NothingToReport
 		}
 		users = append(users, &user)
 	}
 
 	if err = rows.Err(); err != nil {
-		return []*misc.User{}, err, misc.NothingToReport
+		log.Println(err)
+		return []*misc.User{}, misc.NothingToReport
 	}
 
-	return users, nil, misc.NothingToReport
+	return users, misc.NothingToReport
 }
 
-func CreateUser(nickname, email, password string) (int, error, int) {
+func CreateUser(nickname, email, password string) (int, int) {
 	nickname, ok := misc.ValidateString(nickname, misc.MaxLenS)
 	if !ok {
-		return 0, errors.New("Wrong name"), misc.WrongName
+		log.Println("Wrong nickname", nickname)
+		return 0, misc.WrongName
 	}
 
 	email, ok = misc.ValidateEmail(email)
 	if !ok {
-		return 0, errors.New("Wrong email"), misc.WrongEmail
+		log.Println("Wrong email", email)
+		return 0, misc.WrongEmail
 	}
 
 	if !misc.IsPasswordValid(password) {
-		return 0, errors.New("Wrong password"), misc.WrongPassword
+		log.Println("Wrong password")
+		return 0, misc.WrongPassword
 	}
 
 	salt, err := auth.GenerateSalt()
 	if err != nil {
-		return 0, err, misc.NoSalt
+		log.Println(err)
+		return 0, misc.NoSalt
 	}
 
 	hash, err := auth.PasswordHash(password, salt)
 	if err != nil {
-		return 0, err, misc.NothingToReport
+		log.Println(err)
+		return 0, misc.NothingToReport
 	}
 
 	userId := 0
@@ -520,16 +580,17 @@ func CreateUser(nickname, email, password string) (int, error, int) {
 		RETURNING id`, nickname, email, hash, salt,
 	).Scan(&userId)
 	if err == nil {
-		return userId, nil, misc.NothingToReport
+		return userId, misc.NothingToReport
 	}
 
 	err, code := checkSpecificDriverErrors(err)
-	return 0, err, code
+	log.Println(err)
+	return 0, code
 }
 
 func Login(email, password string) (string, bool) {
 	email, ok := misc.ValidateEmail(email)
-	if !ok || !misc.IsPasswordValid(password){
+	if !ok || !misc.IsPasswordValid(password) {
 		return "", false
 	}
 
@@ -583,9 +644,10 @@ func getPurchases(rows *sql.Rows, err error) ([]*misc.Purchase, error, int) {
 	return purchases, nil, misc.NothingToReport
 }
 
-func whoCreatedPurchaseByPurchaseId(purchaseId int) (int, error, int) {
+func whoCreatedPurchaseByPurchaseId(purchaseId int) (int, int) {
 	if !misc.IsIdValid(purchaseId) {
-		return 0, errors.New("No purchase"), misc.NoPurchase
+		log.Println("purchase ID is wrong", purchaseId)
+		return 0, misc.NoPurchase
 	}
 
 	whosePurchase := 0
@@ -595,19 +657,22 @@ func whoCreatedPurchaseByPurchaseId(purchaseId int) (int, error, int) {
 		WHERE id = $1`, purchaseId,
 	).Scan(&whosePurchase); err != nil {
 		if err == sql.ErrNoRows {
-			return 0, err, misc.NoPurchase
+			log.Println(err)
+			return 0, misc.NoPurchase
 		}
 
-		return 0, err, misc.NothingToReport
+		log.Println(err)
+		return 0, misc.NothingToReport
 	}
 
-	return whosePurchase, nil, misc.NothingToReport
+	return whosePurchase, misc.NothingToReport
 }
 
-func whoCreatedPurchaseByQuestionId(questionId int) (int, error, int) {
+func whoCreatedPurchaseByQuestionId(questionId int) (int, int) {
 	if !misc.IsIdValid(questionId) {
 		// if question does not exist, surely there is no purchase for this question
-		return 0, errors.New("No purchase"), misc.NoPurchase
+		log.Println("No question ID is wrong", questionId)
+		return 0, misc.NoPurchase
 	}
 
 	whosePurchase := 0
@@ -620,16 +685,18 @@ func whoCreatedPurchaseByQuestionId(questionId int) (int, error, int) {
 			WHERE id = $1
 		)`, questionId).Scan(&whosePurchase); err != nil {
 		if err == sql.ErrNoRows {
-			return 0, err, misc.NoPurchase
+			log.Println(err)
+			return 0, misc.NoPurchase
 		}
 
-		return 0, err, misc.NothingToReport
+		log.Println(err)
+		return 0, misc.NothingToReport
 	}
 
-	return whosePurchase, nil, misc.NothingToReport
+	return whosePurchase, misc.NothingToReport
 }
 
-func GetUserPurchases(userId int) ([]*misc.Purchase, error, int) {
+func GetUserPurchases(userId int) ([]*misc.Purchase, int) {
 	// userId is the current user and is always valid
 	rows, err := Db.Query(`
 		SELECT id, image, description, user_id, issued_at, brand_id, likes_num
@@ -637,22 +704,27 @@ func GetUserPurchases(userId int) ([]*misc.Purchase, error, int) {
 		WHERE user_id = $1
 		ORDER BY issued_at DESC`, userId)
 
-	return getPurchases(rows, err)
+	purchases, err, code := getPurchases(rows, err)
+	log.Println(err)
+	return purchases, code
 }
 
-func CreatePurchase(userId int, description string, brandId int, tagsId []int) (int, error, int) {
+func CreatePurchase(userId int, description string, brandId int, tagsId []int) (int, int) {
 	// userID is the current user and should be valid
 	description, ok := misc.ValidateString(description, misc.MaxLenB)
 	if !ok {
-		return 0, errors.New("Wrong description"), misc.WrongDescr
+		log.Println("description is wrong", description)
+		return 0, misc.WrongDescr
 	}
 
 	if brandId < 0 {
-		return 0, errors.New("Not positive id"), misc.NoElement
+		log.Println("BrandID is wrong", brandId)
+		return 0, misc.NoElement
 	}
 
 	if err, code := validateTags(tagsId); err != nil {
-		return 0, err, code
+		log.Println(err)
+		return 0, code
 	}
 
 	stringTagIds, id := make([]string, len(tagsId), len(tagsId)), 0
@@ -666,11 +738,13 @@ func CreatePurchase(userId int, description string, brandId int, tagsId []int) (
 		VALUES ('', $1, $2, $3, $4)
 		RETURNING id`, description, userId, tagsToInsert, brandId).Scan(&id)
 	if err != nil {
-		return 0, err, misc.NothingToReport
+		log.Println(err)
+		return 0, misc.NothingToReport
 	}
 
 	if err, code := checkSpecificDriverErrors(err); err != nil {
-		return 0, err, code
+		log.Println(err)
+		return 0, code
 	}
 
 	sqlResult, err := Db.Exec(`
@@ -678,24 +752,28 @@ func CreatePurchase(userId int, description string, brandId int, tagsId []int) (
 		SET purchases_num = purchases_num + 1
 		WHERE id=$1`, userId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		return 0, err, code
+		log.Println(err)
+		return 0, code
 	}
 
-	return id, nil, misc.NothingToReport
+	return id, misc.NothingToReport
 }
 
-func GetAllPurchases() ([]*misc.Purchase, error, int) {
+func GetAllPurchases() ([]*misc.Purchase, int) {
 	rows, err := Db.Query(`
 		SELECT id, image, description, user_id, issued_at, brand_id, likes_num
 		FROM purchases
 		ORDER BY issued_at DESC`)
 
-	return getPurchases(rows, err)
+	purchases, err, code := getPurchases(rows, err)
+	log.Println(err)
+	return purchases, code
 }
 
-func GetAllPurchasesWithBrand(brandId int) ([]*misc.Purchase, error, int) {
+func GetAllPurchasesWithBrand(brandId int) ([]*misc.Purchase, int) {
 	if !misc.IsIdValid(brandId) {
-		return []*misc.Purchase{}, nil, misc.NothingToReport
+		log.Println("Brand Id is wrong", brandId)
+		return []*misc.Purchase{}, misc.NothingToReport
 	}
 
 	rows, err := Db.Query(`
@@ -704,12 +782,15 @@ func GetAllPurchasesWithBrand(brandId int) ([]*misc.Purchase, error, int) {
 		WHERE brand_id = $1
 		ORDER BY issued_at DESC`, brandId)
 
-	return getPurchases(rows, err)
+	purchases, err, code := getPurchases(rows, err)
+	log.Println(err)
+	return purchases, code
 }
 
-func GetAllPurchasesWithTag(tagId int) ([]*misc.Purchase, error, int) {
+func GetAllPurchasesWithTag(tagId int) ([]*misc.Purchase, int) {
 	if !misc.IsIdValid(tagId) {
-		return []*misc.Purchase{}, nil, misc.NothingToReport
+		log.Println("Tag ID is wrong", tagId)
+		return []*misc.Purchase{}, misc.NothingToReport
 	}
 
 	rows, err := Db.Query(`
@@ -718,12 +799,15 @@ func GetAllPurchasesWithTag(tagId int) ([]*misc.Purchase, error, int) {
 		WHERE $1 = ANY (tag_ids)
 		ORDER BY issued_at DESC`, tagId)
 
-	return getPurchases(rows, err)
+	purchases, err, code := getPurchases(rows, err)
+	log.Println(err)
+	return purchases, code
 }
 
-func GetPurchase(purchaseId int) (misc.Purchase, error, int) {
+func GetPurchase(purchaseId int) (misc.Purchase, int) {
 	if !misc.IsIdValid(purchaseId) {
-		return misc.Purchase{}, errors.New("Not positive id"), misc.NoElement
+		log.Println("Purchase ID is wrong", purchaseId)
+		return misc.Purchase{}, misc.NoElement
 	}
 
 	p := misc.Purchase{}
@@ -733,29 +817,33 @@ func GetPurchase(purchaseId int) (misc.Purchase, error, int) {
 		WHERE id = $1`, purchaseId,
 	).Scan(&p.Image, &p.Description, &p.User_id, &p.Issued_at, &p.Brand, &p.Likes_num); err != nil {
 		if err == sql.ErrNoRows {
-			return misc.Purchase{}, err, misc.NoElement
+			log.Println(err)
+			return misc.Purchase{}, misc.NoElement
 		}
 
-		return misc.Purchase{}, err, misc.NothingToReport
+		log.Println(err)
+		return misc.Purchase{}, misc.NothingToReport
 	}
 
 	p.Id = purchaseId
-	return p, nil, misc.NothingToReport
+	return p, misc.NothingToReport
 }
 
-func LikePurchase(purchaseId, userId int) (error, int) {
+func LikePurchase(purchaseId, userId int) int {
 	if !misc.IsIdValid(purchaseId) {
-		return errors.New("Not positive id"), misc.NoPurchase
+		log.Println("Purchase Id is not valid", purchaseId)
+		return misc.NoPurchase
 	}
 
-	// check whose purchase it is
-	whosePurchase, err, code := whoCreatedPurchaseByPurchaseId(purchaseId)
-	if err != nil {
-		return err, code
+	// check whose purchase is it
+	whosePurchase, code := whoCreatedPurchaseByPurchaseId(purchaseId)
+	if whosePurchase == 0 {
+		return code
 	}
 
 	if whosePurchase == userId {
-		return errors.New("can't vote for own purchase"), misc.VoteForYourself
+		log.Println("can't vote for own purchase")
+		return misc.VoteForYourself
 	}
 
 	// now allow the person to vote for someones else purchase
@@ -763,10 +851,12 @@ func LikePurchase(purchaseId, userId int) (error, int) {
 		INSERT INTO likes (purchase_id, user_id)
 		VALUES ($1, $2)`, purchaseId, userId)
 	if err, code := checkSpecificDriverErrors(err); err != nil {
-		return err, code
+		log.Println(err)
+		return code
 	}
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		return err, code
+		log.Println(err)
+		return code
 	}
 
 	sqlResult, err = Db.Exec(`
@@ -774,35 +864,40 @@ func LikePurchase(purchaseId, userId int) (error, int) {
 		SET likes_num = likes_num + 1
 		WHERE id = $1`, purchaseId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		return err, code
+		log.Println(err)
+		return code
 	}
 
-	return nil, misc.NothingToReport
+	return misc.NothingToReport
 }
 
-func UnlikePurchase(purchaseId, userId int) (error, int) {
+func UnlikePurchase(purchaseId, userId int) int {
 	if !misc.IsIdValid(purchaseId) {
-		return errors.New("Not positive id"), misc.NoPurchase
+		log.Println("Purchase Id is not possitive", purchaseId)
+		return misc.NoPurchase
 	}
 
-	// check whose purchase it is
-	whosePurchase, err, code := whoCreatedPurchaseByPurchaseId(purchaseId)
-	if err != nil {
-		return err, code
+	// check whose purchase is it
+	whosePurchase, code := whoCreatedPurchaseByPurchaseId(purchaseId)
+	if whosePurchase == 0 {
+		return code
 	}
 
 	if whosePurchase == userId {
-		return errors.New("can't vote for own purchase"), misc.VoteForYourself
+		log.Println("can't vote for own purchase")
+		return misc.VoteForYourself
 	}
 
 	sqlResult, err := Db.Exec(`
 		DELETE FROM likes
 		WHERE purchase_id = $1 AND user_id = $2`, purchaseId, userId)
 	if err, code := checkSpecificDriverErrors(err); err != nil {
-		return err, code
+		log.Println(err)
+		return code
 	}
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		return err, code
+		log.Println(err)
+		return code
 	}
 
 	sqlResult, err = Db.Exec(`
@@ -810,32 +905,35 @@ func UnlikePurchase(purchaseId, userId int) (error, int) {
 		SET likes_num = likes_num - 1
 		WHERE id = $1`, purchaseId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		return err, code
+		log.Println(err)
+		return code
 	}
 
-	return nil, misc.NothingToReport
+	return misc.NothingToReport
 }
 
-func AskQuestion(purchaseId, userId int, question string) (int, error, int) {
+func AskQuestion(purchaseId, userId int, question string) (int, int) {
 	// TODO validate everything
-	whosePurchase, err, code := whoCreatedPurchaseByPurchaseId(purchaseId)
-	if err != nil {
-		return 0, err, code
+	whosePurchase, code := whoCreatedPurchaseByPurchaseId(purchaseId)
+	if whosePurchase == 0 {
+		return 0, code
 	}
 
 	if whosePurchase == userId {
-		return 0, errors.New("can't ask question about your stuff"), misc.AskYourself
+		log.Println("can't vote for own purchase")
+		return 0, misc.AskYourself
 	}
 
 	questionId := 0
-	err = Db.QueryRow(`
+	err := Db.QueryRow(`
 		INSERT INTO questions (user_id, purchase_id, name)
 		VALUES ($1, $2, $3)
 		RETURNING id`, userId, purchaseId, question,
 	).Scan(&questionId)
 	if err != nil {
 		err, code := checkSpecificDriverErrors(err)
-		return 0, err, code
+		log.Println(err)
+		return 0, code
 	}
 
 	sqlResult, err := Db.Exec(`
@@ -843,33 +941,36 @@ func AskQuestion(purchaseId, userId int, question string) (int, error, int) {
 		SET questions_num = questions_num + 1
 		WHERE id = $1`, userId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		return 0, err, code
+		log.Println(err)
+		return 0, code
 	}
 
-	return questionId, nil, misc.NothingToReport
+	return questionId, misc.NothingToReport
 }
 
 // --- Answers ---
-func AnswerQuestion(questionId, userId int, answer string) (int, error, int) {
+func AnswerQuestion(questionId, userId int, answer string) (int, int) {
 	// TODO validate everything
-	whosePurchase, err, code := whoCreatedPurchaseByQuestionId(questionId)
-	if err != nil {
-		return 0, err, code
+	whosePurchase, code := whoCreatedPurchaseByQuestionId(questionId)
+	if whosePurchase == 0 {
+		return 0, code
 	}
 
 	if whosePurchase != userId {
-		return 0, errors.New("can asnwer only questions regarding your purchase"), misc.AnswerOtherPurchase
+		log.Println("can asnwer only questions regarding your purchase")
+		return 0, misc.AnswerOtherPurchase
 	}
 
 	answerId := 0
-	err = Db.QueryRow(`
+	err := Db.QueryRow(`
 		INSERT INTO answers (user_id, question_id, name)
 		VALUES ($1, $2, $3)
 		RETURNING id`, userId, questionId, answer,
 	).Scan(&answerId)
 	if err != nil {
 		err, code := checkSpecificDriverErrors(err)
-		return 0, err, code
+		log.Println(err)
+		return 0, code
 	}
 
 	sqlResult, err := Db.Exec(`
@@ -877,8 +978,9 @@ func AnswerQuestion(questionId, userId int, answer string) (int, error, int) {
 		SET answers_num = answers_num + 1
 		WHERE id = $1`, userId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		return 0, err, code
+		log.Println(err)
+		return 0, code
 	}
 
-	return answerId, nil, misc.NothingToReport
+	return answerId, misc.NothingToReport
 }
