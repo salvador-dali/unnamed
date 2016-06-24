@@ -129,6 +129,11 @@ func TestValidateJWT(t *testing.T) {
 		{1, 1639292831, "eyJ0eXAiOiJKV1QifQ.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY"},
 		{1, 1639292831, "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY"},
 		{1, 1639292831, "eyJhbGciOiIiLCJ0eXAiOiJKV1QifQ.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY"},
+		{0, 0, "asfasdfasdf"},
+		{0, 0, "wrong.token"},
+		{0, 0, "wrong.token.asdf"},
+		{0, 0, ""},
+		{0, 0, "..........."},
 	}
 	for _, v := range tableFail {
 		jwtJson, err := ValidateJWT(v.jwt)

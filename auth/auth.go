@@ -8,6 +8,8 @@ import (
 	jwt "github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/scrypt"
 	"time"
+	"strings"
+	"errors"
 )
 
 // TODO read about these parameters
@@ -28,6 +30,10 @@ func CreateJWT(userId int) (string, error) {
 }
 
 func ValidateJWT(jwtToken string) (misc.JwtToken, error) {
+	if strings.Count(jwtToken, ".") != 2 {
+		return misc.JwtToken{}, errors.New("Not a JWT token")
+	}
+
 	token, err := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
 		// Don't forget to validate the alg is what you expect:
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
