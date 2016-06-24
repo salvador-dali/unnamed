@@ -4,12 +4,12 @@ import (
 	"../config"
 	"../misc"
 	"crypto/rand"
+	"errors"
 	"fmt"
 	jwt "github.com/dgrijalva/jwt-go"
 	"golang.org/x/crypto/scrypt"
-	"time"
 	"strings"
-	"errors"
+	"time"
 )
 
 // TODO read about these parameters

@@ -31,3 +31,27 @@ information.
  - small (100 - 200 bytes)
  - self-contained (everything is there, no need to search anything in the database)
  - no need to worry about [CORS](https://developer.mozilla.org/en-US/docs/Web/HTTP/Access_control_CORS)
+ 
+ 
+### Frontend usage
+During the login process a client provides username and password and the server returns either a 
+JWT token or some error message. It is up to a client to store this JWT token (in local storage or 
+something similar) and to transmit this token at every next request. Client should transmit it
+in a `token` header (`curl -X POST -H "token: youJwtToken" ...`).
+
+If a user logs out, client should delete a token.
+
+A list of valid tokens for every user with a very far-in-the-future expiration date (more about 
+expiration date later)
+
+ - 1 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY`
+ - 2 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU2NzAsImlkIjoyfQ.-o8iN6TXLqeyUR8bkJ3WCfDr7527BZ9aHY12qCfOCvE`
+ - 3 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU3MTksImlkIjozfQ.Agi-2KpwE-J8B4wUwOz5n-5mcg8P9cUF9qqCwsL2USI`
+ - 4 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU3NDMsImlkIjo0fQ.ceGmymRfiO2sv-WV-_7z63FePcdZ36wrQmugHtyI94g`
+ - 5 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU3NzQsImlkIjo1fQ.FMx5hJQ-KdV1lCrOhP_UrKXhKvY1DfNeDzsnO2wlGwI`
+ - 6 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU3ODUsImlkIjo2fQ.sTQ9HMqrpaP1R6tl7mgrCPjbr52-qWpensYB2IsoaNo`
+ - 7 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU4MDAsImlkIjo3fQ.DhJpM75XmrvJet37OhEff0jN3ZBrpoBMbUoSOaCaqTM`
+ - 8 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU4MTEsImlkIjo4fQ.vF0Vo_Mpha7FcYhu7BraRfJqsn8hMBednlFGTMumAhk`
+ - 9 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU4MjIsImlkIjo5fQ.huTzZZ2ToM1wflgT42oirBRwnyTZbtAJZw6hm6-aJck`
+
+
