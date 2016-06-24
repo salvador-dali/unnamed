@@ -2,537 +2,483 @@
 package routes
 
 import (
+	"../auth"
 	"../misc"
 	"../storage"
 	"encoding/json"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 )
 
-// -- A couple of Helper methods and constants
-const (
-	maximumNameLength     = 40
-	maximumQuestionLength = 100
-	maximumDescrLength    = 1000
-	currentUserId         = 1 // TODO should be removed when login/logout is implemented
-)
-
-// sendJSON sends a JSON back to a client with a status Code. Makes error checking
-func sendJSON(w http.ResponseWriter, data interface{}, statusCode int) {
-	json, err := json.Marshal(data)
-	if err != nil {
-		log.Fatal(err)
+// sendJson sends a JSON back to a client with a status Code. Makes error checking
+func sendJson(w http.ResponseWriter, data interface{}, statusCode int) {
+	if json, err := json.Marshal(data); err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusInternalServerError)
+	} else {
+		w.WriteHeader(statusCode)
+		w.Write(json)
 	}
-
-	w.WriteHeader(statusCode)
-	w.Write(json)
 }
 
-// isErrorReasonSerious checks whether an error happened and whether the reason is serious to notify
-// a client. If there is an error and no reason to notify a client - just halt the operation and write to log
-// if there is a reason - just write a JSON with an error code to a client
-func isErrorReasonSerious(err error, reason int, w http.ResponseWriter) bool {
-	if err == nil {
+// readJson parses request body and sends BadRequest status if can't be parsed
+func readJson(r *http.Request, w http.ResponseWriter) ([]byte, bool) {
+	body, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		log.Println(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return []byte{}, false
+	}
+	return body, true
+}
+
+// isCodeTrivial checks if the code is important enough to be treated as a failure
+// NothingToReport is the only code which is unimportant (there might be some failures that were
+// written in the log, but a client should not know about them at all
+// In all other reasons server sends just a code number to represent a problem. Codes below 200
+// represents failure to find something. Was looking by a userId/purchaseID and has found nothing.
+func isCodeTrivial(code int, w http.ResponseWriter) bool {
+	if code == misc.NothingToReport {
+		return true
+	}
+
+	if code < 200 {
+		sendJson(w, misc.ErrorCode{code}, http.StatusNotFound)
 		return false
 	}
 
-	if reason == misc.NoElement {
-		sendJSON(w, misc.ErrorCode{reason}, http.StatusNotFound)
-		return true
-	} else if reason > 0 {
-		sendJSON(w, misc.ErrorCode{reason}, http.StatusBadRequest)
-		return true
-	}
-
-	log.Fatal(err)
-	return true
+	sendJson(w, misc.ErrorCode{code}, http.StatusBadRequest)
+	return false
 }
 
-// validateId checks whether ID is a natural number and returns it.
+// validateNaturalNumber checks if the value is a natural and returns it.
 // If not, sends a 404 status code and responds with an error JSON
-func validateId(w http.ResponseWriter, id string) int {
+func validateNumeric(w http.ResponseWriter, id string) int {
 	id_valid, err := strconv.Atoi(id)
 	if err != nil || id_valid <= 0 {
-		sendJSON(w, misc.ErrorCode{misc.WrongTags}, http.StatusNotFound)
+		sendJson(w, misc.ErrorCode{misc.NotNatural}, http.StatusNotFound)
 		return 0
 	}
 	return id_valid
 }
 
-// validateName checks whether Name is not empty and has a correct length.
-// If not, sends a 404 status code and responds with an error JSON
-func validateName(w http.ResponseWriter, name string, maxLen int) (string, bool) {
-	name = strings.TrimSpace(name)
-	if len(name) == 0 || len(name) > maxLen {
-		sendJSON(w, misc.ErrorCode{misc.WrongName}, http.StatusBadRequest)
-		return "", false
+// getUserId parses a token header for a JWT token. If found, it is validated and a userId is returned
+// otherwise it returns 0. If ResponseWriter is specified, it additionally sends Unauthorized header
+func getUserId(r *http.Request, w http.ResponseWriter) int {
+	jwt := r.Header.Get("token")
+	if len(jwt) == 0 {
+		if w != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+		}
+		return 0
 	}
 
-	return name, true
-}
-
-// isValidFormLength returns true if exactly validLen parameters were passed
-// If not, sends a 404 status code and responds with an error JSON
-func isValidFormLength(w http.ResponseWriter, r *http.Request, validLen int) bool {
-	r.ParseForm()
-	if len(r.Form) == validLen {
-		return true
+	jwtToken, err := auth.ValidateJWT(jwt)
+	if err != nil {
+		if w != nil {
+			w.WriteHeader(http.StatusUnauthorized)
+		}
+		return 0
 	}
 
-	sendJSON(w, misc.ErrorCode{misc.WrongParamsNum}, http.StatusBadRequest)
-	return false
+	return jwtToken.UserId
 }
 
-// extractPurchasesWithIdSendJSON simplifies extracting many purchases knowing some id
-type getPurchasesWithId func(int) ([]*misc.Purchase, error, int)
+// extractPurchasesWithIdsendJson simplifies extracting many purchases knowing some id
+type getPurchasesWithId func(int) ([]*misc.Purchase, int)
 
-func extractPurchasesWithIdSendJSON(getData getPurchasesWithId, w http.ResponseWriter, ps map[string]string) {
+func extractPurchasesWithIdsendJson(getData getPurchasesWithId, w http.ResponseWriter, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	id := validateId(w, ps["id"])
+	id := validateNumeric(w, ps["id"])
 	if id <= 0 {
 		return
 	}
 
-	data, err, reason := getData(id)
-	if isErrorReasonSerious(err, reason, w) {
-		return
+	if data, code := getData(id); isCodeTrivial(code, w) {
+		sendJson(w, data, http.StatusOK)
 	}
-
-	sendJSON(w, data, http.StatusOK)
 }
-
-// -- Actual Handlers
 
 // GetAllBrands returns all the brands (id, name)
 func GetAllBrands(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	brands, err, reason := storage.GetAllBrands()
-	if isErrorReasonSerious(err, reason, w) {
-		return
+	if brands, code := storage.GetAllBrands(); isCodeTrivial(code, w) {
+		sendJson(w, brands, http.StatusOK)
 	}
-
-	sendJSON(w, brands, http.StatusOK)
 }
 
 // GetBrand returns full information about a brand
 func GetBrand(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	id := validateId(w, ps["id"])
+	id := validateNumeric(w, ps["id"])
 	if id <= 0 {
 		return
 	}
 
-	brand, err, reason := storage.GetBrand(id)
-	if isErrorReasonSerious(err, reason, w) {
-		return
+	if brand, code := storage.GetBrand(id); isCodeTrivial(code, w) {
+		sendJson(w, brand, http.StatusOK)
 	}
-
-	sendJSON(w, brand, http.StatusOK)
 }
 
 // CreateBrand creates a brand with a specific name
 func CreateBrand(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
-	if !isValidFormLength(w, r, 1) {
+
+	if getUserId(r, w) == 0 {
 		return
 	}
 
-	name, ok := validateName(w, r.PostFormValue("name"), maximumNameLength)
-	if !ok {
+	var data misc.JsonName
+	if body, ok := readJson(r, w); !ok {
 		return
+	} else {
+		json.Unmarshal(body, &data)
 	}
 
-	id, err, reason := storage.CreateBrand(name)
-	if isErrorReasonSerious(err, reason, w) {
-		return
+	if id, code := storage.CreateBrand(data.Name); isCodeTrivial(code, w) {
+		sendJson(w, misc.Id{int(id)}, http.StatusCreated)
 	}
-
-	sendJSON(w, misc.Id{int(id)}, http.StatusCreated)
 }
 
 // UpdateBrand changes the brand's name for a specific brandID
 func UpdateBrand(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	if !isValidFormLength(w, r, 1) {
+	if getUserId(r, w) == 0 {
 		return
 	}
 
-	id := validateId(w, ps["id"])
+	id := validateNumeric(w, ps["id"])
 	if id <= 0 {
 		return
 	}
 
-	name, ok := validateName(w, r.PostFormValue("name"), maximumNameLength)
-	if !ok {
+	var data misc.JsonName
+	if body, ok := readJson(r, w); !ok {
 		return
+	} else {
+		json.Unmarshal(body, &data)
 	}
 
-	err, reason := storage.UpdateBrand(id, name)
-	if isErrorReasonSerious(err, reason, w) {
-		return
+	if code := storage.UpdateBrand(id, data.Name); isCodeTrivial(code, w) {
+		sendJson(w, nil, http.StatusNoContent)
 	}
-
-	sendJSON(w, nil, http.StatusNoContent)
 }
 
 // GetAllTags returns all the tags (id, name)
 func GetAllTags(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	tags, err, reason := storage.GetAllTags()
-	if isErrorReasonSerious(err, reason, w) {
-		return
+	if tags, code := storage.GetAllTags(); isCodeTrivial(code, w) {
+		sendJson(w, tags, http.StatusOK)
 	}
-
-	sendJSON(w, tags, http.StatusOK)
 }
 
 // GetTag returns full information about a tag
 func GetTag(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	id := validateId(w, ps["id"])
+	id := validateNumeric(w, ps["id"])
 	if id <= 0 {
 		return
 	}
 
-	tag, err, reason := storage.GetTag(id)
-	if isErrorReasonSerious(err, reason, w) {
-		return
+	if tag, code := storage.GetTag(id); isCodeTrivial(code, w) {
+		sendJson(w, tag, http.StatusOK)
 	}
-
-	sendJSON(w, tag, http.StatusOK)
 }
 
 // CreateTag creates a tag with a specific name and description
 func CreateTag(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
-	if !isValidFormLength(w, r, 2) {
+
+	var data misc.JsonNameDescr
+	if body, ok := readJson(r, w); !ok {
 		return
+	} else {
+		json.Unmarshal(body, &data)
 	}
 
-	name, ok := validateName(w, r.PostFormValue("name"), maximumNameLength)
-	if !ok {
-		return
+	if id, code := storage.CreateTag(data.Name, data.Descr); isCodeTrivial(code, w) {
+		sendJson(w, misc.Id{int(id)}, http.StatusCreated)
 	}
-
-	descr, ok := validateName(w, r.PostFormValue("description"), maximumDescrLength)
-	if !ok {
-		return
-	}
-
-	id, err, reason := storage.CreateTag(name, descr)
-	if isErrorReasonSerious(err, reason, w) {
-		return
-	}
-
-	sendJSON(w, misc.Id{int(id)}, http.StatusCreated)
 }
 
 // UpdateTag changes the tag's name for a specific tagID
 func UpdateTag(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	if !isValidFormLength(w, r, 2) {
-		return
-	}
-
-	id := validateId(w, ps["id"])
+	id := validateNumeric(w, ps["id"])
 	if id <= 0 {
 		return
 	}
 
-	name, ok := validateName(w, r.PostFormValue("name"), maximumNameLength)
-	if !ok {
+	var data misc.JsonNameDescr
+	if body, ok := readJson(r, w); !ok {
 		return
+	} else {
+		json.Unmarshal(body, &data)
 	}
 
-	descr, ok := validateName(w, r.PostFormValue("description"), maximumDescrLength)
-	if !ok {
-		return
+	if code := storage.UpdateTag(id, data.Name, data.Descr); isCodeTrivial(code, w) {
+		sendJson(w, nil, http.StatusNoContent)
 	}
-
-	err, reason := storage.UpdateTag(id, name, descr)
-	if isErrorReasonSerious(err, reason, w) {
-		return
-	}
-
-	sendJSON(w, nil, http.StatusNoContent)
 }
 
 // GetUser returns full information about a user
 func GetUser(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	id := validateId(w, ps["id"])
+	id := validateNumeric(w, ps["id"])
 	if id <= 0 {
 		return
 	}
 
-	user, err, reason := storage.GetUser(id)
-	if isErrorReasonSerious(err, reason, w) {
-		return
+	if user, code := storage.GetUser(id); isCodeTrivial(code, w) {
+		sendJson(w, user, http.StatusOK)
 	}
-
-	sendJSON(w, user, http.StatusOK)
 }
 
 // UpdateYourUserInfo changes the information about a user who is currently
 func UpdateYourUserInfo(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	if !isValidFormLength(w, r, 2) {
+	userId := getUserId(r, w)
+	if userId == 0 {
 		return
 	}
 
-	nickname, ok := validateName(w, r.PostFormValue("nickname"), maximumNameLength)
-	if !ok {
+	var data misc.JsonNicknameAbout
+	if body, ok := readJson(r, w); !ok {
+		return
+	} else {
+		json.Unmarshal(body, &data)
+	}
+
+	code := storage.UpdateUser(userId, data.Nickname, data.About)
+	if isCodeTrivial(code, w) {
 		return
 	}
 
-	about, ok := validateName(w, r.PostFormValue("about"), maximumDescrLength)
-	if !ok {
-		return
-	}
-
-	err, reason := storage.UpdateUser(currentUserId, nickname, about)
-	if isErrorReasonSerious(err, reason, w) {
-		return
-	}
-
-	sendJSON(w, nil, http.StatusNoContent)
+	sendJson(w, nil, http.StatusNoContent)
 }
 
 // Follow a current user starts following some user
 func Follow(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	id := validateId(w, ps["id"])
+	id := validateNumeric(w, ps["id"])
 	if id <= 0 {
 		return
 	}
 
-	err, reason := storage.Follow(currentUserId, id)
-	if isErrorReasonSerious(err, reason, w) {
+	userId := getUserId(r, w)
+	if userId == 0 {
 		return
 	}
 
-	sendJSON(w, nil, http.StatusNoContent)
+	if code := storage.Follow(userId, id); isCodeTrivial(code, w) {
+		sendJson(w, nil, http.StatusNoContent)
+	}
 }
 
 // Unfollow a current stops following some user
 func Unfollow(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	id := validateId(w, ps["id"])
+	id := validateNumeric(w, ps["id"])
 	if id <= 0 {
 		return
 	}
 
-	err, reason := storage.Unfollow(currentUserId, id)
-	if isErrorReasonSerious(err, reason, w) {
+	userId := getUserId(r, w)
+	if userId == 0 {
 		return
 	}
 
-	sendJSON(w, nil, http.StatusNoContent)
+	if code := storage.Unfollow(userId, id); isCodeTrivial(code, w) {
+		sendJson(w, nil, http.StatusNoContent)
+	}
 }
 
 // GetFollowing returns all the users, whom this user follows
 func GetFollowing(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	id := validateId(w, ps["id"])
+	id := validateNumeric(w, ps["id"])
 	if id <= 0 {
 		return
 	}
 
-	users, err, reason := storage.GetFollowing(id)
-	if isErrorReasonSerious(err, reason, w) {
-		return
+	if users, code := storage.GetFollowing(id); isCodeTrivial(code, w) {
+		sendJson(w, users, http.StatusOK)
 	}
-
-	sendJSON(w, users, http.StatusOK)
 }
 
 // GetFollowers returns all the users, who follows this user
 func GetFollowers(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	id := validateId(w, ps["id"])
+	id := validateNumeric(w, ps["id"])
 	if id <= 0 {
 		return
 	}
 
-	users, err, reason := storage.GetFollowers(id)
-	if isErrorReasonSerious(err, reason, w) {
-		return
+	if users, code := storage.GetFollowers(id); isCodeTrivial(code, w) {
+		sendJson(w, users, http.StatusOK)
 	}
-
-	sendJSON(w, users, http.StatusOK)
-}
-
-// GetUserPurchases returns all the list of all purchases done by this user in reverse order
-func GetUserPurchases(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	extractPurchasesWithIdSendJSON(storage.GetUserPurchases, w, ps)
 }
 
 // GetAllPurchases returns all the purchases in reverse order
 func GetAllPurchases(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	purchases, err, reason := storage.GetAllPurchases()
-	if isErrorReasonSerious(err, reason, w) {
-		return
+	if purchases, code := storage.GetAllPurchases(); isCodeTrivial(code, w) {
+		sendJson(w, purchases, http.StatusOK)
 	}
+}
 
-	sendJSON(w, purchases, http.StatusOK)
+// GetUserPurchases returns all the list of all purchases done by this user in reverse order
+func GetUserPurchases(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	extractPurchasesWithIdsendJson(storage.GetUserPurchases, w, ps)
 }
 
 // GetAllPurchases returns all the purchases which were tagged with a particular brand
 func GetAllPurchasesWithBrand(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	extractPurchasesWithIdSendJSON(storage.GetAllPurchasesWithBrand, w, ps)
+	extractPurchasesWithIdsendJson(storage.GetAllPurchasesWithBrand, w, ps)
 }
 
 // GetAllPurchases returns all the purchases which were tagged with a particular tag
 func GetAllPurchasesWithTag(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	extractPurchasesWithIdSendJSON(storage.GetAllPurchasesWithTag, w, ps)
+	extractPurchasesWithIdsendJson(storage.GetAllPurchasesWithTag, w, ps)
 }
 
 // GetPurchase returns full information about a purchase
 func GetPurchase(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	id := validateId(w, ps["id"])
+	id := validateNumeric(w, ps["id"])
 	if id <= 0 {
 		return
 	}
 
-	purchase, err, reason := storage.GetPurchase(id)
-	if isErrorReasonSerious(err, reason, w) {
-		return
+	if purchase, code := storage.GetPurchase(id); isCodeTrivial(code, w) {
+		sendJson(w, purchase, http.StatusOK)
 	}
-
-	sendJSON(w, purchase, http.StatusOK)
 }
 
 // CreatePurchase allows a current user to create a purchase
 func CreatePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
-	if !isValidFormLength(w, r, 3) {
+
+	userId := getUserId(r, w)
+	if userId == 0 {
 		return
 	}
 
-	descr, ok := validateName(w, r.PostFormValue("description"), maximumDescrLength)
-	if !ok {
+	var data misc.JsonDescrBrandTag
+	if body, ok := readJson(r, w); !ok {
 		return
+	} else {
+		json.Unmarshal(body, &data)
 	}
 
-	brandId := validateId(w, r.PostFormValue("brand"))
-	if brandId <= 0 {
-		return
+	if id, code := storage.CreatePurchase(userId, data.Descr, data.BrandId, []int{data.TagId}); isCodeTrivial(code, w) {
+		sendJson(w, misc.Id{int(id)}, http.StatusCreated)
 	}
-
-	tagId := validateId(w, r.PostFormValue("tag"))
-	if tagId <= 0 {
-		return
-	}
-
-	id, err, reason := storage.CreatePurchase(currentUserId, descr, brandId, []int{tagId})
-	if isErrorReasonSerious(err, reason, w) {
-		return
-	}
-
-	sendJSON(w, misc.Id{int(id)}, http.StatusCreated)
 }
 
 // LikePurchase allows current user to like a particular purchase
 func LikePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	purchaseId := validateId(w, ps["id"])
+	userId := getUserId(r, w)
+	if userId == 0 {
+		return
+	}
+
+	purchaseId := validateNumeric(w, ps["id"])
 	if purchaseId <= 0 {
 		return
 	}
 
-	err, reason := storage.LikePurchase(purchaseId, currentUserId)
-	if isErrorReasonSerious(err, reason, w) {
-		return
+	if code := storage.LikePurchase(purchaseId, userId); isCodeTrivial(code, w) {
+		sendJson(w, nil, http.StatusNoContent)
 	}
-
-	sendJSON(w, nil, http.StatusNoContent)
 }
 
 // UnlikePurchase allows current user to revert his like of a particular purchase
 func UnlikePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	purchaseId := validateId(w, ps["id"])
+	userId := getUserId(r, w)
+	if userId == 0 {
+		return
+	}
+
+	purchaseId := validateNumeric(w, ps["id"])
 	if purchaseId <= 0 {
 		return
 	}
 
-	err, reason := storage.UnlikePurchase(purchaseId, currentUserId)
-	if isErrorReasonSerious(err, reason, w) {
-		return
+	if code := storage.UnlikePurchase(purchaseId, userId); isCodeTrivial(code, w) {
+		sendJson(w, nil, http.StatusNoContent)
 	}
-
-	sendJSON(w, nil, http.StatusNoContent)
 }
 
 // AskQuestion allows current user to ask a question about someone's purchase
 func AskQuestion(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	if !isValidFormLength(w, r, 1) {
+	userId := getUserId(r, w)
+	if userId == 0 {
 		return
 	}
 
-	purchaseId := validateId(w, ps["id"])
+	purchaseId := validateNumeric(w, ps["id"])
 	if purchaseId <= 0 {
 		return
 	}
 
-	name, ok := validateName(w, r.PostFormValue("name"), maximumQuestionLength)
-	if !ok {
+	var data misc.JsonName
+	if body, ok := readJson(r, w); !ok {
 		return
+	} else {
+		json.Unmarshal(body, &data)
 	}
 
-	id, err, reason := storage.AskQuestion(purchaseId, currentUserId, name)
-	if isErrorReasonSerious(err, reason, w) {
-		return
+	if id, code := storage.AskQuestion(purchaseId, userId, data.Name); isCodeTrivial(code, w) {
+		sendJson(w, misc.Id{int(id)}, http.StatusCreated)
 	}
-
-	sendJSON(w, misc.Id{int(id)}, http.StatusCreated)
 }
 
 // AnswerQuestion allows current user to answer a question about his own purchase
 func AnswerQuestion(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	if !isValidFormLength(w, r, 1) {
+	userId := getUserId(r, w)
+	if userId == 0 {
 		return
 	}
 
-	questionId := validateId(w, ps["id"])
+	questionId := validateNumeric(w, ps["id"])
 	if questionId <= 0 {
 		return
 	}
 
-	name, ok := validateName(w, r.PostFormValue("name"), maximumDescrLength)
-	if !ok {
+	var data misc.JsonName
+	if body, ok := readJson(r, w); !ok {
 		return
+	} else {
+		json.Unmarshal(body, &data)
 	}
 
-	id, err, reason := storage.AnswerQuestion(questionId, currentUserId, name)
-	if isErrorReasonSerious(err, reason, w) {
-		return
+	if id, code := storage.AnswerQuestion(questionId, userId, data.Name); isCodeTrivial(code, w) {
+		sendJson(w, misc.Id{int(id)}, http.StatusCreated)
 	}
-
-	sendJSON(w, misc.Id{int(id)}, http.StatusCreated)
 }

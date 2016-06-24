@@ -15,25 +15,27 @@ const (
 
 // Error codes
 const (
-	NothingToReport       = 0   // either there is no error, or a client should not know about it
-	NothingUpdated        = 100 // wanted to update an element by ID. Element does not exist
-	WrongName             = 101 // name is too long or empty
-	WrongDescr            = 102 // description is too long or empty
-	WrongEmail            = 802 // email does not look right
-	WrongPassword         = 803 // password is too short
-	WrongParamsNum        = 103 // number of parameters is not correct
-	WrongTagsNum          = 104 // user provided more tags that allowed
-	WrongTags             = 105 // a one or more tags are not in the database
-	FollowYourself        = 106 // user can't follow himself
-	VoteForYourself       = 107 // a person should not vote for his own stuff
-	AskYourself           = 108 // a person should not ask questions about his purchase
-	AnswerOtherPurchase   = 109 // user can answer only question about his purchase
-	NoTags                = 110 // user has not provided any tags
-	NoSalt                = 111 // system does not have enough randomness
-	NoElement             = 112 // searched for an element by ID. Have not found it.
-	NoPurchase            = 113 // purchase with such ID does not exist
-	DbDuplicate           = 114 // duplicate constrain violation. Inserted X, where X already exists and should be unique
-	DbForeignKeyViolation = 115 // foreign key violation
+	NothingToReport = 0   // either there is no error, or a client should not know about it
+	NothingUpdated  = 100 // wanted to update an element by ID. Element does not exist
+	NoElement       = 101 // searched for an element by ID. Have not found it.
+	NoPurchase      = 102 // purchase with such ID does not exist
+	NotNatural      = 103 // provided value was not a natural number
+
+	WrongName           = 201 // name is too long or empty
+	WrongDescr          = 202 // description is too long or empty
+	WrongEmail          = 203 // email does not look right
+	WrongPassword       = 204 // password is too short
+	WrongTagsNum        = 205 // user provided more tags that allowed
+	WrongTags           = 206 // a one or more tags are not in the database
+	FollowYourself      = 207 // user can't follow himself
+	VoteForYourself     = 208 // a person should not vote for his own stuff
+	AskYourself         = 209 // a person should not ask questions about his purchase
+	AnswerOtherPurchase = 210 // user can answer only question about his purchase
+	NoTags              = 211 // user has not provided any tags
+
+	NoSalt                = 301 // system does not have enough randomness
+	DbDuplicate           = 302 // duplicate constrain violation. Inserted X, where X already exists and should be unique
+	DbForeignKeyViolation = 303 // foreign key violation
 )
 
 // ErrorCode stores code of a problem that happened while processing client's request.
@@ -93,6 +95,26 @@ type Purchase struct {
 type JwtToken struct {
 	UserId int
 	Exp    int
+}
+
+type JsonName struct {
+	Name string `json:"name"`
+}
+
+type JsonNameDescr struct {
+	Name  string `json:"name"`
+	Descr string `json:"descr"`
+}
+
+type JsonNicknameAbout struct {
+	Nickname string `json:"nickname"`
+	About    string `json:"about"`
+}
+
+type JsonDescrBrandTag struct {
+	Descr   string `json:"descr"`
+	BrandId int    `json:"brand"`
+	TagId   int    `json:"tag"`
 }
 
 func IsPasswordValid(str string) bool {
