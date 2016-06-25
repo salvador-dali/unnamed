@@ -21,6 +21,7 @@ var Db *sql.DB
 // http://go-database-sql.org/accessing.html
 func Init(user, pass, host, name string, port int) {
 	dbURL := fmt.Sprintf("postgresql://%s:%s@%s:%d/%s?sslmode=disable", user, pass, host, port, name)
+	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
 		log.Fatal(err)
@@ -35,14 +36,17 @@ func Init(user, pass, host, name string, port int) {
 func isAffectedOneRow(sqlResult sql.Result) (error, int) {
 	affectedRows, err := sqlResult.RowsAffected()
 	if err != nil {
+		log.Println(err)
 		return err, misc.NothingToReport
 	}
 
 	if affectedRows == 1 {
 		return nil, misc.NothingToReport
 	} else if affectedRows == 0 {
+		log.Println("nothing updated")
 		return errors.New("nothing updated"), misc.NothingUpdated
 	}
+	log.Println(fmt.Sprintf("Expected to update 1 value. %d updated", affectedRows))
 	return errors.New(fmt.Sprintf("Expected to update 1 value. %d updated", affectedRows)), misc.NothingToReport
 }
 
@@ -164,7 +168,6 @@ func UpdateBrand(brandId int, name string) int {
 	}
 
 	err, code := isAffectedOneRow(sqlResult)
-	log.Println(err)
 	return code
 }
 
@@ -279,7 +282,6 @@ func UpdateTag(tagId int, name, descr string) int {
 	}
 
 	err, code := isAffectedOneRow(sqlResult)
-	log.Println(err)
 	return code
 }
 
@@ -376,7 +378,6 @@ func UpdateUser(userId int, nickname, about string) int {
 	}
 
 	err, code := isAffectedOneRow(sqlResult)
-	log.Println(err)
 	return code
 }
 
@@ -399,7 +400,6 @@ func Follow(whoId, whomId int) int {
 		return code
 	}
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		log.Println(err)
 		return code
 	}
 
@@ -408,7 +408,6 @@ func Follow(whoId, whomId int) int {
 		SET followers_num = followers_num + 1
 		WHERE id = $1`, whomId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		log.Println(err)
 		return code
 	}
 
@@ -417,7 +416,6 @@ func Follow(whoId, whomId int) int {
 		SET following_num = following_num + 1
 		WHERE id = $1`, whoId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		log.Println(err)
 		return code
 	}
 
@@ -444,7 +442,6 @@ func Unfollow(whoId, whomId int) int {
 	}
 
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		log.Println(err)
 		return code
 	}
 
@@ -453,7 +450,6 @@ func Unfollow(whoId, whomId int) int {
 		SET followers_num = followers_num - 1
 		WHERE id = $1`, whomId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		log.Println(err)
 		return code
 	}
 
@@ -462,7 +458,6 @@ func Unfollow(whoId, whomId int) int {
 		SET following_num = following_num - 1
 		WHERE id = $1`, whoId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		log.Println(err)
 		return code
 	}
 
@@ -622,9 +617,10 @@ func Login(email, password string) (string, bool) {
 
 // --- Purchases ---
 
-func getPurchases(rows *sql.Rows, err error) ([]*misc.Purchase, error, int) {
+func getPurchases(rows *sql.Rows, err error) ([]*misc.Purchase, int) {
 	if err != nil {
-		return []*misc.Purchase{}, err, misc.NothingToReport
+		log.Println(err)
+		return []*misc.Purchase{}, misc.NothingToReport
 	}
 	defer rows.Close()
 
@@ -632,16 +628,18 @@ func getPurchases(rows *sql.Rows, err error) ([]*misc.Purchase, error, int) {
 	for rows.Next() {
 		p := misc.Purchase{}
 		if err := rows.Scan(&p.Id, &p.Image, &p.Description, &p.User_id, &p.Issued_at, &p.Brand, &p.Likes_num); err != nil {
-			return []*misc.Purchase{}, err, misc.NothingToReport
+			log.Println(err)
+			return []*misc.Purchase{}, misc.NothingToReport
 		}
 		purchases = append(purchases, &p)
 	}
 
 	if err = rows.Err(); err != nil {
-		return []*misc.Purchase{}, err, misc.NothingToReport
+		log.Println(err)
+		return []*misc.Purchase{}, misc.NothingToReport
 	}
 
-	return purchases, nil, misc.NothingToReport
+	return purchases, misc.NothingToReport
 }
 
 func whoCreatedPurchaseByPurchaseId(purchaseId int) (int, int) {
@@ -704,9 +702,7 @@ func GetUserPurchases(userId int) ([]*misc.Purchase, int) {
 		WHERE user_id = $1
 		ORDER BY issued_at DESC`, userId)
 
-	purchases, err, code := getPurchases(rows, err)
-	log.Println(err)
-	return purchases, code
+	return getPurchases(rows, err)
 }
 
 func CreatePurchase(userId int, description string, brandId int, tagsId []int) (int, int) {
@@ -752,7 +748,6 @@ func CreatePurchase(userId int, description string, brandId int, tagsId []int) (
 		SET purchases_num = purchases_num + 1
 		WHERE id=$1`, userId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		log.Println(err)
 		return 0, code
 	}
 
@@ -765,9 +760,7 @@ func GetAllPurchases() ([]*misc.Purchase, int) {
 		FROM purchases
 		ORDER BY issued_at DESC`)
 
-	purchases, err, code := getPurchases(rows, err)
-	log.Println(err)
-	return purchases, code
+	return getPurchases(rows, err)
 }
 
 func GetAllPurchasesWithBrand(brandId int) ([]*misc.Purchase, int) {
@@ -782,9 +775,7 @@ func GetAllPurchasesWithBrand(brandId int) ([]*misc.Purchase, int) {
 		WHERE brand_id = $1
 		ORDER BY issued_at DESC`, brandId)
 
-	purchases, err, code := getPurchases(rows, err)
-	log.Println(err)
-	return purchases, code
+	return getPurchases(rows, err)
 }
 
 func GetAllPurchasesWithTag(tagId int) ([]*misc.Purchase, int) {
@@ -799,9 +790,7 @@ func GetAllPurchasesWithTag(tagId int) ([]*misc.Purchase, int) {
 		WHERE $1 = ANY (tag_ids)
 		ORDER BY issued_at DESC`, tagId)
 
-	purchases, err, code := getPurchases(rows, err)
-	log.Println(err)
-	return purchases, code
+	return getPurchases(rows, err)
 }
 
 func GetPurchase(purchaseId int) (misc.Purchase, int) {
@@ -855,7 +844,6 @@ func LikePurchase(purchaseId, userId int) int {
 		return code
 	}
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		log.Println(err)
 		return code
 	}
 
@@ -864,7 +852,6 @@ func LikePurchase(purchaseId, userId int) int {
 		SET likes_num = likes_num + 1
 		WHERE id = $1`, purchaseId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		log.Println(err)
 		return code
 	}
 
@@ -896,7 +883,6 @@ func UnlikePurchase(purchaseId, userId int) int {
 		return code
 	}
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		log.Println(err)
 		return code
 	}
 
@@ -905,7 +891,6 @@ func UnlikePurchase(purchaseId, userId int) int {
 		SET likes_num = likes_num - 1
 		WHERE id = $1`, purchaseId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		log.Println(err)
 		return code
 	}
 
@@ -941,7 +926,6 @@ func AskQuestion(purchaseId, userId int, question string) (int, int) {
 		SET questions_num = questions_num + 1
 		WHERE id = $1`, userId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		log.Println(err)
 		return 0, code
 	}
 
@@ -978,7 +962,6 @@ func AnswerQuestion(questionId, userId int, answer string) (int, int) {
 		SET answers_num = answers_num + 1
 		WHERE id = $1`, userId)
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
-		log.Println(err)
 		return 0, code
 	}
 

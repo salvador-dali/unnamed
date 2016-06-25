@@ -141,7 +141,7 @@ func CreateBrand(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	}
 
 	if id, code := storage.CreateBrand(data.Name); isCodeTrivial(code, w) {
-		sendJson(w, misc.Id{int(id)}, http.StatusCreated)
+		sendJson(w, misc.Id{id}, http.StatusCreated)
 	}
 }
 
@@ -205,7 +205,7 @@ func CreateTag(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	}
 
 	if id, code := storage.CreateTag(data.Name, data.Descr); isCodeTrivial(code, w) {
-		sendJson(w, misc.Id{int(id)}, http.StatusCreated)
+		sendJson(w, misc.Id{id}, http.StatusCreated)
 	}
 }
 
@@ -262,10 +262,8 @@ func UpdateYourUserInfo(w http.ResponseWriter, r *http.Request, ps map[string]st
 
 	code := storage.UpdateUser(userId, data.Nickname, data.About)
 	if isCodeTrivial(code, w) {
-		return
+		sendJson(w, nil, http.StatusNoContent)
 	}
-
-	sendJson(w, nil, http.StatusNoContent)
 }
 
 // Follow a current user starts following some user
@@ -389,7 +387,7 @@ func CreatePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string
 	}
 
 	if id, code := storage.CreatePurchase(userId, data.Descr, data.BrandId, []int{data.TagId}); isCodeTrivial(code, w) {
-		sendJson(w, misc.Id{int(id)}, http.StatusCreated)
+		sendJson(w, misc.Id{id}, http.StatusCreated)
 	}
 }
 
@@ -453,7 +451,7 @@ func AskQuestion(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	}
 
 	if id, code := storage.AskQuestion(purchaseId, userId, data.Name); isCodeTrivial(code, w) {
-		sendJson(w, misc.Id{int(id)}, http.StatusCreated)
+		sendJson(w, misc.Id{id}, http.StatusCreated)
 	}
 }
 
@@ -479,6 +477,38 @@ func AnswerQuestion(w http.ResponseWriter, r *http.Request, ps map[string]string
 	}
 
 	if id, code := storage.AnswerQuestion(questionId, userId, data.Name); isCodeTrivial(code, w) {
-		sendJson(w, misc.Id{int(id)}, http.StatusCreated)
+		sendJson(w, misc.Id{id}, http.StatusCreated)
+	}
+}
+
+func Login(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+
+	var data misc.JsonEmailPassword
+	if body, ok := readJson(r, w); !ok {
+		return
+	} else {
+		json.Unmarshal(body, &data)
+	}
+
+	if jwt, ok := storage.Login(data.Email, data.Password); ok {
+		sendJson(w, misc.Jwt{jwt}, http.StatusOK)
+	} else {
+		w.WriteHeader(http.StatusUnauthorized)
+	}
+}
+
+func CreateUser(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+
+	var data misc.JsonNicknameEmailPassword
+	if body, ok := readJson(r, w); !ok {
+		return
+	} else {
+		json.Unmarshal(body, &data)
+	}
+
+	if id, code := storage.CreateUser(data.Nickname, data.Email, data.Password); isCodeTrivial(code, w) {
+		sendJson(w, misc.Id{id}, http.StatusCreated)
 	}
 }

@@ -49,6 +49,11 @@ type Id struct {
 	Id int `json:"id"`
 }
 
+// Id stores jwt token
+type Jwt struct {
+	Jwt string `json:"token"`
+}
+
 // Brand stores all information about a Brand model
 type Brand struct {
 	Id        int        `json:"id,omitempty"`
@@ -115,6 +120,17 @@ type JsonDescrBrandTag struct {
 	Descr   string `json:"descr"`
 	BrandId int    `json:"brand"`
 	TagId   int    `json:"tag"`
+}
+
+type JsonEmailPassword struct {
+	Email    string `json:"email"`
+	Password string `json:"password"`
+}
+
+type JsonNicknameEmailPassword struct {
+	Nickname string `json:"nickname"`
+	Email    string `json:"email"`
+	Password string `json:"password"`
 }
 
 func IsPasswordValid(str string) bool {

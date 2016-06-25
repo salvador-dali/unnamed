@@ -33,6 +33,8 @@ func main() {
 	api.PUT("/tags/:id", routes.UpdateTag)
 
 	// Users
+	api.POST("/users/login", routes.Login)
+	api.POST("/users", routes.CreateUser)
 	api.GET("/users/:id", routes.GetUser)
 	api.PUT("/users/me/info", routes.UpdateYourUserInfo)
 	api.POST("/users/me/follow/:id", routes.Follow)
