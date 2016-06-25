@@ -506,6 +506,16 @@ func Login(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	}
 }
 
+func ExtendJwt(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+
+	if jwt, err := auth.ExtendJWT(r.Header.Get("token")); err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+	} else {
+		sendJson(w, misc.Jwt{jwt}, http.StatusOK)
+	}
+}
+
 func CreateUser(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 

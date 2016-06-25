@@ -34,6 +34,7 @@ func main() {
 
 	// Users
 	api.POST("/users/login", routes.Login)
+	api.GET("/users/login/extend", routes.ExtendJwt)
 	api.POST("/users", routes.CreateUser)
 	api.GET("/users/:id", routes.GetUser)
 	api.PUT("/users/me/info", routes.UpdateYourUserInfo)

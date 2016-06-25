@@ -44,14 +44,21 @@ If a user logs out, client should delete a token.
 A list of valid tokens for every user with a very far-in-the-future expiration date (more about 
 expiration date later)
 
- - 1 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY`
- - 2 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU2NzAsImlkIjoyfQ.-o8iN6TXLqeyUR8bkJ3WCfDr7527BZ9aHY12qCfOCvE`
- - 3 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU3MTksImlkIjozfQ.Agi-2KpwE-J8B4wUwOz5n-5mcg8P9cUF9qqCwsL2USI`
- - 4 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU3NDMsImlkIjo0fQ.ceGmymRfiO2sv-WV-_7z63FePcdZ36wrQmugHtyI94g`
- - 5 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU3NzQsImlkIjo1fQ.FMx5hJQ-KdV1lCrOhP_UrKXhKvY1DfNeDzsnO2wlGwI`
- - 6 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU3ODUsImlkIjo2fQ.sTQ9HMqrpaP1R6tl7mgrCPjbr52-qWpensYB2IsoaNo`
- - 7 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU4MDAsImlkIjo3fQ.DhJpM75XmrvJet37OhEff0jN3ZBrpoBMbUoSOaCaqTM`
- - 8 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU4MTEsImlkIjo4fQ.vF0Vo_Mpha7FcYhu7BraRfJqsn8hMBednlFGTMumAhk`
- - 9 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU4MjIsImlkIjo5fQ.huTzZZ2ToM1wflgT42oirBRwnyTZbtAJZw6hm6-aJck`
+ - 1 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjF9.LYey3jgBd70QYjygbZvoPqXGJHj90nZ8VUm2yeVlVVo`
+ - 2 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjJ9.dbBN08ZNdGhKbPhFRSccRWvMgSxSTjlM3wC7K2oz3_M`
+ - 3 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjN9.WF7GGKA2XB3Th5lztqseW1fixf9XApTYpwDhcvq_sDw`
+ - 4 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjR9.cI2Ie6KDVQhWk1VRuP_UzE1HpKFfyT0jgTe9J2g7pJA`
+ - 5 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjV9.bmmgOyeN700onUcVfJcFT4dn5XyNY7rdUfpYDhlfdOc`
+ - 6 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjZ9.vqP4oem2PeQpzBBC2enSXYrKg2xDcPa8iXcJToSmWHs`
+ - 7 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjd9.KlfEaHwqWLMGVA9MUIu_z8oSNaXbioJ6_mgftlbWpeI`
+ - 8 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjh9.0u293Hl2-cJawLI1JlEcE1fYBB6yrkMvKUiGHy61-2A`
+ - 9 `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjl9.JS9Xc135ndkunTa2oKess5KCX4WVCcvAkI7bVsV4YVo`
 
+The second part is the base64 encoded payload of the JWT. In this case it is `{"exp":1639633211,"iat":1466833211,"id":3}`.
+If the current time is bigger than the expiration time, the token will be invalidated on the server.
+`PROJ_JWT_EXP_DAYS` is a variable that is responsible for number of days the token is valid for.
+Right now it is 2 days. A client can ask to extend a token (call `GET /users/login/extend` with
+an old token in the header). This allows to create a new token for a user in the current one.
 
+It is up to a client to decide when to ask for an extension. Reasonable heuristics is to call it 
+when one half of the time is left (`currentTime > (exp + iat) / 2`).

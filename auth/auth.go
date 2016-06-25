@@ -23,6 +23,7 @@ const (
 func CreateJWT(userId int) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"id":  userId,
+		"iat": time.Now().Unix(),
 		"exp": time.Now().Add(time.Hour * 24 * time.Duration(config.Cfg.ExpDays)).Unix(),
 	})
 
@@ -32,6 +33,10 @@ func CreateJWT(userId int) (string, error) {
 func ValidateJWT(jwtToken string) (misc.JwtToken, error) {
 	if strings.Count(jwtToken, ".") != 2 {
 		return misc.JwtToken{}, errors.New("Not a JWT token")
+	}
+
+	if len(jwtToken) <= 90 {
+		return misc.JwtToken{}, errors.New("JWT token is too short")
 	}
 
 	token, err := jwt.Parse(jwtToken, func(token *jwt.Token) (interface{}, error) {
@@ -45,11 +50,21 @@ func ValidateJWT(jwtToken string) (misc.JwtToken, error) {
 	var jwtJson misc.JwtToken
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		jwtJson.UserId = int(claims["id"].(float64))
+		jwtJson.Iat = int(claims["iat"].(float64))
 		jwtJson.Exp = int(claims["exp"].(float64))
 		return jwtJson, nil
 	}
 
 	return misc.JwtToken{}, err
+}
+
+func ExtendJWT(jwtToken string) (string, error) {
+	token, err := ValidateJWT(jwtToken)
+	if err != nil {
+		return "", err
+	}
+
+	return CreateJWT(token.UserId)
 }
 
 func GenerateSalt() ([]byte, error) {

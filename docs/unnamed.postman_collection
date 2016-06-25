@@ -28,8 +28,9 @@
 		"8e5c23ec-cd3e-1011-524f-380c69d96ad3",
 		"fe5dc30b-3ee0-911c-9043-61bd14cea765",
 		"e10d5ebc-7ada-5fe4-6f43-69eaa89213bc",
-		"93f6e125-2bbc-1bb9-0d59-85338831cea4",
+		"0d768508-bdae-a051-ec15-090a1d2e1b76",
 		"7d3a74b3-48b3-319b-1524-acf32641fffb",
+		"93f6e125-2bbc-1bb9-0d59-85338831cea4",
 		"ecb23731-2c8d-2507-c013-4a5212012682",
 		"fb574645-b387-5f72-d847-81c816212442",
 		"74c84846-102a-aa1a-d62e-eeab4c666376",
@@ -42,10 +43,30 @@
 	"owner": "301022",
 	"remoteLink": "",
 	"public": false,
+	"published": false,
 	"requests": [
 		{
+			"id": "0d768508-bdae-a051-ec15-090a1d2e1b76",
+			"headers": "token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjl9.JS9Xc135ndkunTa2oKess5KCX4WVCcvAkI7bVsV4YVo\n",
+			"url": "http://localhost:8080/api/v1/users/login/extend",
+			"preRequestScript": null,
+			"pathVariables": {},
+			"method": "GET",
+			"data": null,
+			"dataMode": "params",
+			"version": 2,
+			"tests": null,
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1466835893013,
+			"name": "Extend a token",
+			"description": "",
+			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
+			"responses": []
+		},
+		{
 			"id": "139593e5-d9ed-f666-7f4a-bb067bd2e8ef",
-			"headers": "",
+			"headers": "token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY\n",
 			"url": "http://localhost:8080/api/v1/users/me/follow/8",
 			"preRequestScript": null,
 			"pathVariables": {},
@@ -56,7 +77,7 @@
 			"tests": null,
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1466045349906,
+			"time": 1466766154364,
 			"name": "Start following user with a particular ID",
 			"description": "",
 			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
@@ -83,7 +104,7 @@
 		},
 		{
 			"id": "38f688a0-ca4f-bf52-1e9a-00f53310e6cc",
-			"headers": "",
+			"headers": "token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY\n",
 			"url": "http://localhost:8080/api/v1/users/me/follow/8",
 			"preRequestScript": null,
 			"pathVariables": {},
@@ -94,7 +115,7 @@
 			"tests": null,
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1466045723926,
+			"time": 1466766166728,
 			"name": "Stop following user with some ID",
 			"description": "",
 			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
@@ -102,41 +123,23 @@
 		},
 		{
 			"id": "393ab045-7b41-831f-9d21-d14981ecc2aa",
-			"headers": "",
+			"headers": "token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY\nContent-Type: application/json\n",
 			"url": "http://localhost:8080/api/v1/purchases",
 			"preRequestScript": null,
 			"pathVariables": {},
 			"method": "POST",
-			"data": [
-				{
-					"key": "description",
-					"value": "some funny description",
-					"type": "text",
-					"enabled": true
-				},
-				{
-					"key": "brand",
-					"value": "4",
-					"type": "text",
-					"enabled": true
-				},
-				{
-					"key": "tag",
-					"value": "65",
-					"type": "text",
-					"enabled": true
-				}
-			],
-			"dataMode": "urlencoded",
+			"data": [],
+			"dataMode": "raw",
 			"version": 2,
 			"tests": null,
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1466101464651,
+			"time": 1466766491890,
 			"name": "Create a new purchase",
 			"description": "",
 			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
-			"responses": []
+			"responses": [],
+			"rawModeData": "{\"descr\":\"sadfsd\", \"brand\":1, \"tag\":6}"
 		},
 		{
 			"id": "477ad7d6-bd19-a5e7-ace2-c70117fe127c",
@@ -217,49 +220,43 @@
 		},
 		{
 			"id": "768bd819-cb39-7aeb-e9ff-3ce11b012709",
-			"headers": "",
-			"url": "http://localhost:8080/api/v1/brands/4",
+			"headers": "Content-Type: application/json\ntoken: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY\n",
+			"url": "http://localhost:8080/api/v1/brands/5",
 			"preRequestScript": null,
 			"pathVariables": {},
 			"method": "PUT",
-			"data": [
-				{
-					"key": "name",
-					"value": "new_name",
-					"type": "text",
-					"enabled": true
-				}
-			],
-			"dataMode": "urlencoded",
+			"data": [],
+			"dataMode": "raw",
 			"version": 2,
 			"tests": null,
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1465889927995,
+			"time": 1466757237715,
 			"name": "Update a brand by ID",
 			"description": "",
 			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
-			"responses": []
+			"responses": [],
+			"rawModeData": "{\"name\":\"brand_name\"}"
 		},
 		{
 			"id": "7d3a74b3-48b3-319b-1524-acf32641fffb",
-			"headers": "",
+			"headers": "Content-Type: application/json\n",
 			"url": "http://localhost:8080/api/v1/users",
-			"pathVariables": {},
 			"preRequestScript": null,
+			"pathVariables": {},
 			"method": "POST",
-			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
-			"data": null,
-			"dataMode": "params",
-			"name": "Create a new user",
-			"description": "",
-			"descriptionFormat": "html",
-			"time": 1465536771369,
+			"data": [],
+			"dataMode": "raw",
 			"version": 2,
-			"responses": [],
 			"tests": null,
 			"currentHelper": "normal",
-			"helperAttributes": {}
+			"helperAttributes": {},
+			"time": 1466824963019,
+			"name": "Create a new user",
+			"description": "",
+			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
+			"responses": [],
+			"rawModeData": "{\"nickname\": \"somestuff\", \"email\":\"isaacs@gmail.com\", \"password\":\"password\"}"
 		},
 		{
 			"id": "815270a0-6933-c443-1b20-9ed571a8c7ca",
@@ -340,29 +337,23 @@
 		},
 		{
 			"id": "8e5c23ec-cd3e-1011-524f-380c69d96ad3",
-			"headers": "",
+			"headers": "token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY\nContent-Type: application/json\n",
 			"url": "http://localhost:8080/api/v1/purchases/2/ask",
 			"preRequestScript": null,
 			"pathVariables": {},
 			"method": "POST",
-			"data": [
-				{
-					"key": "name",
-					"value": "something something something somethingsomething somethingsomething somethingsomething something",
-					"type": "text",
-					"enabled": true
-				}
-			],
-			"dataMode": "urlencoded",
+			"data": [],
+			"dataMode": "raw",
 			"version": 2,
 			"tests": null,
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1466062244497,
+			"time": 1466766781252,
 			"name": "Ask a question about a particular purchase",
 			"description": "",
 			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
-			"responses": []
+			"responses": [],
+			"rawModeData": "{\"name\":\"sadfsd\"}"
 		},
 		{
 			"id": "91ad1cc0-8b90-487f-4bb0-5a76557b0b7f",
@@ -405,65 +396,47 @@
 		},
 		{
 			"id": "99e8bd34-24f6-5fb0-ef56-924310bb6cfe",
-			"headers": "",
+			"headers": "token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY\nContent-Type: application/json\n",
 			"url": "http://localhost:8080/api/v1/brands",
 			"preRequestScript": null,
 			"pathVariables": {},
 			"method": "POST",
-			"data": [
-				{
-					"key": "name",
-					"value": "some_name",
-					"type": "text",
-					"enabled": true
-				}
-			],
-			"dataMode": "urlencoded",
+			"data": [],
+			"dataMode": "raw",
 			"version": 2,
 			"tests": null,
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1465719520785,
+			"time": 1466756315570,
 			"name": "Create a new brand",
 			"description": "",
 			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
-			"responses": []
+			"responses": [],
+			"rawModeData": "{\"name\":\"brand_name\"}"
 		},
 		{
 			"id": "9e4feafe-db17-8342-08e7-e87d6a10aa8e",
-			"headers": "",
+			"headers": "token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY\nContent-Type: application/json\n",
 			"url": "http://localhost:8080/api/v1/tags",
 			"preRequestScript": null,
 			"pathVariables": {},
 			"method": "POST",
-			"data": [
-				{
-					"key": "name",
-					"value": "some_cool_name",
-					"type": "text",
-					"enabled": true
-				},
-				{
-					"key": "description",
-					"value": "better description",
-					"type": "text",
-					"enabled": true
-				}
-			],
-			"dataMode": "urlencoded",
+			"data": [],
+			"dataMode": "raw",
 			"version": 2,
 			"tests": null,
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1465889996396,
+			"time": 1466763669821,
 			"name": "Create a new tag",
 			"description": "",
 			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
-			"responses": []
+			"responses": [],
+			"rawModeData": "{\"name\":\"brand_name\", \"descr\":\"some descr\"}"
 		},
 		{
 			"id": "a3594217-d3ac-192a-4676-f0f4c35dfc5b",
-			"headers": "",
+			"headers": "token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY\n",
 			"url": "http://localhost:8080/api/v1/purchases/2/like",
 			"preRequestScript": null,
 			"pathVariables": {},
@@ -474,7 +447,7 @@
 			"tests": null,
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1466057876297,
+			"time": 1466766528800,
 			"name": "Like a purchase with some ID",
 			"description": "",
 			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
@@ -540,7 +513,7 @@
 		},
 		{
 			"id": "a81a5aaf-3978-0b24-a8e1-3bd9d07dd42f",
-			"headers": "",
+			"headers": "token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY\n",
 			"url": "http://localhost:8080/api/v1/purchases/2/like",
 			"preRequestScript": null,
 			"pathVariables": {},
@@ -551,7 +524,7 @@
 			"tests": null,
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1466057872551,
+			"time": 1466766546181,
 			"name": "Unlike a purchase with a particular ID",
 			"description": "",
 			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
@@ -598,55 +571,43 @@
 		},
 		{
 			"id": "e10d5ebc-7ada-5fe4-6f43-69eaa89213bc",
-			"headers": "",
+			"headers": "Content-Type: application/json\n",
 			"url": "http://localhost:8080/api/v1/users/login",
-			"pathVariables": {},
 			"preRequestScript": null,
+			"pathVariables": {},
 			"method": "POST",
-			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
-			"data": null,
-			"dataMode": "params",
-			"name": "Log in user",
-			"description": "",
-			"descriptionFormat": "html",
-			"time": 1465536803972,
-			"version": 2,
-			"responses": [],
-			"tests": null,
-			"currentHelper": "normal",
-			"helperAttributes": {}
-		},
-		{
-			"id": "e60c131b-5e9b-e38b-2460-cb03bf6730f0",
-			"headers": "",
-			"url": "http://localhost:8080/api/v1/tags/10",
-			"preRequestScript": null,
-			"pathVariables": {},
-			"method": "PUT",
-			"data": [
-				{
-					"key": "name",
-					"value": "some_cool_name",
-					"type": "text",
-					"enabled": true
-				},
-				{
-					"key": "description",
-					"value": "better description",
-					"type": "text",
-					"enabled": true
-				}
-			],
-			"dataMode": "urlencoded",
+			"data": [],
+			"dataMode": "raw",
 			"version": 2,
 			"tests": null,
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1465890012888,
+			"time": 1466824772540,
+			"name": "Log in user",
+			"description": "",
+			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
+			"responses": [],
+			"rawModeData": "{\"email\":\"isaac@gmail.com\", \"password\":\"password\"}"
+		},
+		{
+			"id": "e60c131b-5e9b-e38b-2460-cb03bf6730f0",
+			"headers": "token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY\nContent-Type: application/json\n",
+			"url": "http://localhost:8080/api/v1/tags/2",
+			"preRequestScript": null,
+			"pathVariables": {},
+			"method": "PUT",
+			"data": [],
+			"dataMode": "raw",
+			"version": 2,
+			"tests": null,
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1466763736127,
 			"name": "Update a tag by ID",
 			"description": "",
 			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
-			"responses": []
+			"responses": [],
+			"rawModeData": "{\"name\":\"brand_name1\", \"descr\":\"some descr\"}"
 		},
 		{
 			"id": "ecb23731-2c8d-2507-c013-4a5212012682",
@@ -669,35 +630,23 @@
 		},
 		{
 			"id": "f769049e-c79f-3d92-04ec-ae806c245759",
-			"headers": "",
+			"headers": "token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY\n",
 			"url": "http://localhost:8080/api/v1/users/me/info",
 			"preRequestScript": null,
 			"pathVariables": {},
 			"method": "PUT",
-			"data": [
-				{
-					"key": "nickname",
-					"value": "New_nickname",
-					"type": "text",
-					"enabled": true
-				},
-				{
-					"key": "about",
-					"value": "something new about me ",
-					"type": "text",
-					"enabled": true
-				}
-			],
-			"dataMode": "urlencoded",
+			"data": [],
+			"dataMode": "raw",
 			"version": 2,
 			"tests": null,
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1465952776229,
+			"time": 1466765912331,
 			"name": "Update information about yourself",
 			"description": "",
 			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
-			"responses": []
+			"responses": [],
+			"rawModeData": "{\"nickname\":\"new_user\", \"about\":\"some descr\"}"
 		},
 		{
 			"id": "fb574645-b387-5f72-d847-81c816212442",
@@ -720,29 +669,23 @@
 		},
 		{
 			"id": "fe5dc30b-3ee0-911c-9043-61bd14cea765",
-			"headers": "",
+			"headers": "token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY\n",
 			"url": "http://localhost:8080/api/v1/questions/1/answer",
 			"preRequestScript": null,
 			"pathVariables": {},
 			"method": "POST",
-			"data": [
-				{
-					"key": "name",
-					"value": "some funny description",
-					"type": "text",
-					"enabled": true
-				}
-			],
-			"dataMode": "urlencoded",
+			"data": [],
+			"dataMode": "raw",
 			"version": 2,
 			"tests": null,
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1466133027485,
+			"time": 1466766870679,
 			"name": "Answer a particular question",
 			"description": "",
 			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
-			"responses": []
+			"responses": [],
+			"rawModeData": "{\"name\":\"sadfsd\"}"
 		},
 		{
 			"id": "ff5eb6af-1fb1-2aea-7725-5414ae88d47d",

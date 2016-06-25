@@ -20,6 +20,7 @@ func TestMain(m *testing.M) {
 func TestCreateJWT(t *testing.T) {
 	type jwtJson struct {
 		Id  int
+		Iat int
 		Exp int
 	}
 
@@ -49,7 +50,7 @@ func TestCreateJWT(t *testing.T) {
 			t.Errorf("Second part is not a json: %v, %v", data, err)
 		}
 
-		if claim.Id != v || claim.Exp <= currentTime {
+		if claim.Id != v || claim.Exp <= currentTime || claim.Iat != currentTime {
 			t.Errorf("Claim is not correct %v, %v", claim, v)
 		}
 	}
@@ -101,24 +102,23 @@ func TestPasswordHash(t *testing.T) {
 func TestValidateJWT(t *testing.T) {
 	tableSuccess := []struct {
 		id  int
+		iat int
 		exp int
 		jwt string
 	}{
-		{1, 1639292831, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY"},
-		{2, 1639555670, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU2NzAsImlkIjoyfQ.-o8iN6TXLqeyUR8bkJ3WCfDr7527BZ9aHY12qCfOCvE"},
-		{3, 1639555719, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU3MTksImlkIjozfQ.Agi-2KpwE-J8B4wUwOz5n-5mcg8P9cUF9qqCwsL2USI"},
-		{4, 1639555743, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU3NDMsImlkIjo0fQ.ceGmymRfiO2sv-WV-_7z63FePcdZ36wrQmugHtyI94g"},
-		{5, 1639555774, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU3NzQsImlkIjo1fQ.FMx5hJQ-KdV1lCrOhP_UrKXhKvY1DfNeDzsnO2wlGwI"},
-		{6, 1639555785, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU3ODUsImlkIjo2fQ.sTQ9HMqrpaP1R6tl7mgrCPjbr52-qWpensYB2IsoaNo"},
-		{7, 1639555800, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU4MDAsImlkIjo3fQ.DhJpM75XmrvJet37OhEff0jN3ZBrpoBMbUoSOaCaqTM"},
-		{8, 1639555811, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU4MTEsImlkIjo4fQ.vF0Vo_Mpha7FcYhu7BraRfJqsn8hMBednlFGTMumAhk"},
-		{9, 1639555822, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk1NTU4MjIsImlkIjo5fQ.huTzZZ2ToM1wflgT42oirBRwnyTZbtAJZw6hm6-aJck"},
-		{123, 1639292614, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzkyOTI2MTQsImlkIjoxMjN9.-MW6PUpl8PastumA03R-i0ZuW21aG_3ZQnruSHS6aBo"},
-		{1341, 1639292852, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzkyOTI4NTIsImlkIjoxMzQxfQ.39L7Bl8ZzVg5N2E_X2sl-T43hlsNFloI8X1ZnMDySeA"},
+		{1, 1466833211, 1639633211, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjF9.LYey3jgBd70QYjygbZvoPqXGJHj90nZ8VUm2yeVlVVo"},
+		{2, 1466833211, 1639633211, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjJ9.dbBN08ZNdGhKbPhFRSccRWvMgSxSTjlM3wC7K2oz3_M"},
+		{3, 1466833211, 1639633211, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjN9.WF7GGKA2XB3Th5lztqseW1fixf9XApTYpwDhcvq_sDw"},
+		{4, 1466833211, 1639633211, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjR9.cI2Ie6KDVQhWk1VRuP_UzE1HpKFfyT0jgTe9J2g7pJA"},
+		{5, 1466833211, 1639633211, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjV9.bmmgOyeN700onUcVfJcFT4dn5XyNY7rdUfpYDhlfdOc"},
+		{6, 1466833211, 1639633211, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjZ9.vqP4oem2PeQpzBBC2enSXYrKg2xDcPa8iXcJToSmWHs"},
+		{7, 1466833211, 1639633211, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjd9.KlfEaHwqWLMGVA9MUIu_z8oSNaXbioJ6_mgftlbWpeI"},
+		{8, 1466833211, 1639633211, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjh9.0u293Hl2-cJawLI1JlEcE1fYBB6yrkMvKUiGHy61-2A"},
+		{9, 1466833211, 1639633211, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjl9.JS9Xc135ndkunTa2oKess5KCX4WVCcvAkI7bVsV4YVo"},
 	}
 	for _, v := range tableSuccess {
 		jwtJson, err := ValidateJWT(v.jwt)
-		if err != nil || jwtJson.UserId != v.id || jwtJson.Exp != v.exp {
+		if err != nil || jwtJson.UserId != v.id || jwtJson.Exp != v.exp || jwtJson.Iat != v.iat {
 			t.Errorf("Expect a correct unexpired token. Got %v, %v", jwtJson, err)
 		}
 	}
@@ -128,20 +128,21 @@ func TestValidateJWT(t *testing.T) {
 	tableSuccess[2].jwt += "a"
 	tableFail := []struct {
 		id  int
+		iat int
 		exp int
 		jwt string
 	}{
 		tableSuccess[0],
 		tableSuccess[1],
 		tableSuccess[2],
-		{1, 1639292831, "eyJ0eXAiOiJKV1QifQ.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY"},
-		{1, 1639292831, "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY"},
-		{1, 1639292831, "eyJhbGciOiIiLCJ0eXAiOiJKV1QifQ.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY"},
-		{0, 0, "asfasdfasdf"},
-		{0, 0, "wrong.token"},
-		{0, 0, "wrong.token.asdf"},
-		{0, 0, ""},
-		{0, 0, "..........."},
+		{1, 0, 1639292831, "eyJ0eXAiOiJKV1QifQ.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY"},
+		{1, 0, 1639292831, "eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY"},
+		{1, 0, 1639292831, "eyJhbGciOiIiLCJ0eXAiOiJKV1QifQ.eyJleHAiOjE2MzkyOTI4MzEsImlkIjoxfQ.E3KRJgFfpKHgexw13grm9-neaXrlb7sLjk5Q9XsBeRY"},
+		{0, 0, 0, "asfasdfasdf"},
+		{0, 0, 0, "wrong.token"},
+		{0, 0, 0, "wrong.token.asdf"},
+		{0, 0, 0, ""},
+		{0, 0, 0, "..........."},
 	}
 	for _, v := range tableFail {
 		jwtJson, err := ValidateJWT(v.jwt)
@@ -160,6 +161,46 @@ func TestValidateJWT(t *testing.T) {
 		jwtJson, err := ValidateJWT(v)
 		if err == nil || jwtJson.Exp != 0 || jwtJson.UserId != 0 || err.Error() != "Token is expired" {
 			t.Errorf("Token expired. Got %v %v", jwtJson, err)
+		}
+	}
+}
+
+func TestExtendJWT(t *testing.T) {
+	tableSuccess := []struct {
+		id  int
+		jwt string
+	}{
+		{1, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjF9.LYey3jgBd70QYjygbZvoPqXGJHj90nZ8VUm2yeVlVVo"},
+		{2, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjJ9.dbBN08ZNdGhKbPhFRSccRWvMgSxSTjlM3wC7K2oz3_M"},
+		{3, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjN9.WF7GGKA2XB3Th5lztqseW1fixf9XApTYpwDhcvq_sDw"},
+		{4, "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjR9.cI2Ie6KDVQhWk1VRuP_UzE1HpKFfyT0jgTe9J2g7pJA"},
+	}
+	for _, v := range tableSuccess {
+		currentTime := int(time.Now().Unix())
+		jwtJson, err := ExtendJWT(v.jwt)
+		if err != nil || len(jwtJson) < 100 {
+			t.Errorf("Expect a correct unexpired token. Got %v, %v", jwtJson, err)
+		}
+
+		data, err := ValidateJWT(jwtJson)
+		if data.UserId != v.id || data.Iat != currentTime {
+			t.Errorf("Expect %v, %v. Got %v, %v", v.id, currentTime, data.UserId, data.Iat)
+		}
+	}
+
+	tableFail := []struct {
+		id  int
+		jwt string
+	}{
+		{1, tableSuccess[0].jwt + "a"},
+		{2, tableSuccess[0].jwt + "a"},
+		{3, tableSuccess[0].jwt + "a"},
+		{4, tableSuccess[0].jwt + "a"},
+	}
+	for _, v := range tableFail {
+		jwtJson, err := ExtendJWT(v.jwt)
+		if err == nil || jwtJson != "" {
+			t.Errorf("Expect failure. Got %v, %v", err, jwtJson)
 		}
 	}
 }
