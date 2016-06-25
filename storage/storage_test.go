@@ -19,32 +19,32 @@ const (
 )
 
 var AllPurchases = map[int]misc.Purchase{
-	1: {1, "some_img", "Look at my new drone", 1, nil, []int{}, 0, 0},
-	2: {2, "some_img", "How cool am I?", 4, nil, []int{}, 5, 0},
-	3: {3, "some_img", "I really like drones", 1, nil, []int{}, 0, 3},
-	4: {4, "some_img", "Now I am fond of cars", 1, nil, []int{}, 4, 1},
+	1: {1, "some_img", "Look at my new drone", 1, 0, []int{}, 0, 0},
+	2: {2, "some_img", "How cool am I?", 4, 0, []int{}, 5, 0},
+	3: {3, "some_img", "I really like drones", 1, 0, []int{}, 0, 3},
+	4: {4, "some_img", "Now I am fond of cars", 1, 0, []int{}, 4, 1},
 }
 
 var AllBrands = map[int]misc.Brand{
-	1: {1, "Apple", nil},
-	2: {2, "BMW", nil},
-	3: {3, "Playstation", nil},
-	4: {4, "Ferrari", nil},
-	5: {5, "Gucci", nil},
+	1: {1, "Apple", 0},
+	2: {2, "BMW", 0},
+	3: {3, "Playstation", 0},
+	4: {4, "Ferrari", 0},
+	5: {5, "Gucci", 0},
 }
 
 var AllTags = map[int]misc.Tag{
-	1: {1, "dress", "nice dresses", nil},
-	2: {2, "drone", "cool flying machines that do stuff", nil},
-	3: {3, "cosmetics", "Known as make-up, are substances or products used to enhance the appearance or scent of the body", nil},
-	4: {4, "car", "Vehicles that people use to move faster", nil},
-	5: {5, "hat", "Stuff people put on their heads", nil},
-	6: {6, "phone", "People use it to speak with other people", nil},
+	1: {1, "dress", "nice dresses", 0},
+	2: {2, "drone", "cool flying machines that do stuff", 0},
+	3: {3, "cosmetics", "Known as make-up, are substances or products used to enhance the appearance or scent of the body", 0},
+	4: {4, "car", "Vehicles that people use to move faster", 0},
+	5: {5, "hat", "Stuff people put on their heads", 0},
+	6: {6, "phone", "People use it to speak with other people", 0},
 }
 
 var AllUsers = map[int]misc.User{
-	1: {1, "Albert Einstein", "", "Developed the general theory of relativity.", 0, 0, 3, 3, 0, 1, nil},
-	2: {2, "Isaac Newton", "", "Mechanics, laws of motion", 0, 2, 0, 0, 0, 0, nil},
+	1: {1, "Albert Einstein", "", "Developed the general theory of relativity.", 0, 0, 3, 3, 0, 1, 0},
+	2: {2, "Isaac Newton", "", "Mechanics, laws of motion", 0, 2, 0, 0, 0, 0, 0},
 	// actually there are more of them
 }
 
@@ -172,7 +172,7 @@ func TestGetAllBrands(t *testing.T) {
 
 	for _, brand := range brands {
 		b := AllBrands[brand.Id]
-		if brand.Id != b.Id || brand.Name != b.Name || brand.Issued_at != nil {
+		if brand.Id != b.Id || brand.Name != b.Name || brand.Issued_at != 0 {
 			t.Errorf("Expect %v. Got %v", b, brand)
 		}
 	}
@@ -201,7 +201,7 @@ func TestGetBrand(t *testing.T) {
 		if v.code != code || brand.Id != v.brand.Id || brand.Name != v.brand.Name {
 			t.Errorf("Case %v. Expect %v, %v. Got %v, %v", num, v.brand, v.code, brand, code)
 		}
-		if brand.Id != 0 && brand.Issued_at == nil {
+		if brand.Id != 0 && brand.Issued_at == 0 {
 			t.Errorf("Case %v. Expect %v, %v. Got %v, %v", num, v.brand, v.code, brand, code)
 		}
 	}
@@ -306,7 +306,7 @@ func TestGetAllTags(t *testing.T) {
 
 	for num, tag := range tags {
 		el := AllTags[tag.Id]
-		if tag.Id != el.Id || tag.Name != el.Name || tag.Issued_at != nil || tag.Description != "" {
+		if tag.Id != el.Id || tag.Name != el.Name || tag.Issued_at != 0 || tag.Description != "" {
 			t.Errorf("Case %v. Expect %v. Got %v", num, el, tag)
 		}
 	}
@@ -334,7 +334,7 @@ func TestGetTag(t *testing.T) {
 		if code != v.code || tag.Id != v.tag.Id || tag.Name != v.tag.Name || tag.Description != v.tag.Description {
 			t.Errorf("Case %v. Expect %v. Got %v", num, v, tag)
 		}
-		if tag.Id != 0 && tag.Issued_at == nil {
+		if tag.Id != 0 && tag.Issued_at == 0 {
 			t.Errorf("Case %v. Expect <nil>. Got %v", num, tag)
 		}
 	}
@@ -459,7 +459,7 @@ func TestGetUser(t *testing.T) {
 			user.Answers_num != v.user.Answers_num {
 			t.Errorf("Case %v. Expect %v. Got %v", num, v.user, user)
 		}
-		if user.Id != 0 && user.Issued_at == nil {
+		if user.Id != 0 && user.Issued_at == 0 {
 			t.Errorf("Case %v. Expect <nil>. Got %v", num, user.Issued_at)
 		}
 	}

@@ -3,7 +3,6 @@ package misc
 import (
 	"net/mail"
 	"strings"
-	"time"
 )
 
 const (
@@ -58,7 +57,7 @@ type Jwt struct {
 type Brand struct {
 	Id        int        `json:"id,omitempty"`
 	Name      string     `json:"name,omitempty"`
-	Issued_at *time.Time `json:"issued_at,omitempty"`
+	Issued_at int64 `json:"issued_at,omitempty"`
 }
 
 // Tag stores all information about a Tag model
@@ -66,7 +65,7 @@ type Tag struct {
 	Id          int        `json:"id,omitempty"`
 	Name        string     `json:"name,omitempty"`
 	Description string     `json:"description,omitempty"`
-	Issued_at   *time.Time `json:"issued_at,omitempty"`
+	Issued_at int64 `json:"issued_at,omitempty"`
 }
 
 // User stores all information about a User model
@@ -81,7 +80,7 @@ type User struct {
 	Purchases_num int        `json:"purchases_num,omitempty"`
 	Questions_num int        `json:"questions_num,omitempty"`
 	Answers_num   int        `json:"answers_num,omitempty"`
-	Issued_at     *time.Time `json:"issued_at,omitempty"`
+	Issued_at int64 `json:"issued_at,omitempty"`
 }
 
 // Purchase stores all information about a Purchase model
@@ -90,7 +89,7 @@ type Purchase struct {
 	Image       string     `json:"image,omitempty"`
 	Description string     `json:"description,omitempty"`
 	User_id     int        `json:"user_id,omitempty"`
-	Issued_at   *time.Time `json:"issued_at,omitempty"`
+	Issued_at int64 `json:"issued_at,omitempty"`
 	Tags        []int      `json:"tags,omitempty"`
 	Brand       int        `json:"brand,omitempty"`
 	Likes_num   int        `json:"likes_num,omitempty"`

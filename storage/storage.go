@@ -12,6 +12,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 )
 
 var Db *sql.DB
@@ -106,11 +107,12 @@ func GetBrand(brandId int) (misc.Brand, int) {
 	}
 
 	brand := misc.Brand{}
+	var timestamp time.Time
 	if err := Db.QueryRow(`
 		SELECT name, issued_at
 		FROM brands
 		WHERE id = $1`, brandId,
-	).Scan(&brand.Name, &brand.Issued_at); err != nil {
+	).Scan(&brand.Name, &timestamp); err != nil {
 		if err == sql.ErrNoRows {
 			log.Println(err)
 			return misc.Brand{}, misc.NoElement
@@ -121,6 +123,7 @@ func GetBrand(brandId int) (misc.Brand, int) {
 	}
 
 	brand.Id = brandId
+	brand.Issued_at = timestamp.Unix()
 	return brand, misc.NothingToReport
 }
 
@@ -208,11 +211,12 @@ func GetTag(tagId int) (misc.Tag, int) {
 	}
 
 	tag := misc.Tag{}
+	var timestamp time.Time
 	if err := Db.QueryRow(`
 		SELECT name, description, issued_at
 		FROM tags
 		WHERE id = $1`, tagId,
-	).Scan(&tag.Name, &tag.Description, &tag.Issued_at); err != nil {
+	).Scan(&tag.Name, &tag.Description, &timestamp); err != nil {
 		if err == sql.ErrNoRows {
 			log.Println(err)
 			return misc.Tag{}, misc.NoElement
@@ -223,6 +227,7 @@ func GetTag(tagId int) (misc.Tag, int) {
 	}
 
 	tag.Id = tagId
+	tag.Issued_at = timestamp.Unix()
 	return tag, misc.NothingToReport
 }
 
@@ -330,13 +335,14 @@ func GetUser(userId int) (misc.User, int) {
 	}
 
 	user := misc.User{}
+	var timestamp time.Time
 	if err := Db.QueryRow(`
 		SELECT nickname, image, about, expertise, followers_num, following_num, purchases_num, questions_num, answers_num, issued_at
 		FROM users WHERE id = $1`, userId,
 	).Scan(
 		&user.Nickname, &user.Image, &user.About, &user.Expertise, &user.Followers_num,
 		&user.Following_num, &user.Purchases_num, &user.Questions_num, &user.Answers_num,
-		&user.Issued_at,
+		&timestamp,
 	); err != nil {
 		if err == sql.ErrNoRows {
 			log.Println(err)
@@ -347,6 +353,7 @@ func GetUser(userId int) (misc.User, int) {
 		return misc.User{}, misc.NothingToReport
 	}
 	user.Id = userId
+	user.Issued_at = timestamp.Unix()
 	return user, misc.NothingToReport
 }
 
@@ -625,12 +632,15 @@ func getPurchases(rows *sql.Rows, err error) ([]*misc.Purchase, int) {
 	defer rows.Close()
 
 	purchases := []*misc.Purchase{}
+	var timestamp time.Time
 	for rows.Next() {
 		p := misc.Purchase{}
-		if err := rows.Scan(&p.Id, &p.Image, &p.Description, &p.User_id, &p.Issued_at, &p.Brand, &p.Likes_num); err != nil {
+		if err := rows.Scan(&p.Id, &p.Image, &p.Description, &p.User_id, &timestamp, &p.Brand, &p.Likes_num); err != nil {
 			log.Println(err)
 			return []*misc.Purchase{}, misc.NothingToReport
 		}
+
+		p.Issued_at = timestamp.Unix()
 		purchases = append(purchases, &p)
 	}
 
@@ -800,11 +810,12 @@ func GetPurchase(purchaseId int) (misc.Purchase, int) {
 	}
 
 	p := misc.Purchase{}
+	var timestamp time.Time
 	if err := Db.QueryRow(`
 		SELECT image, description, user_id, issued_at, brand_id, likes_num
 		FROM purchases
 		WHERE id = $1`, purchaseId,
-	).Scan(&p.Image, &p.Description, &p.User_id, &p.Issued_at, &p.Brand, &p.Likes_num); err != nil {
+	).Scan(&p.Image, &p.Description, &p.User_id, &timestamp, &p.Brand, &p.Likes_num); err != nil {
 		if err == sql.ErrNoRows {
 			log.Println(err)
 			return misc.Purchase{}, misc.NoElement
@@ -815,6 +826,7 @@ func GetPurchase(purchaseId int) (misc.Purchase, int) {
 	}
 
 	p.Id = purchaseId
+	p.Issued_at = timestamp.Unix()
 	return p, misc.NothingToReport
 }
 
