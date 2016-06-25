@@ -49,6 +49,16 @@ func ValidateJWT(jwtToken string) (misc.JwtToken, error) {
 
 	var jwtJson misc.JwtToken
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		if len(claims) != 3 {
+			return misc.JwtToken{}, errors.New("Token with wrong number of claims")
+		}
+		_, ok1 := claims["id"]
+		_, ok2 := claims["iat"]
+		_, ok3 := claims["exp"]
+		if !(ok1 && ok2 && ok3) {
+			return misc.JwtToken{}, errors.New("One of the claims is missing")
+		}
+
 		jwtJson.UserId = int(claims["id"].(float64))
 		jwtJson.Iat = int(claims["iat"].(float64))
 		jwtJson.Exp = int(claims["exp"].(float64))
