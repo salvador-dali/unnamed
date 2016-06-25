@@ -898,7 +898,6 @@ func UnlikePurchase(purchaseId, userId int) int {
 }
 
 func AskQuestion(purchaseId, userId int, question string) (int, int) {
-	// TODO validate everything
 	whosePurchase, code := whoCreatedPurchaseByPurchaseId(purchaseId)
 	if whosePurchase == 0 {
 		return 0, code
@@ -907,6 +906,12 @@ func AskQuestion(purchaseId, userId int, question string) (int, int) {
 	if whosePurchase == userId {
 		log.Println("can't vote for own purchase")
 		return 0, misc.AskYourself
+	}
+
+	question, ok := misc.ValidateString(question, misc.MaxLenB)
+	if !ok {
+		log.Println("Wrong question", question)
+		return 0, misc.WrongName
 	}
 
 	questionId := 0
@@ -934,7 +939,6 @@ func AskQuestion(purchaseId, userId int, question string) (int, int) {
 
 // --- Answers ---
 func AnswerQuestion(questionId, userId int, answer string) (int, int) {
-	// TODO validate everything
 	whosePurchase, code := whoCreatedPurchaseByQuestionId(questionId)
 	if whosePurchase == 0 {
 		return 0, code
@@ -943,6 +947,12 @@ func AnswerQuestion(questionId, userId int, answer string) (int, int) {
 	if whosePurchase != userId {
 		log.Println("can asnwer only questions regarding your purchase")
 		return 0, misc.AnswerOtherPurchase
+	}
+
+	answer, ok := misc.ValidateString(answer, misc.MaxLenB)
+	if !ok {
+		log.Println("Wrong answer", answer)
+		return 0, misc.WrongName
 	}
 
 	answerId := 0

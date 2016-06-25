@@ -129,15 +129,15 @@ func GetBrand(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 func CreateBrand(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	if getUserId(r, w) == 0 {
-		return
-	}
-
 	var data misc.JsonName
 	if body, ok := readJson(r, w); !ok {
 		return
 	} else {
 		json.Unmarshal(body, &data)
+	}
+
+	if getUserId(r, w) == 0 {
+		return
 	}
 
 	if id, code := storage.CreateBrand(data.Name); isCodeTrivial(code, w) {
@@ -149,10 +149,6 @@ func CreateBrand(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 func UpdateBrand(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	if getUserId(r, w) == 0 {
-		return
-	}
-
 	id := validateNumeric(w, ps["id"])
 	if id <= 0 {
 		return
@@ -163,6 +159,10 @@ func UpdateBrand(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	} else {
 		json.Unmarshal(body, &data)
+	}
+
+	if getUserId(r, w) == 0 {
+		return
 	}
 
 	if code := storage.UpdateBrand(id, data.Name); isCodeTrivial(code, w) {
@@ -204,6 +204,10 @@ func CreateTag(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		json.Unmarshal(body, &data)
 	}
 
+	if getUserId(r, w) == 0 {
+		return
+	}
+
 	if id, code := storage.CreateTag(data.Name, data.Descr); isCodeTrivial(code, w) {
 		sendJson(w, misc.Id{id}, http.StatusCreated)
 	}
@@ -223,6 +227,10 @@ func UpdateTag(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	} else {
 		json.Unmarshal(body, &data)
+	}
+
+	if getUserId(r, w) == 0 {
+		return
 	}
 
 	if code := storage.UpdateTag(id, data.Name, data.Descr); isCodeTrivial(code, w) {
@@ -248,16 +256,16 @@ func GetUser(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 func UpdateYourUserInfo(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	userId := getUserId(r, w)
-	if userId == 0 {
-		return
-	}
-
 	var data misc.JsonNicknameAbout
 	if body, ok := readJson(r, w); !ok {
 		return
 	} else {
 		json.Unmarshal(body, &data)
+	}
+
+	userId := getUserId(r, w)
+	if userId == 0 {
+		return
 	}
 
 	code := storage.UpdateUser(userId, data.Nickname, data.About)
@@ -374,16 +382,16 @@ func GetPurchase(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 func CreatePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	userId := getUserId(r, w)
-	if userId == 0 {
-		return
-	}
-
 	var data misc.JsonDescrBrandTag
 	if body, ok := readJson(r, w); !ok {
 		return
 	} else {
 		json.Unmarshal(body, &data)
+	}
+
+	userId := getUserId(r, w)
+	if userId == 0 {
+		return
 	}
 
 	if id, code := storage.CreatePurchase(userId, data.Descr, data.BrandId, []int{data.TagId}); isCodeTrivial(code, w) {
@@ -395,13 +403,13 @@ func CreatePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string
 func LikePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	userId := getUserId(r, w)
-	if userId == 0 {
+	purchaseId := validateNumeric(w, ps["id"])
+	if purchaseId <= 0 {
 		return
 	}
 
-	purchaseId := validateNumeric(w, ps["id"])
-	if purchaseId <= 0 {
+	userId := getUserId(r, w)
+	if userId == 0 {
 		return
 	}
 
@@ -414,13 +422,13 @@ func LikePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string) 
 func UnlikePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	userId := getUserId(r, w)
-	if userId == 0 {
+	purchaseId := validateNumeric(w, ps["id"])
+	if purchaseId <= 0 {
 		return
 	}
 
-	purchaseId := validateNumeric(w, ps["id"])
-	if purchaseId <= 0 {
+	userId := getUserId(r, w)
+	if userId == 0 {
 		return
 	}
 
@@ -433,11 +441,6 @@ func UnlikePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string
 func AskQuestion(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	userId := getUserId(r, w)
-	if userId == 0 {
-		return
-	}
-
 	purchaseId := validateNumeric(w, ps["id"])
 	if purchaseId <= 0 {
 		return
@@ -450,6 +453,11 @@ func AskQuestion(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		json.Unmarshal(body, &data)
 	}
 
+	userId := getUserId(r, w)
+	if userId == 0 {
+		return
+	}
+
 	if id, code := storage.AskQuestion(purchaseId, userId, data.Name); isCodeTrivial(code, w) {
 		sendJson(w, misc.Id{id}, http.StatusCreated)
 	}
@@ -458,11 +466,6 @@ func AskQuestion(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 // AnswerQuestion allows current user to answer a question about his own purchase
 func AnswerQuestion(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
-
-	userId := getUserId(r, w)
-	if userId == 0 {
-		return
-	}
 
 	questionId := validateNumeric(w, ps["id"])
 	if questionId <= 0 {
@@ -474,6 +477,11 @@ func AnswerQuestion(w http.ResponseWriter, r *http.Request, ps map[string]string
 		return
 	} else {
 		json.Unmarshal(body, &data)
+	}
+
+	userId := getUserId(r, w)
+	if userId == 0 {
+		return
 	}
 
 	if id, code := storage.AnswerQuestion(questionId, userId, data.Name); isCodeTrivial(code, w) {

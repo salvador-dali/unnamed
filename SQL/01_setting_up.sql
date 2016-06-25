@@ -143,7 +143,7 @@ CREATE TABLE "questions" (
     "id" serial,
     "user_id" int NOT NULL,
     "purchase_id" int NOT NULL,
-    "name" varchar(100) NOT NULL,
+    "name" varchar(1000) NOT NULL,
     "issued_at" timestamp NOT NULL DEFAULT (now() at time zone 'utc'),
     "votes_num" int NOT NULl DEFAULT 0,
     PRIMARY KEY ("id"),
