@@ -13,6 +13,7 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	"bytes"
 )
 
 var Db *sql.DB
@@ -300,23 +301,22 @@ func validateTags(tagIds []int) (error, int) {
 		return errors.New("too many tags"), misc.WrongTagsNum
 	}
 
-	for _, v := range tagIds {
+
+	buf := bytes.NewBufferString("SELECT COUNT(id) FROM tags WHERE id IN (")
+	for i, v := range tagIds {
 		if v <= 0 {
 			return errors.New("tag is negative"), misc.WrongTags
 		}
+		if i > 0 {
+			buf.WriteString(",")
+		}
+		buf.WriteString(strconv.Itoa(v))
 	}
+	buf.WriteString(")")
 
-	stringTagIds, num := make([]string, len(tagIds), len(tagIds)), 0
-	for k, v := range tagIds {
-		stringTagIds[k] = strconv.Itoa(v)
-	}
-
-	if err := Db.QueryRow(`
-		SELECT COUNT(id)
-		FROM tags
-		WHERE id IN ($1)`, strings.Join(stringTagIds, ","),
-	).Scan(&num); err != nil {
-		return err, misc.NothingToReport
+	num := 0
+	if err := Db.QueryRow(buf.String()).Scan(&num); err != nil {
+    	return err, misc.NothingToReport
 	}
 
 	if num != len(tagIds) {
