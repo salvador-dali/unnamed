@@ -631,13 +631,22 @@ func getPurchases(rows *sql.Rows, err error) ([]*misc.Purchase, int) {
 	}
 	defer rows.Close()
 
-	purchases := []*misc.Purchase{}
+	purchases, tagString := []*misc.Purchase{}, ""
 	var timestamp time.Time
 	for rows.Next() {
 		p := misc.Purchase{}
-		if err := rows.Scan(&p.Id, &p.Image, &p.Description, &p.User_id, &timestamp, &p.Brand, &p.Likes_num); err != nil {
+		if err := rows.Scan(&p.Id, &p.Image, &p.Description, &p.User_id, &timestamp, &tagString, &p.Brand, &p.Likes_num); err != nil {
 			log.Println(err)
 			return []*misc.Purchase{}, misc.NothingToReport
+		}
+
+		for _, v := range strings.Split(tagString[1:len(tagString) - 1], ",") {
+			if tagId, err := strconv.Atoi(v); err != nil {
+				log.Println(err)
+				return []*misc.Purchase{}, misc.NothingToReport
+			} else {
+				p.Tags = append(p.Tags, tagId)
+			}
 		}
 
 		p.Issued_at = timestamp.Unix()
@@ -707,7 +716,7 @@ func whoCreatedPurchaseByQuestionId(questionId int) (int, int) {
 func GetUserPurchases(userId int) ([]*misc.Purchase, int) {
 	// userId is the current user and is always valid
 	rows, err := Db.Query(`
-		SELECT id, image, description, user_id, issued_at, brand_id, likes_num
+		SELECT id, image, description, user_id, issued_at, tag_ids, brand_id, likes_num
 		FROM purchases
 		WHERE user_id = $1
 		ORDER BY issued_at DESC`, userId)
@@ -766,7 +775,7 @@ func CreatePurchase(userId int, description string, brandId int, tagsId []int) (
 
 func GetAllPurchases() ([]*misc.Purchase, int) {
 	rows, err := Db.Query(`
-		SELECT id, image, description, user_id, issued_at, brand_id, likes_num
+		SELECT id, image, description, user_id, issued_at, tag_ids, brand_id, likes_num
 		FROM purchases
 		ORDER BY issued_at DESC`)
 
@@ -780,7 +789,7 @@ func GetAllPurchasesWithBrand(brandId int) ([]*misc.Purchase, int) {
 	}
 
 	rows, err := Db.Query(`
-		SELECT id, image, description, user_id, issued_at, brand_id, likes_num
+		SELECT id, image, description, user_id, issued_at, tag_ids, brand_id, likes_num
 		FROM purchases
 		WHERE brand_id = $1
 		ORDER BY issued_at DESC`, brandId)
@@ -795,7 +804,7 @@ func GetAllPurchasesWithTag(tagId int) ([]*misc.Purchase, int) {
 	}
 
 	rows, err := Db.Query(`
-		SELECT id, image, description, user_id, issued_at, brand_id, likes_num
+		SELECT id, image, description, user_id, issued_at, tag_ids, brand_id, likes_num
 		FROM purchases
 		WHERE $1 = ANY (tag_ids)
 		ORDER BY issued_at DESC`, tagId)
@@ -809,13 +818,13 @@ func GetPurchase(purchaseId int) (misc.Purchase, int) {
 		return misc.Purchase{}, misc.NoElement
 	}
 
-	p := misc.Purchase{}
+	p, tagString := misc.Purchase{}, ""
 	var timestamp time.Time
 	if err := Db.QueryRow(`
-		SELECT image, description, user_id, issued_at, brand_id, likes_num
+		SELECT image, description, user_id, issued_at, tag_ids, brand_id, likes_num
 		FROM purchases
 		WHERE id = $1`, purchaseId,
-	).Scan(&p.Image, &p.Description, &p.User_id, &timestamp, &p.Brand, &p.Likes_num); err != nil {
+	).Scan(&p.Image, &p.Description, &p.User_id, &timestamp, &tagString, &p.Brand, &p.Likes_num); err != nil {
 		if err == sql.ErrNoRows {
 			log.Println(err)
 			return misc.Purchase{}, misc.NoElement
@@ -825,6 +834,14 @@ func GetPurchase(purchaseId int) (misc.Purchase, int) {
 		return misc.Purchase{}, misc.NothingToReport
 	}
 
+	for _, v := range strings.Split(tagString[1:len(tagString) - 1], ",") {
+		if tagId, err := strconv.Atoi(v); err != nil {
+			log.Println(err)
+			return misc.Purchase{}, misc.NoElement
+		} else {
+			p.Tags = append(p.Tags, tagId)
+		}
+	}
 	p.Id = purchaseId
 	p.Issued_at = timestamp.Unix()
 	return p, misc.NothingToReport

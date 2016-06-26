@@ -394,7 +394,7 @@ func CreatePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string
 		return
 	}
 
-	if id, code := storage.CreatePurchase(userId, data.Descr, data.BrandId, []int{data.TagId}); isCodeTrivial(code, w) {
+	if id, code := storage.CreatePurchase(userId, data.Descr, data.BrandId, data.TagIds); isCodeTrivial(code, w) {
 		sendJson(w, misc.Id{id}, http.StatusCreated)
 	}
 }

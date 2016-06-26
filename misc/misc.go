@@ -119,7 +119,7 @@ type JsonNicknameAbout struct {
 type JsonDescrBrandTag struct {
 	Descr   string `json:"descr"`
 	BrandId int    `json:"brand"`
-	TagId   int    `json:"tag"`
+	TagIds  []int  `json:"tags"`
 }
 
 type JsonEmailPassword struct {

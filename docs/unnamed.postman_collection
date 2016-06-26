@@ -134,12 +134,12 @@
 			"tests": null,
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1466840639718,
+			"time": 1466934146611,
 			"name": "Create a new purchase",
 			"description": "",
 			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
 			"responses": [],
-			"rawModeData": "{\"descr\":\"sadfsd\", \"brand\":1, \"tag\":6}"
+			"rawModeData": "{\"descr\":\"sadfsd\", \"brand\":1, \"tags\":[6]}"
 		},
 		{
 			"id": "477ad7d6-bd19-a5e7-ace2-c70117fe127c",
@@ -330,7 +330,7 @@
 			"currentHelper": "normal",
 			"helperAttributes": {},
 			"time": 1466051740474,
-			"name": "Get purchase with a particular ID",
+			"name": "Get purchase by ID",
 			"description": "",
 			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
 			"responses": []
