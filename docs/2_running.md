@@ -9,7 +9,7 @@ Run `01_setting_up.sql` and `02_populate.sql` from an `SQL` folder or just run a
 or [Navicat](https://www.navicat.com/products/navicat-for-postgresql) to view your database. 
 
 You can interact with a server using cURL or better install a browser extension 
-[PostMan](https://www.getpostman.com/). Import data from `unnamed.postman_collection` file. It has 
+[PostMan](https://www.getpostman.com/). Import data from [`unnamed.postman_collection`](unnamed.postman_collection) file. It has 
 all the routes predefined with all required parameters.
 
 ### API design
