@@ -4,8 +4,8 @@ Run `go run index.go`, which will start a server on 8080 port. If you go to [htt
 you will see `404 page not found` which is expected, because this is a [REST application](https://en.wikipedia.org/wiki/Representational_state_transfer).
 
 Before you can have any meaningful interaction with a server, you have to initialize a database.
-Run `01_setting_up.sql` and `02_populate.sql` from an `SQL` folder or just run a python file 
-`set_up_database.py` which will initialize everything for you. You can install [Postico](https://eggerapps.at/postico/)
+Run `01_setting_up.sql` and `02_populate.sql` from an `SQL` folder or just `pip install psycopg2` and run a python file 
+[`set_up_database.py`](../SQL/set_up_database.py) which will initialize everything for you. You can install [Postico](https://eggerapps.at/postico/)
 or [Navicat](https://www.navicat.com/products/navicat-for-postgresql) to view your database. 
 
 You can interact with a server using cURL or better install a browser extension 
