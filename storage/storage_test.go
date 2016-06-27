@@ -21,10 +21,10 @@ const (
 )
 
 var AllPurchases = map[int]misc.Purchase{
-	1: {1, "some_img", "Look at my new drone", 1, 0, []int{}, 0, 0},
-	2: {2, "some_img", "How cool am I?", 4, 0, []int{}, 5, 0},
-	3: {3, "some_img", "I really like drones", 1, 0, []int{}, 0, 3},
-	4: {4, "some_img", "Now I am fond of cars", 1, 0, []int{}, 4, 1},
+	1: {1, "some_img", "Look at my new drone", 1, 0, []int{2}, 0, 0},
+	2: {2, "some_img", "How cool am I?", 4, 0, []int{3, 5}, 5, 0},
+	3: {3, "some_img", "I really like drones", 1, 0, []int{4}, 0, 3},
+	4: {4, "some_img", "Now I am fond of cars", 1, 0, []int{2}, 4, 1},
 }
 
 var AllBrands = map[int]misc.Brand{
@@ -119,7 +119,7 @@ func TestMain(m *testing.M) {
 	retCode := m.Run()
 
 	defer Db.Close()
-	//cleanUpDb()
+	cleanUpDb()
 	os.Exit(retCode)
 }
 
@@ -802,6 +802,10 @@ func TestGetUserPurchases(t *testing.T) {
 	if p.Id != o.Id || p.Image != o.Image || p.Description != o.Description || p.Likes_num != o.Likes_num || p.User_id != o.User_id || p.Brand != o.Brand {
 		t.Errorf("Expect %v. Got %v", o, p)
 	}
+
+	if !reflect.DeepEqual(p.Tags, o.Tags) {
+		t.Errorf("Expect %v. Got %v", o.Tags, p.Tags)
+	}
 }
 
 func TestGetAllPurchases(t *testing.T) {
@@ -821,6 +825,10 @@ func TestGetAllPurchases(t *testing.T) {
 		if p.Image != v.Image || p.Description != v.Description || p.User_id != v.User_id ||
 			p.Brand != v.Brand || p.Likes_num != v.Likes_num {
 			t.Errorf("Purcahse %v. Expect %v, got %v", v.Id, v, p)
+		}
+
+		if !reflect.DeepEqual(p.Tags, v.Tags) {
+			t.Errorf("Purcahse %v. Expect %v, got %v", v.Id, v.Tags, p.Tags)
 		}
 	}
 }
@@ -846,6 +854,10 @@ func TestGetPurchase(t *testing.T) {
 		if p.Id != v.p.Id || p.Image != v.p.Image || p.Description != v.p.Description ||
 			p.User_id != v.p.User_id || p.Brand != v.p.Brand || p.Likes_num != v.p.Likes_num {
 			t.Errorf("Case %v. Expect %v. Got %v", num, p, v.p)
+		}
+
+		if !reflect.DeepEqual(p.Tags, v.p.Tags) {
+			t.Errorf("Purcahse %v. Expect %v, got %v", v.id, v.p.Tags, p.Tags)
 		}
 	}
 
@@ -890,6 +902,10 @@ func TestGetAllPurchasesWithBrand(t *testing.T) {
 					expected.Likes_num != p.Likes_num || expected.Brand != p.Brand {
 					t.Errorf("Expect %v. Got %v", expected, p)
 				}
+
+				if !reflect.DeepEqual(p.Tags, expected.Tags) {
+					t.Errorf("Expect %v, got %v", expected.Tags, p.Tags)
+				}
 			}
 		}
 	}
@@ -929,6 +945,10 @@ func TestGetAllPurchasesWithTag(t *testing.T) {
 				if expected.Id != p.Id || expected.Image != p.Image || expected.Description != p.Description ||
 					expected.Likes_num != p.Likes_num || expected.Brand != p.Brand {
 					t.Errorf("Expect %v. Got %v", expected, p)
+				}
+
+				if !reflect.DeepEqual(p.Tags, expected.Tags) {
+					t.Errorf("Expect %v, got %v", expected.Tags, p.Tags)
 				}
 			}
 		}
