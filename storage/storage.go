@@ -4,6 +4,7 @@ package storage
 import (
 	"../auth"
 	"../misc"
+	"bytes"
 	"database/sql"
 	"errors"
 	"fmt"
@@ -13,7 +14,6 @@ import (
 	"strconv"
 	"strings"
 	"time"
-	"bytes"
 )
 
 var Db *sql.DB
@@ -301,7 +301,6 @@ func validateTags(tagIds []int) (error, int) {
 		return errors.New("too many tags"), misc.WrongTagsNum
 	}
 
-
 	buf := bytes.NewBufferString("SELECT COUNT(id) FROM tags WHERE id IN (")
 	for i, v := range tagIds {
 		if v <= 0 {
@@ -316,7 +315,7 @@ func validateTags(tagIds []int) (error, int) {
 
 	num := 0
 	if err := Db.QueryRow(buf.String()).Scan(&num); err != nil {
-    	return err, misc.NothingToReport
+		return err, misc.NothingToReport
 	}
 
 	if num != len(tagIds) {
@@ -640,7 +639,7 @@ func getPurchases(rows *sql.Rows, err error) ([]*misc.Purchase, int) {
 			return []*misc.Purchase{}, misc.NothingToReport
 		}
 
-		for _, v := range strings.Split(tagString[1:len(tagString) - 1], ",") {
+		for _, v := range strings.Split(tagString[1:len(tagString)-1], ",") {
 			if tagId, err := strconv.Atoi(v); err != nil {
 				log.Println(err)
 				return []*misc.Purchase{}, misc.NothingToReport
@@ -753,13 +752,10 @@ func CreatePurchase(userId int, description string, brandId int, tagsId []int) (
 		VALUES ('', $1, $2, $3, $4)
 		RETURNING id`, description, userId, tagsToInsert, brandId).Scan(&id)
 	if err != nil {
-		log.Println(err)
-		return 0, misc.NothingToReport
-	}
-
-	if err, code := checkSpecificDriverErrors(err); err != nil {
-		log.Println(err)
-		return 0, code
+		if err, code := checkSpecificDriverErrors(err); err != nil {
+			log.Println(err)
+			return 0, code
+		}
 	}
 
 	sqlResult, err := Db.Exec(`
@@ -834,7 +830,7 @@ func GetPurchase(purchaseId int) (misc.Purchase, int) {
 		return misc.Purchase{}, misc.NothingToReport
 	}
 
-	for _, v := range strings.Split(tagString[1:len(tagString) - 1], ",") {
+	for _, v := range strings.Split(tagString[1:len(tagString)-1], ",") {
 		if tagId, err := strconv.Atoi(v); err != nil {
 			log.Println(err)
 			return misc.Purchase{}, misc.NoElement

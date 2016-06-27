@@ -10,8 +10,10 @@ import (
 	"math/rand"
 	"os"
 	"os/exec"
+	"reflect"
 	"sort"
 	"testing"
+	"time"
 )
 
 const (
@@ -117,7 +119,7 @@ func TestMain(m *testing.M) {
 	retCode := m.Run()
 
 	defer Db.Close()
-	cleanUpDb()
+	//cleanUpDb()
 	os.Exit(retCode)
 }
 
@@ -1033,6 +1035,71 @@ func TestUnlikePurchase(t *testing.T) {
 		p, _ := GetPurchase(v.purchaseId)
 		if p.Likes_num != v.likesNum {
 			t.Errorf("Case %v. Expect %v likes. Got %v", num, v.likesNum, p.Likes_num)
+		}
+	}
+}
+
+func TestCreatePurchase(t *testing.T) {
+	cleanUpDb()
+
+	tableSuccess := []struct {
+		userId  int
+		descr   string
+		brandId int
+		tagIds  []int
+	}{
+		{7, randomString(misc.MaxLenB, 0, 0), 1, []int{4}},
+		{2, randomString(misc.MaxLenB, 0, 1), 4, []int{2}},
+		{1, randomString(misc.MaxLenB, 0, 0), 0, []int{2}},
+		{4, randomString(misc.MaxLenB, 0, 0), 0, []int{2, 1}},
+		{6, randomString(misc.MaxLenB, 0, 0), 1, []int{2, 4, 1}},
+		{5, randomString(misc.MaxLenB, 0, 0), 1, []int{2, 4, 5, 3}},
+	}
+	for num, v := range tableSuccess {
+		timeNow := time.Now().Unix()
+		id, code := CreatePurchase(v.userId, v.descr, v.brandId, v.tagIds)
+		if code != misc.NothingToReport {
+			t.Errorf("Case %v. Expect correct execution. Got %v", num, code)
+		}
+
+		if id != num+len(AllPurchases)+1 {
+			t.Errorf("Case %v. Expect correct ID %v. Got %v", num, num+len(AllPurchases)+1, id)
+		}
+
+		p, _ := GetPurchase(id)
+		if p.Id != id || p.Description != v.descr || p.Brand != v.brandId {
+			t.Errorf("Case %v. Expect %v %v %v. Got %v %v %v", num, p.Id, len(p.Description), p.Brand, id, len(v.descr), v.brandId)
+		}
+
+		if !reflect.DeepEqual(p.Tags, v.tagIds) {
+			t.Errorf("Case %v. Expect %v. Got %v", num, v.tagIds, p.Tags)
+		}
+
+		if timeNow != p.Issued_at {
+			t.Errorf("Case %v. Expect %v. Got %v", num, timeNow, p.Issued_at)
+		}
+	}
+
+	tableFail := []struct {
+		userId  int
+		descr   string
+		brandId int
+		tagIds  []int
+		code    int
+	}{
+		{19, randomString(misc.MaxLenB, 0, 0), 1, []int{4}, misc.DbForeignKeyViolation},
+		{8, randomString(misc.MaxLenB, 0, 0), 1, []int{}, misc.NoTags},
+		{5, randomString(misc.MaxLenB, 0, 0), 1, []int{1, 3, 3}, misc.WrongTags},
+		{1, randomString(misc.MaxLenB, 0, 0), 1, []int{1, 3, 9}, misc.WrongTags},
+		{2, randomString(misc.MaxLenB, 0, 0), 1, []int{1, 3, 2, 5, 1}, misc.WrongTagsNum},
+		{3, randomString(misc.MaxLenB, 0, 0), 9, []int{1, 3}, misc.DbForeignKeyViolation},
+		{3, randomString(misc.MaxLenB, 1, 0), 2, []int{1, 3}, misc.WrongDescr},
+		{3, randomString(misc.MaxLenB, 1, 1), 2, []int{1, 3}, misc.WrongDescr},
+	}
+	for num, v := range tableFail {
+		id, code := CreatePurchase(v.userId, v.descr, v.brandId, v.tagIds)
+		if id != 0 || code != v.code {
+			t.Errorf("Case %v. Expect failing. Got %v", num, code)
 		}
 	}
 }
