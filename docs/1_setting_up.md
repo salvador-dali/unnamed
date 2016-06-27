@@ -19,9 +19,12 @@ Set up the following env variables (all DB variables are related to your psql da
     export PROJ_DB_PWD=
     export PROJ_DB_PORT=5432
     export PROJ_HTTP_PORT=8080
-    export PROJ_SECRET=secret
-    export PROJ_JWT_EXP_DAYS=365
+    export PROJ_SECRET=asd4q-ass21sflse41r123hsz
+    export PROJ_JWT_EXP_DAYS=2
     export PROJ_SALT_LEN_BYTE=16
+    
+By default after psql installation your password is empty. In this project it is not possible to have
+empty env variables, so you have to change it `ALTER USER "user_name" WITH PASSWORD 'new_password';`
     
 Cd to this repo and set up GOPATH equal to $PWD (on macOS you also need to set GOBIN):
 

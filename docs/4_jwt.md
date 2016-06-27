@@ -4,7 +4,7 @@ authenticated, it makes sense to install a [jwt plugin](https://chrome.google.co
 Frontend developer does not really need to know a lot about JWT. It is sufficient to know that 
 this is a base64 encoded string, that should not be shared with anyone (something like a cookie).
 
-You get this string when a person log in to a site and have to destroy it when a user logs out. If
+You get this string when a person logs in to a site and have to destroy it when a user logs out. If
 a user is logged in, you have to send this string in the header with every his request.
 
 ### Brief description of JWT
