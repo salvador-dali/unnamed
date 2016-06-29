@@ -9,7 +9,7 @@ import (
 const (
 	letterBytes    = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	passwordMinLen = 8
-	ConfCodeLen	   = 20 // length of the confirmation code which will be sent to a newly created user
+	ConfCodeLen    = 20   // length of the confirmation code which will be sent to a newly created user
 	MaxTags        = 4    // maximum number of tags possible for a purchase
 	MaxLenS        = 40   // maximum length of the small field in SQL
 	MaxLenB        = 1000 // maximum length of the big field in SQL

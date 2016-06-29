@@ -413,6 +413,11 @@ func Follow(whoId, whomId int) int {
 		UPDATE users
 		SET followers_num = followers_num + 1
 		WHERE id = $1`, whomId)
+	if err, code := checkSpecificDriverErrors(err); err != nil {
+		log.Println(err)
+		return code
+	}
+
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
 		return code
 	}
@@ -421,6 +426,11 @@ func Follow(whoId, whomId int) int {
 		UPDATE users
 		SET following_num = following_num + 1
 		WHERE id = $1`, whoId)
+	if err, code := checkSpecificDriverErrors(err); err != nil {
+		log.Println(err)
+		return code
+	}
+
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
 		return code
 	}
@@ -455,6 +465,11 @@ func Unfollow(whoId, whomId int) int {
 		UPDATE users
 		SET followers_num = followers_num - 1
 		WHERE id = $1`, whomId)
+	if err, code := checkSpecificDriverErrors(err); err != nil {
+		log.Println(err)
+		return code
+	}
+
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
 		return code
 	}
@@ -463,6 +478,11 @@ func Unfollow(whoId, whomId int) int {
 		UPDATE users
 		SET following_num = following_num - 1
 		WHERE id = $1`, whoId)
+	if err, code := checkSpecificDriverErrors(err); err != nil {
+		log.Println(err)
+		return code
+	}
+
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
 		return code
 	}
@@ -621,6 +641,22 @@ func Login(email, password string) (string, bool) {
 	return jwt, true
 }
 
+func VerifyEmail(userId int, confString string) bool {
+	sqlResult, err := Db.Exec(`
+		UPDATE users
+		SET verified = True, confirmation_code = ''
+		WHERE verified = False AND id = $1 AND confirmation_code = $2`, userId, confString)
+	if err, _ := checkSpecificDriverErrors(err); err != nil {
+		log.Println(err)
+		return false
+	}
+
+	if err, _ := isAffectedOneRow(sqlResult); err != nil {
+		return false
+	}
+	return true
+}
+
 // --- Purchases ---
 
 func getPurchases(rows *sql.Rows, err error) ([]*misc.Purchase, int) {
@@ -762,6 +798,11 @@ func CreatePurchase(userId int, description string, brandId int, tagsId []int) (
 		UPDATE users
 		SET purchases_num = purchases_num + 1
 		WHERE id=$1`, userId)
+	if err, code := checkSpecificDriverErrors(err); err != nil {
+		log.Println(err)
+		return 0, code
+	}
+
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
 		return 0, code
 	}
@@ -876,6 +917,11 @@ func LikePurchase(purchaseId, userId int) int {
 		UPDATE purchases
 		SET likes_num = likes_num + 1
 		WHERE id = $1`, purchaseId)
+	if err, code := checkSpecificDriverErrors(err); err != nil {
+		log.Println(err)
+		return code
+	}
+
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
 		return code
 	}
@@ -915,6 +961,11 @@ func UnlikePurchase(purchaseId, userId int) int {
 		UPDATE purchases
 		SET likes_num = likes_num - 1
 		WHERE id = $1`, purchaseId)
+	if err, code := checkSpecificDriverErrors(err); err != nil {
+		log.Println(err)
+		return code
+	}
+
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
 		return code
 	}
@@ -955,6 +1006,11 @@ func AskQuestion(purchaseId, userId int, question string) (int, int) {
 		UPDATE users
 		SET questions_num = questions_num + 1
 		WHERE id = $1`, userId)
+	if err, code := checkSpecificDriverErrors(err); err != nil {
+		log.Println(err)
+		return 0, code
+	}
+
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
 		return 0, code
 	}
@@ -996,6 +1052,11 @@ func AnswerQuestion(questionId, userId int, answer string) (int, int) {
 		UPDATE users
 		SET answers_num = answers_num + 1
 		WHERE id = $1`, userId)
+	if err, code := checkSpecificDriverErrors(err); err != nil {
+		log.Println(err)
+		return 0, code
+	}
+
 	if err, code := isAffectedOneRow(sqlResult); err != nil {
 		return 0, code
 	}

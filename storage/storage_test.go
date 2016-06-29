@@ -696,9 +696,9 @@ func TestCreateUser(t *testing.T) {
 		password string
 		userId   int
 	}{
-		{"User_134", "email@gmail.com", "just_some_password", 10},
-		{"stuff", "email@somemail.com", "anotherPa$$W0rt", 11},
-		{"another", "random@yahoo.com", "anotherPa$$W0rt", 12},
+		{"User_134", "email@gmail.com", "just_some_password", 11},
+		{"stuff", "email@somemail.com", "anotherPa$$W0rt", 12},
+		{"another", "random@yahoo.com", "anotherPa$$W0rt", 13},
 	}
 	for num, v := range tableSuccess {
 		userId, code := CreateUser(v.nickname, v.email, v.password)
@@ -766,6 +766,30 @@ func TestLogin(t *testing.T) {
 		if ok || jwt != "" {
 			t.Errorf("Case %v. Expect to fail. Got %v, %v", num, ok, jwt)
 		}
+	}
+}
+
+func TestVerifyEmail(t *testing.T) {
+	cleanUpDb()
+
+	tableFail := []struct {
+		userId     int
+		verifyCode string
+	}{
+		{11, "pqaJaBRgAvzLXqzRrrUI"},
+		{1, ""},
+		{5, "pqaJaBRgAvzLXqzRrrUI"},
+		{500, "pqaJaBRgAvzLXqzRrrUIsafasdfsad"},
+		{10, "pqaJaBRgAvzLXqzRrrUIsafasdfsad"},
+	}
+	for num, v := range tableFail {
+		if VerifyEmail(v.userId, v.verifyCode) {
+			t.Errorf("Case %v. Expect to fail. Got True", num)
+		}
+	}
+
+	if !VerifyEmail(10, "pqaJaBRgAvzLXqzRrrUI") {
+		t.Errorf("Expect to verify email. Got False")
 	}
 }
 
@@ -992,7 +1016,7 @@ func TestLikePurchase(t *testing.T) {
 		{3, 2, misc.DbDuplicate, 4},
 		{0, 2, misc.NoPurchase, 0},
 		{9, 1, misc.NoPurchase, 0},
-		{1, 10, misc.DbForeignKeyViolation, 3},
+		{1, 11, misc.DbForeignKeyViolation, 3},
 	}
 	for num, v := range tableFail {
 		code := LikePurchase(v.purchaseId, v.userId)
