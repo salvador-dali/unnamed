@@ -43,6 +43,7 @@ func main() {
 	api.GET("/users/:id/followers", routes.GetFollowers)
 	api.GET("/users/:id/following", routes.GetFollowing)
 	api.GET("/users/:id/purchases", routes.GetUserPurchases)
+	api.GET("/users/verify/:id/:code", routes.VerifyEmail)
 
 	// Purchases
 	api.GET("/purchases", routes.GetAllPurchases)

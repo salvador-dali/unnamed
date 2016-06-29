@@ -530,3 +530,16 @@ func CreateUser(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		sendJson(w, misc.Id{id}, http.StatusCreated)
 	}
 }
+
+func VerifyEmail(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+
+	userId := validateNumeric(w, ps["id"])
+	if userId <= 0 {
+		return
+	}
+
+	if ok := storage.VerifyEmail(userId, ps["code"]); !ok {
+		w.WriteHeader(http.StatusBadRequest)
+	}
+}

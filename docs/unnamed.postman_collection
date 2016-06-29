@@ -78,7 +78,7 @@
 			"currentHelper": "normal",
 			"helperAttributes": {},
 			"time": 1466766154364,
-			"name": "Start following user with a particular ID",
+			"name": "Start following user with ID",
 			"description": "",
 			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
 			"responses": []
@@ -134,12 +134,12 @@
 			"tests": null,
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1466934146611,
+			"time": 1466967788555,
 			"name": "Create a new purchase",
 			"description": "",
 			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
 			"responses": [],
-			"rawModeData": "{\"descr\":\"sadfsd\", \"brand\":1, \"tags\":[6]}"
+			"rawModeData": "{\"descr\":\"sadfsd\", \"brand\":1, \"tags\":[6, 1, 4, 3]}"
 		},
 		{
 			"id": "477ad7d6-bd19-a5e7-ace2-c70117fe127c",
@@ -213,7 +213,7 @@
 			"currentHelper": "normal",
 			"helperAttributes": {},
 			"time": 1466050082451,
-			"name": "Get all purchases marked with a particular brand",
+			"name": "Get all purchases marked with a brand",
 			"description": "",
 			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
 			"responses": []
@@ -349,7 +349,7 @@
 			"currentHelper": "normal",
 			"helperAttributes": {},
 			"time": 1466766781252,
-			"name": "Ask a question about a particular purchase",
+			"name": "Ask a question about a purchase",
 			"description": "",
 			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
 			"responses": [],
@@ -506,7 +506,7 @@
 			"currentHelper": "normal",
 			"helperAttributes": {},
 			"time": 1466050359730,
-			"name": "Get all purchases marked with a particular tag",
+			"name": "Get all purchases marked with a tag",
 			"description": "",
 			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
 			"responses": []
@@ -612,7 +612,7 @@
 		{
 			"id": "ecb23731-2c8d-2507-c013-4a5212012682",
 			"headers": "",
-			"url": "http://localhost:8080/api/v1/users/me/email/HASH",
+			"url": "http://localhost:8080/api/v1/users/verify/10/pqaJaBRgAvzLXqzRrrUI",
 			"preRequestScript": null,
 			"pathVariables": {},
 			"method": "GET",
@@ -622,7 +622,7 @@
 			"tests": null,
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1465539054012,
+			"time": 1467185246778,
 			"name": "Verify user after having hash from email",
 			"description": "",
 			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
