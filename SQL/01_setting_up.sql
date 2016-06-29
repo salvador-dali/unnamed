@@ -33,6 +33,7 @@ CREATE TABLE "users" (
     "password" bytea NOT NULL,
     "salt" bytea NOT NULL,
     "verified" boolean NOT NULL DEFAULT FALSE,
+    "confirmation_code" varchar(20) NOT NULL DEFAULT '',
     PRIMARY KEY ("id"),
     UNIQUE ("nickname"),
     UNIQUE ("email")
@@ -57,6 +58,7 @@ COMMENT ON COLUMN "users"."email" IS 'Email address of a person';
 COMMENT ON COLUMN "users"."password" IS 'Scrypt of a password';
 COMMENT ON COLUMN "users"."salt" IS 'Salt for a password';
 COMMENT ON COLUMN "users"."verified" IS 'Whether a person verified email address';
+COMMENT ON COLUMN "users"."confirmation_code" IS 'Confirmation code sent to a person on registration. Empty when a person is verified.';
 
 -- Followers
 CREATE TABLE "followers" (

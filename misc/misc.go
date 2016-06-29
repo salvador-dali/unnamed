@@ -1,12 +1,15 @@
 package misc
 
 import (
+	"math/rand"
 	"net/mail"
 	"strings"
 )
 
 const (
+	letterBytes    = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ"
 	passwordMinLen = 8
+	ConfCodeLen	   = 20 // length of the confirmation code which will be sent to a newly created user
 	MaxTags        = 4    // maximum number of tags possible for a purchase
 	MaxLenS        = 40   // maximum length of the small field in SQL
 	MaxLenB        = 1000 // maximum length of the big field in SQL
@@ -157,4 +160,12 @@ func ValidateEmail(str string) (string, bool) {
 	}
 
 	return e.Address, true
+}
+
+func RandomString(n int) string {
+	b := make([]byte, n)
+	for i := range b {
+		b[i] = letterBytes[rand.Int63()%int64(len(letterBytes))]
+	}
+	return string(b)
 }

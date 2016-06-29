@@ -576,9 +576,9 @@ func CreateUser(nickname, email, password string) (int, int) {
 
 	userId := 0
 	err = Db.QueryRow(`
-		INSERT INTO users (nickname, email, password, salt)
-		VALUES ($1, $2, $3, $4)
-		RETURNING id`, nickname, email, hash, salt,
+		INSERT INTO users (nickname, email, password, salt, confirmation_code)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id`, nickname, email, hash, salt, misc.RandomString(misc.ConfCodeLen),
 	).Scan(&userId)
 	if err == nil {
 		return userId, misc.NothingToReport

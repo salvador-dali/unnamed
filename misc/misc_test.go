@@ -76,3 +76,12 @@ func TestValidateEmail(t *testing.T) {
 		}
 	}
 }
+
+func TestRandomString(t *testing.T) {
+	for _, v := range []int{5, 2, 3, 10} {
+		s := RandomString(v)
+		if len(s) != v {
+			t.Errorf("Expected %v. Got %v", v, len(s))
+		}
+	}
+}
