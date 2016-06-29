@@ -53,3 +53,16 @@ from slices (maps do not run deterministically)
 	for _, v := range tableSuccess {
 	    ...
 	}
+
+
+### Test coverage
+
+Covered in details on [official Go blog](https://blog.golang.org/cover). Install the tool:
+`go get golang.org/x/tools/cmd/cover`. To see just a bare metrics run:
+
+    go test ./storage/ -cover
+    >> ok  	unnamed/storage	6.166s	coverage: 69.2% of statements
+    
+The metric itself is not really helpful to understand which parts are not covered with tests.
+To understand what is not covered, generate the coverage plan: `go test ./auth/ -coverprofile=coverage.out`
+and see it in the browser with `go tool cover -html=coverage.out`
