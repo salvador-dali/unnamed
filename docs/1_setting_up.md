@@ -24,7 +24,7 @@ Set up the following env variables (all DB variables are related to your psql da
     export PROJ_SALT_LEN_BYTE=16
     export PROJ_MAILGUN_DOMAIN=sandbox4d69a15edfe64dfaa3680f1a19fa50fa.mailgun.org
     export PROJ_MAILGUN_PRIVATE=
-    export PROJ_MAILGUN_PUBLIC=pubkey-703cb3b4f8ee0807862184954ff7c252
+    export PROJ_MAILGUN_PUBLIC=
     
 By default after psql installation your password is empty. In this project it is not possible to have
 empty env variables, so you have to change it `ALTER USER "user_name" WITH PASSWORD 'new_password';`
