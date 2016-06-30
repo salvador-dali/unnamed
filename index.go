@@ -2,6 +2,7 @@ package main
 
 import (
 	"./config"
+	"./mailer"
 	"./routes"
 	"./storage"
 	"fmt"
@@ -11,9 +12,10 @@ import (
 )
 
 func main() {
-	// Initializes config and a database
+	// Initializes config, mailer, database
 	config.Init()
-	storage.Init(config.Cfg.DbUser, config.Cfg.DbPass, config.Cfg.DbHost, config.Cfg.DbName, config.Cfg.DbPort)
+	mailer.Init()
+	storage.Init()
 	defer storage.Db.Close()
 
 	// Creates a router

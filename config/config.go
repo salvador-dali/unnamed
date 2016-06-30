@@ -9,15 +9,18 @@ import (
 
 // Config stores environment variables
 type Config struct {
-	DbName   string
-	DbUser   string
-	DbHost   string
-	DbPass   string
-	DbPort   int
-	HttpPort int
-	Secret   []byte
-	ExpDays  int
-	SaltLen  int
+	DbName      string
+	DbUser      string
+	DbHost      string
+	DbPass      string
+	DbPort      int
+	HttpPort    int
+	Secret      []byte
+	ExpDays     int
+	SaltLen     int
+	MailDomain  string
+	MailPrivate string
+	MailPublic  string
 }
 
 var Cfg Config
@@ -34,6 +37,9 @@ func Init() {
 		[]byte(GetEnvStr("PROJ_SECRET")),
 		GetEnvInt("PROJ_JWT_EXP_DAYS"),
 		GetEnvInt("PROJ_SALT_LEN_BYTE"),
+		GetEnvStr("PROJ_MAILGUN_DOMAIN"),
+		GetEnvStr("PROJ_MAILGUN_PRIVATE"),
+		GetEnvStr("PROJ_MAILGUN_PUBLIC"),
 	}
 	Cfg = cfg
 }

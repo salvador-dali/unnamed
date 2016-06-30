@@ -99,13 +99,13 @@ func isSortedArrayEquivalentToArray(arrSorted, arr []int) bool {
 func isApproximatelyNow(createdTime int64) bool {
 	// sometimes time can be one off. This causes a lot of confusion in the tests.
 	timeNow := time.Now().Unix()
-	return timeNow == createdTime || timeNow - 1 == createdTime
+	return timeNow == createdTime || timeNow-1 == createdTime
 }
 
 func initializeDb() {
 	// initialize Db connection
 	config.Init()
-	Init(config.Cfg.DbUser, config.Cfg.DbPass, config.Cfg.DbHost, config.Cfg.DbName, config.Cfg.DbPort)
+	Init()
 }
 
 func cleanUpDb() {

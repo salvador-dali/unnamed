@@ -3,6 +3,7 @@ package storage
 
 import (
 	"../auth"
+	"../config"
 	"../misc"
 	"bytes"
 	"database/sql"
@@ -21,8 +22,9 @@ var Db *sql.DB
 // Init prepares the database abstraction for later use. It does not establish any connections to
 // the database, nor does it validate driver connection parameters. To do this call Ping
 // http://go-database-sql.org/accessing.html
-func Init(user, pass, host, name string, port int) {
-	dbURL := fmt.Sprintf("postgresql://%s:%s@%s:%d/%s?sslmode=disable", user, pass, host, port, name)
+func Init() {
+	dbURL := fmt.Sprintf("postgresql://%s:%s@%s:%d/%s?sslmode=disable", config.Cfg.DbUser,
+		config.Cfg.DbPass, config.Cfg.DbHost, config.Cfg.DbPort, config.Cfg.DbName)
 	log.SetFlags(log.LstdFlags | log.Lshortfile)
 	db, err := sql.Open("postgres", dbURL)
 	if err != nil {
