@@ -96,6 +96,12 @@ func isSortedArrayEquivalentToArray(arrSorted, arr []int) bool {
 	return true
 }
 
+func isApproximatelyNow(createdTime int64) bool {
+	// sometimes time can be one off. This causes a lot of confusion in the tests.
+	timeNow := time.Now().Unix()
+	return timeNow == createdTime || timeNow - 1 == createdTime
+}
+
 func initializeDb() {
 	// initialize Db connection
 	config.Init()
@@ -1100,7 +1106,6 @@ func TestCreatePurchase(t *testing.T) {
 		{5, randomString(misc.MaxLenB, 0, 0), 1, []int{2, 4, 5, 3}},
 	}
 	for num, v := range tableSuccess {
-		timeNow := time.Now().Unix()
 		id, code := CreatePurchase(v.userId, v.descr, v.brandId, v.tagIds)
 		if code != misc.NothingToReport {
 			t.Errorf("Case %v. Expect correct execution. Got %v", num, code)
@@ -1119,8 +1124,8 @@ func TestCreatePurchase(t *testing.T) {
 			t.Errorf("Case %v. Expect %v. Got %v", num, v.tagIds, p.Tags)
 		}
 
-		if timeNow != p.Issued_at {
-			t.Errorf("Case %v. Expect %v. Got %v", num, timeNow, p.Issued_at)
+		if !isApproximatelyNow(p.Issued_at) {
+			t.Errorf("Case %v. Time %v is not approximately now", num, p.Issued_at)
 		}
 	}
 
