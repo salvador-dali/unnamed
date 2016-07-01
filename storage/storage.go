@@ -596,13 +596,14 @@ func CreateUser(nickname, email, password string) (int, int) {
 		return 0, misc.NothingToReport
 	}
 
-	userId := 0
+	userId, confirmationCode := 0, misc.RandomString(misc.ConfCodeLen)
 	err = Db.QueryRow(`
 		INSERT INTO users (nickname, email, password, salt, confirmation_code)
 		VALUES ($1, $2, $3, $4, $5)
-		RETURNING id`, nickname, email, hash, salt, misc.RandomString(misc.ConfCodeLen),
+		RETURNING id`, nickname, email, hash, salt, confirmationCode,
 	).Scan(&userId)
 	if err == nil {
+		log.Println("Confirmation code", confirmationCode)
 		return userId, misc.NothingToReport
 	}
 
@@ -617,13 +618,13 @@ func Login(email, password string) (string, bool) {
 		return "", false
 	}
 
-	userId, hash, salt := 0, make([]byte, 32), make([]byte, 16)
+	userId, hash, salt, verified := 0, make([]byte, 32), make([]byte, 16), false
 
 	if err := Db.QueryRow(`
-		SELECT id, password, salt
+		SELECT id, password, salt, verified
 		FROM users
 		WHERE email = $1`, email,
-	).Scan(&userId, &hash, &salt); err != nil {
+	).Scan(&userId, &hash, &salt, &verified); err != nil {
 		return "", false
 	}
 
@@ -636,27 +637,33 @@ func Login(email, password string) (string, bool) {
 		return "", false
 	}
 
-	jwt, err := auth.CreateJWT(userId)
+	jwt, err := auth.CreateJWT(userId, verified)
 	if err != nil {
 		return "", false
 	}
 	return jwt, true
 }
 
-func VerifyEmail(userId int, confString string) bool {
+func VerifyEmail(userId int, confString string) (string, bool) {
 	sqlResult, err := Db.Exec(`
 		UPDATE users
 		SET verified = True, confirmation_code = ''
 		WHERE verified = False AND id = $1 AND confirmation_code = $2`, userId, confString)
 	if err, _ := checkSpecificDriverErrors(err); err != nil {
 		log.Println(err)
-		return false
+		return "", false
 	}
 
 	if err, _ := isAffectedOneRow(sqlResult); err != nil {
-		return false
+		return "", false
 	}
-	return true
+
+	jwt, err := auth.CreateJWT(userId, true)
+	if err != nil {
+		return "", false
+	}
+
+	return jwt, true
 }
 
 // --- Purchases ---

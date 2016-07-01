@@ -4,6 +4,7 @@ docs/lectures_startup.md
 src
 tmp/
 bin/
+pkg/
 *.out
 .env
 todo.md

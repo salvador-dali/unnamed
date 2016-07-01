@@ -30,7 +30,9 @@ small memory allocation](https://github.com/dimfeld/go-http-routing-benchmark).
 ###  Tests
 
 To run a test, run `go test ./folder` or go to that directory and run `go test`.
-To run a single test, run `go test -run TestName`. You can add `-v` to see more details. 
+To run a single test, run `go test -run TestName`. You can add `-v` to see more details.
+
+If you want to run all tests, simply execute [all_tests.sh](../all_tests.sh): `./all_test.sh`
 
 ### How to write tests
 

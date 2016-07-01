@@ -26,7 +26,7 @@ func TestCreateJWT(t *testing.T) {
 
 	currentTime := int(time.Now().Unix())
 	for _, v := range []int{6, 2, 1, 5, 8} {
-		jwt, err := CreateJWT(v)
+		jwt, err := CreateJWT(v, true)
 		if err != nil {
 			t.Errorf("Expect correct jwt. Got %v", err)
 		}

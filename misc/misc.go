@@ -100,9 +100,10 @@ type Purchase struct {
 
 // JwtToken stores authorization information about a user
 type JwtToken struct {
-	UserId int
-	Iat    int
-	Exp    int
+	UserId   int
+	Iat      int
+	Exp      int
+	Verified bool
 }
 
 type JsonName struct {

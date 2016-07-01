@@ -789,12 +789,12 @@ func TestVerifyEmail(t *testing.T) {
 		{10, "pqaJaBRgAvzLXqzRrrUIsafasdfsad"},
 	}
 	for num, v := range tableFail {
-		if VerifyEmail(v.userId, v.verifyCode) {
+		if _, ok := VerifyEmail(v.userId, v.verifyCode); ok {
 			t.Errorf("Case %v. Expect to fail. Got True", num)
 		}
 	}
 
-	if !VerifyEmail(10, "pqaJaBRgAvzLXqzRrrUI") {
+	if _, ok := VerifyEmail(10, "pqaJaBRgAvzLXqzRrrUI"); !ok {
 		t.Errorf("Expect to verify email. Got False")
 	}
 }

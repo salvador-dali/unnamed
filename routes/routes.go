@@ -83,6 +83,11 @@ func getUserId(r *http.Request, w http.ResponseWriter) int {
 		return 0
 	}
 
+	if !jwtToken.Verified {
+		w.WriteHeader(http.StatusUnauthorized)
+		return 0
+	}
+
 	return jwtToken.UserId
 }
 
@@ -539,7 +544,9 @@ func VerifyEmail(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	if ok := storage.VerifyEmail(userId, ps["code"]); !ok {
+	if jwt, ok := storage.VerifyEmail(userId, ps["code"]); ok {
+		sendJson(w, misc.Jwt{jwt}, http.StatusOK)
+	} else {
 		w.WriteHeader(http.StatusBadRequest)
 	}
 }

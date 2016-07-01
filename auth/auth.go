@@ -20,13 +20,18 @@ const (
 	hashKeyLen = 32
 )
 
-func CreateJWT(userId int) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
+func CreateJWT(userId int, verified bool) (string, error) {
+	claims := jwt.MapClaims{
 		"id":  userId,
 		"iat": time.Now().Unix(),
 		"exp": time.Now().Add(time.Hour * 24 * time.Duration(config.Cfg.ExpDays)).Unix(),
-	})
+	}
 
+	if !verified {
+		claims["unverified"] = 1
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
 	return token.SignedString(config.Cfg.Secret)
 }
 
@@ -49,19 +54,28 @@ func ValidateJWT(jwtToken string) (misc.JwtToken, error) {
 
 	var jwtJson misc.JwtToken
 	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		if len(claims) != 3 {
+		if len(claims) < 3 || len(claims) > 4 {
 			return misc.JwtToken{}, errors.New("Token with wrong number of claims")
 		}
 		_, ok1 := claims["id"]
 		_, ok2 := claims["iat"]
 		_, ok3 := claims["exp"]
 		if !(ok1 && ok2 && ok3) {
-			return misc.JwtToken{}, errors.New("One of the claims is missing")
+			return misc.JwtToken{}, errors.New("One of the required claims is missing")
 		}
 
+		// required claims
 		jwtJson.UserId = int(claims["id"].(float64))
 		jwtJson.Iat = int(claims["iat"].(float64))
 		jwtJson.Exp = int(claims["exp"].(float64))
+
+		// optional claims
+		if _, ok := claims["unverified"]; ok {
+			jwtJson.Verified = false
+		} else {
+			jwtJson.Verified = true
+		}
+
 		return jwtJson, nil
 	}
 
@@ -74,7 +88,7 @@ func ExtendJWT(jwtToken string) (string, error) {
 		return "", err
 	}
 
-	return CreateJWT(token.UserId)
+	return CreateJWT(token.UserId, true)
 }
 
 func GenerateSalt() ([]byte, error) {
