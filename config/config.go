@@ -61,3 +61,12 @@ func GetEnvInt(key string) int {
 	}
 	return val
 }
+
+// GetEnvBool returns a environment variable as a boolean. Accepts only true, false. Panics otherwise
+func GetEnvBool(key string) bool {
+	val, err := strconv.ParseBool(GetEnvStr(key))
+	if err != nil {
+		panic("")
+	}
+	return val
+}

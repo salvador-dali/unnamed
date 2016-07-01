@@ -49,3 +49,37 @@ func TestRequiredIntEnvIsMissing(t *testing.T) {
 	}()
 	GetEnvInt("PROJ_FAKE_ENV")
 }
+
+func TestRequiredBoolEnvIsPresent(t *testing.T) {
+	os.Setenv("PROJ_FAKE_ENV", "true")
+	if v := GetEnvBool("PROJ_FAKE_ENV"); !v {
+		t.Errorf("Expected boolean True, got %t", v)
+	}
+
+	os.Setenv("PROJ_FAKE_ENV", "false")
+	if v := GetEnvBool("PROJ_FAKE_ENV"); v {
+		t.Errorf("Expected boolean False, got %t", v)
+	}
+}
+
+func TestRequiredBoolEnvIsNotBool(t *testing.T) {
+	for _, value := range []string{"good", "1", "0", "wrong"} {
+		os.Setenv("PROJ_FAKE_ENV", value)
+		defer func() {
+			if r := recover(); r == nil {
+				t.Errorf("Expected panic from environemnt variable which is not integer")
+			}
+		}()
+		t.Errorf("Expected panic, got: %s", GetEnvInt("PROJ_FAKE_ENV"))
+	}
+}
+
+func TestRequiredBoolEnvIsMissing(t *testing.T) {
+	os.Clearenv()
+	defer func() {
+		if r := recover(); r == nil {
+			t.Errorf("Expected panic, env is missing")
+		}
+	}()
+	GetEnvInt("PROJ_FAKE_ENV")
+}
