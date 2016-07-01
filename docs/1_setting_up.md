@@ -23,8 +23,13 @@ Set up the following env variables (all DB variables are related to your psql da
     export PROJ_JWT_EXP_DAYS=2
     export PROJ_SALT_LEN_BYTE=16
     export PROJ_MAILGUN_DOMAIN=sandbox4d69a15edfe64dfaa3680f1a19fa50fa.mailgun.org
-    export PROJ_MAILGUN_PRIVATE=
-    export PROJ_MAILGUN_PUBLIC=
+    export PROJ_MAILGUN_PRIVATE= // ask me
+    export PROJ_MAILGUN_PUBLIC= // ask me
+    export PROJ_IS_TEST=true
+    export PROJ_TEST_EMAIL= // your email
+    
+When user registers/confirms registration/etc, he receives an email. On a testing setting email is 
+being sent to your email address all the time.
     
 By default after psql installation your password is empty. In this project it is not possible to have
 empty env variables, so you have to change it `ALTER USER "user_name" WITH PASSWORD 'new_password';`

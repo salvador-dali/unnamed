@@ -2,11 +2,16 @@ package mailer
 
 import (
 	"../config"
+	"fmt"
 	mailgun "github.com/mailgun/mailgun-go"
 	"log"
 )
 
 var mailer mailgun.Mailgun
+
+const (
+	emailFrom = "registration@unnamed.com"
+)
 
 func Init() {
 	mailer = mailgun.NewMailgun(config.Cfg.MailDomain, config.Cfg.MailPrivate, config.Cfg.MailPublic)
@@ -24,10 +29,18 @@ func sendMsg(from, subject, text, textHtml, to string) {
 	}
 }
 
-func EmailConfirmation(email string) {
+// getEmail returns either an email address provided to it, or an PROJ_TEST_EMAIL if PROJ_IS_TEST
+func getEmail(email string) string {
+	if config.Cfg.IsTest {
+		return config.Cfg.TestEmail
+	}
 
+	return email
 }
 
-func RegistrationComplete(email string) {
-
+func EmailConfirmation(email, code string) {
+	email = getEmail(email)
+	text := fmt.Sprintf("Your confirmation code is: %s", code)
+	textHtml := fmt.Sprintf("Your confirmation code is: <b>%s</b>", code)
+	sendMsg(emailFrom, "Please confirm your registration", text, textHtml, email)
 }

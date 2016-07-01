@@ -4,6 +4,7 @@ package storage
 
 import (
 	"../config"
+	"../mailer"
 	"../misc"
 	"io/ioutil"
 	"log"
@@ -105,6 +106,7 @@ func isApproximatelyNow(createdTime int64) bool {
 func initializeDb() {
 	// initialize Db connection
 	config.Init()
+	mailer.Init()
 	Init()
 }
 

@@ -8,11 +8,14 @@ import (
 	"fmt"
 	"github.com/dimfeld/httptreemux"
 	"log"
+	"math/rand"
 	"net/http"
+	"time"
 )
 
 func main() {
-	// Initializes config, mailer, database
+	// Initializes randomness, config, mailer, database
+	rand.Seed(time.Now().UnixNano())
 	config.Init()
 	mailer.Init()
 	storage.Init()

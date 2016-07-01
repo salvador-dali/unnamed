@@ -21,6 +21,8 @@ type Config struct {
 	MailDomain  string
 	MailPrivate string
 	MailPublic  string
+	IsTest      bool
+	TestEmail   string
 }
 
 var Cfg Config
@@ -40,6 +42,8 @@ func Init() {
 		GetEnvStr("PROJ_MAILGUN_DOMAIN"),
 		GetEnvStr("PROJ_MAILGUN_PRIVATE"),
 		GetEnvStr("PROJ_MAILGUN_PUBLIC"),
+		GetEnvBool("PROJ_IS_TEST"),
+		GetEnvStr("PROJ_TEST_EMAIL"),
 	}
 	Cfg = cfg
 }

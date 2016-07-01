@@ -4,6 +4,7 @@ package storage
 import (
 	"../auth"
 	"../config"
+	"../mailer"
 	"../misc"
 	"bytes"
 	"database/sql"
@@ -603,7 +604,7 @@ func CreateUser(nickname, email, password string) (int, int) {
 		RETURNING id`, nickname, email, hash, salt, confirmationCode,
 	).Scan(&userId)
 	if err == nil {
-		log.Println("Confirmation code", confirmationCode)
+		mailer.EmailConfirmation(email, confirmationCode)
 		return userId, misc.NothingToReport
 	}
 
