@@ -7,18 +7,19 @@ import (
 	"log"
 )
 
-var mailer mailgun.Mailgun
+var mailer mailgun.Mailgun	// https://documentation.mailgun.com/api-sending.html#examples
 
 const (
 	emailFrom = "registration@unnamed.com"
 )
 
+// Init initializes the mailer object
 func Init() {
 	mailer = mailgun.NewMailgun(config.Cfg.MailDomain, config.Cfg.MailPrivate, config.Cfg.MailPublic)
 }
 
+// sendMsg is a helper function which allows to send email with Plain Text and HTML
 func sendMsg(from, subject, text, textHtml, to string) {
-	// https://documentation.mailgun.com/api-sending.html#examples
 	m := mailgun.NewMessage(from, subject, text, to)
 	m.SetHtml(textHtml)
 
@@ -38,6 +39,7 @@ func getEmail(email string) string {
 	return email
 }
 
+// EmailConfirmation sends a confirmation code to a newly registered user
 func EmailConfirmation(email, code string) {
 	email = getEmail(email)
 	text := fmt.Sprintf("Your confirmation code is: %s", code)

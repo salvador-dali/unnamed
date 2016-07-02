@@ -1,5 +1,5 @@
-// Package config contains functions to read Env variables (String, Int). It reads config variables
-// for this project and stores them in the structure
+// Package config contains functions to read Env variables (String, Int, Bool).
+// It reads config variables for this project and stores them in the structure for further use
 package config
 
 import (
@@ -9,20 +9,20 @@ import (
 
 // Config stores environment variables
 type Config struct {
-	DbName      string
-	DbUser      string
-	DbHost      string
-	DbPass      string
-	DbPort      int
-	HttpPort    int
-	Secret      []byte
-	ExpDays     int
-	SaltLen     int
-	MailDomain  string
-	MailPrivate string
-	MailPublic  string
-	IsTest      bool
-	TestEmail   string
+	DbName      string	// name of the psql database
+	DbUser      string	// user of the psql database
+	DbHost      string  // psql host
+	DbPass      string  // psql password
+	DbPort      int		// psql port
+	HttpPort    int		// http server port
+	Secret      []byte	// a key with which JWT token is signed
+	ExpDays     int		// for how long is JWT token valid
+	SaltLen     int		// the length of the salt of user password (hashed with scrypt)
+	MailDomain  string	// domain name of the mailgun
+	MailPrivate string	// private key for the mailgun
+	MailPublic  string	// public key for the mailgun
+	IsTest      bool	// whether this is a testing environment. Some functions behave differently
+	TestEmail   string	// all mail to all users will be sent to this address in test environments
 }
 
 var Cfg Config

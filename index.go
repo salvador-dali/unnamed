@@ -13,13 +13,20 @@ import (
 	"time"
 )
 
-func main() {
-	// Initializes randomness, config, mailer, database
+// Init prepares the service for a work:
+// - initializes randomness
+// - creates a config
+// - creates a mailer object
+// - creates a database connection
+func Init(){
 	rand.Seed(time.Now().UnixNano())
 	config.Init()
 	mailer.Init()
 	storage.Init()
-	defer storage.Db.Close()
+}
+
+func main() {
+	Init()
 
 	// Creates a router
 	router := httptreemux.New()
