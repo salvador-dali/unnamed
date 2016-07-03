@@ -3,8 +3,8 @@ package main
 import (
 	"./config"
 	"./mailer"
+	"./psql"
 	"./routes"
-	"./storage"
 	"fmt"
 	"github.com/dimfeld/httptreemux"
 	"log"
@@ -18,11 +18,11 @@ import (
 // - creates a config
 // - creates a mailer object
 // - creates a database connection
-func Init(){
+func Init() {
 	rand.Seed(time.Now().UnixNano())
 	config.Init()
 	mailer.Init()
-	storage.Init()
+	psql.Init()
 }
 
 func main() {
@@ -49,7 +49,7 @@ func main() {
 	api.GET("/users/login/extend", routes.ExtendJwt)
 	api.POST("/users", routes.CreateUser)
 	api.GET("/users/:id", routes.GetUser)
-	api.PUT("/users/me/info", routes.UpdateYourUserInfo)
+	api.PUT("/users/me/info", routes.UpdateUser)
 	api.POST("/users/me/follow/:id", routes.Follow)
 	api.DELETE("/users/me/follow/:id", routes.Unfollow)
 	api.GET("/users/:id/followers", routes.GetFollowers)

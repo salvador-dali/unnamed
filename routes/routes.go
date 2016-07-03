@@ -4,7 +4,10 @@ package routes
 import (
 	"../auth"
 	"../misc"
-	"../storage"
+	"../models/brand"
+	"../models/purchase"
+	"../models/tag"
+	"../models/user"
 	"encoding/json"
 	"io/ioutil"
 	"log"
@@ -91,10 +94,10 @@ func getUserId(r *http.Request, w http.ResponseWriter) int {
 	return jwtToken.UserId
 }
 
-// extractPurchasesWithIdsendJson simplifies extracting many purchases knowing some id
-type getPurchasesWithId func(int) ([]*misc.Purchase, int)
+// extractPurchasesWithId simplifies extracting many purchases knowing some id
+type getPurchasesHelper func(int) ([]*misc.Purchase, int)
 
-func extractPurchasesWithIdsendJson(getData getPurchasesWithId, w http.ResponseWriter, ps map[string]string) {
+func extractPurchasesHelperSendJson(getData getPurchasesHelper, w http.ResponseWriter, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
 	id := validateNumeric(w, ps["id"])
@@ -111,7 +114,7 @@ func extractPurchasesWithIdsendJson(getData getPurchasesWithId, w http.ResponseW
 func GetAllBrands(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	if brands, code := storage.GetAllBrands(); isCodeTrivial(code, w) {
+	if brands, code := brand.ShowAll(); isCodeTrivial(code, w) {
 		sendJson(w, brands, http.StatusOK)
 	}
 }
@@ -125,7 +128,7 @@ func GetBrand(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	if brand, code := storage.GetBrand(id); isCodeTrivial(code, w) {
+	if brand, code := brand.ShowById(id); isCodeTrivial(code, w) {
 		sendJson(w, brand, http.StatusOK)
 	}
 }
@@ -145,7 +148,7 @@ func CreateBrand(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		return
 	}
 
-	if id, code := storage.CreateBrand(data.Name); isCodeTrivial(code, w) {
+	if id, code := brand.Create(data.Name); isCodeTrivial(code, w) {
 		sendJson(w, misc.Id{id}, http.StatusCreated)
 	}
 }
@@ -170,7 +173,7 @@ func UpdateBrand(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	if code := storage.UpdateBrand(id, data.Name); isCodeTrivial(code, w) {
+	if code := brand.Update(id, data.Name); isCodeTrivial(code, w) {
 		sendJson(w, nil, http.StatusNoContent)
 	}
 }
@@ -179,7 +182,7 @@ func UpdateBrand(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 func GetAllTags(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	if tags, code := storage.GetAllTags(); isCodeTrivial(code, w) {
+	if tags, code := tag.ShowAll(); isCodeTrivial(code, w) {
 		sendJson(w, tags, http.StatusOK)
 	}
 }
@@ -193,7 +196,7 @@ func GetTag(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	if tag, code := storage.GetTag(id); isCodeTrivial(code, w) {
+	if tag, code := tag.ShowById(id); isCodeTrivial(code, w) {
 		sendJson(w, tag, http.StatusOK)
 	}
 }
@@ -213,7 +216,7 @@ func CreateTag(w http.ResponseWriter, r *http.Request, _ map[string]string) {
 		return
 	}
 
-	if id, code := storage.CreateTag(data.Name, data.Descr); isCodeTrivial(code, w) {
+	if id, code := tag.Create(data.Name, data.Descr); isCodeTrivial(code, w) {
 		sendJson(w, misc.Id{id}, http.StatusCreated)
 	}
 }
@@ -238,7 +241,7 @@ func UpdateTag(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	if code := storage.UpdateTag(id, data.Name, data.Descr); isCodeTrivial(code, w) {
+	if code := tag.Update(id, data.Name, data.Descr); isCodeTrivial(code, w) {
 		sendJson(w, nil, http.StatusNoContent)
 	}
 }
@@ -252,13 +255,13 @@ func GetUser(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	if user, code := storage.GetUser(id); isCodeTrivial(code, w) {
+	if user, code := user.ShowById(id); isCodeTrivial(code, w) {
 		sendJson(w, user, http.StatusOK)
 	}
 }
 
 // UpdateYourUserInfo changes the information about a user who is currently
-func UpdateYourUserInfo(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+func UpdateUser(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
 	var data misc.JsonNicknameAbout
@@ -273,8 +276,7 @@ func UpdateYourUserInfo(w http.ResponseWriter, r *http.Request, ps map[string]st
 		return
 	}
 
-	code := storage.UpdateUser(userId, data.Nickname, data.About)
-	if isCodeTrivial(code, w) {
+	if code := user.Update(userId, data.Nickname, data.About); isCodeTrivial(code, w) {
 		sendJson(w, nil, http.StatusNoContent)
 	}
 }
@@ -293,7 +295,7 @@ func Follow(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	if code := storage.Follow(userId, id); isCodeTrivial(code, w) {
+	if code := user.Follow(userId, id); isCodeTrivial(code, w) {
 		sendJson(w, nil, http.StatusNoContent)
 	}
 }
@@ -312,7 +314,7 @@ func Unfollow(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	if code := storage.Unfollow(userId, id); isCodeTrivial(code, w) {
+	if code := user.Unfollow(userId, id); isCodeTrivial(code, w) {
 		sendJson(w, nil, http.StatusNoContent)
 	}
 }
@@ -326,7 +328,7 @@ func GetFollowing(w http.ResponseWriter, r *http.Request, ps map[string]string) 
 		return
 	}
 
-	if users, code := storage.GetFollowing(id); isCodeTrivial(code, w) {
+	if users, code := user.GetFollowing(id); isCodeTrivial(code, w) {
 		sendJson(w, users, http.StatusOK)
 	}
 }
@@ -340,8 +342,69 @@ func GetFollowers(w http.ResponseWriter, r *http.Request, ps map[string]string) 
 		return
 	}
 
-	if users, code := storage.GetFollowers(id); isCodeTrivial(code, w) {
+	if users, code := user.GetFollowers(id); isCodeTrivial(code, w) {
 		sendJson(w, users, http.StatusOK)
+	}
+}
+
+// Login returns a jwt token if a user passed correct credentials
+func Login(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+
+	var data misc.JsonEmailPassword
+	if body, ok := readJson(r, w); !ok {
+		return
+	} else {
+		json.Unmarshal(body, &data)
+	}
+
+	if jwt, ok := user.Login(data.Email, data.Password); ok {
+		sendJson(w, misc.Jwt{jwt}, http.StatusOK)
+	} else {
+		w.WriteHeader(http.StatusUnauthorized)
+	}
+}
+
+// ExtendJwt takes a valid JWT token and issues a new one with a full TTL
+func ExtendJwt(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+
+	if jwt, err := auth.ExtendJWT(r.Header.Get("token")); err != nil {
+		w.WriteHeader(http.StatusUnauthorized)
+	} else {
+		sendJson(w, misc.Jwt{jwt}, http.StatusOK)
+	}
+}
+
+// CreateUser creates a new unconfirmed user
+func CreateUser(w http.ResponseWriter, r *http.Request, _ map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+
+	var data misc.JsonNicknameEmailPassword
+	if body, ok := readJson(r, w); !ok {
+		return
+	} else {
+		json.Unmarshal(body, &data)
+	}
+
+	if id, code := user.Create(data.Nickname, data.Email, data.Password); isCodeTrivial(code, w) {
+		sendJson(w, misc.Id{id}, http.StatusCreated)
+	}
+}
+
+// VerifyEmail verifies a previously unconfirmed user
+func VerifyEmail(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+
+	userId := validateNumeric(w, ps["id"])
+	if userId <= 0 {
+		return
+	}
+
+	if jwt, ok := user.VerifyEmail(userId, ps["code"]); ok {
+		sendJson(w, misc.Jwt{jwt}, http.StatusOK)
+	} else {
+		w.WriteHeader(http.StatusBadRequest)
 	}
 }
 
@@ -349,24 +412,24 @@ func GetFollowers(w http.ResponseWriter, r *http.Request, ps map[string]string) 
 func GetAllPurchases(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	if purchases, code := storage.GetAllPurchases(); isCodeTrivial(code, w) {
+	if purchases, code := purchase.ShowAll(); isCodeTrivial(code, w) {
 		sendJson(w, purchases, http.StatusOK)
 	}
 }
 
 // GetUserPurchases returns all the list of all purchases done by this user in reverse order
 func GetUserPurchases(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	extractPurchasesWithIdsendJson(storage.GetUserPurchases, w, ps)
+	extractPurchasesHelperSendJson(purchase.ShowByUserId, w, ps)
 }
 
 // GetAllPurchases returns all the purchases which were tagged with a particular brand
 func GetAllPurchasesWithBrand(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	extractPurchasesWithIdsendJson(storage.GetAllPurchasesWithBrand, w, ps)
+	extractPurchasesHelperSendJson(purchase.ShowByBrandId, w, ps)
 }
 
 // GetAllPurchases returns all the purchases which were tagged with a particular tag
 func GetAllPurchasesWithTag(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	extractPurchasesWithIdsendJson(storage.GetAllPurchasesWithTag, w, ps)
+	extractPurchasesHelperSendJson(purchase.ShowByTagId, w, ps)
 }
 
 // GetPurchase returns full information about a purchase
@@ -378,7 +441,7 @@ func GetPurchase(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	if purchase, code := storage.GetPurchase(id); isCodeTrivial(code, w) {
+	if purchase, code := purchase.ShowById(id); isCodeTrivial(code, w) {
 		sendJson(w, purchase, http.StatusOK)
 	}
 }
@@ -399,7 +462,7 @@ func CreatePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string
 		return
 	}
 
-	if id, code := storage.CreatePurchase(userId, data.Descr, data.BrandId, data.TagIds); isCodeTrivial(code, w) {
+	if id, code := purchase.Create(userId, data.Descr, data.BrandId, data.TagIds); isCodeTrivial(code, w) {
 		sendJson(w, misc.Id{id}, http.StatusCreated)
 	}
 }
@@ -418,7 +481,7 @@ func LikePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string) 
 		return
 	}
 
-	if code := storage.LikePurchase(purchaseId, userId); isCodeTrivial(code, w) {
+	if code := purchase.Like(purchaseId, userId); isCodeTrivial(code, w) {
 		sendJson(w, nil, http.StatusNoContent)
 	}
 }
@@ -437,7 +500,7 @@ func UnlikePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string
 		return
 	}
 
-	if code := storage.UnlikePurchase(purchaseId, userId); isCodeTrivial(code, w) {
+	if code := purchase.Unlike(purchaseId, userId); isCodeTrivial(code, w) {
 		sendJson(w, nil, http.StatusNoContent)
 	}
 }
@@ -463,7 +526,7 @@ func AskQuestion(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	if id, code := storage.AskQuestion(purchaseId, userId, data.Name); isCodeTrivial(code, w) {
+	if id, code := purchase.AskQuestion(purchaseId, userId, data.Name); isCodeTrivial(code, w) {
 		sendJson(w, misc.Id{id}, http.StatusCreated)
 	}
 }
@@ -489,64 +552,7 @@ func AnswerQuestion(w http.ResponseWriter, r *http.Request, ps map[string]string
 		return
 	}
 
-	if id, code := storage.AnswerQuestion(questionId, userId, data.Name); isCodeTrivial(code, w) {
+	if id, code := purchase.AnswerQuestion(questionId, userId, data.Name); isCodeTrivial(code, w) {
 		sendJson(w, misc.Id{id}, http.StatusCreated)
-	}
-}
-
-func Login(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-	w.Header().Set("Content-Type", "application/javascript")
-
-	var data misc.JsonEmailPassword
-	if body, ok := readJson(r, w); !ok {
-		return
-	} else {
-		json.Unmarshal(body, &data)
-	}
-
-	if jwt, ok := storage.Login(data.Email, data.Password); ok {
-		sendJson(w, misc.Jwt{jwt}, http.StatusOK)
-	} else {
-		w.WriteHeader(http.StatusUnauthorized)
-	}
-}
-
-func ExtendJwt(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-	w.Header().Set("Content-Type", "application/javascript")
-
-	if jwt, err := auth.ExtendJWT(r.Header.Get("token")); err != nil {
-		w.WriteHeader(http.StatusUnauthorized)
-	} else {
-		sendJson(w, misc.Jwt{jwt}, http.StatusOK)
-	}
-}
-
-func CreateUser(w http.ResponseWriter, r *http.Request, _ map[string]string) {
-	w.Header().Set("Content-Type", "application/javascript")
-
-	var data misc.JsonNicknameEmailPassword
-	if body, ok := readJson(r, w); !ok {
-		return
-	} else {
-		json.Unmarshal(body, &data)
-	}
-
-	if id, code := storage.CreateUser(data.Nickname, data.Email, data.Password); isCodeTrivial(code, w) {
-		sendJson(w, misc.Id{id}, http.StatusCreated)
-	}
-}
-
-func VerifyEmail(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	w.Header().Set("Content-Type", "application/javascript")
-
-	userId := validateNumeric(w, ps["id"])
-	if userId <= 0 {
-		return
-	}
-
-	if jwt, ok := storage.VerifyEmail(userId, ps["code"]); ok {
-		sendJson(w, misc.Jwt{jwt}, http.StatusOK)
-	} else {
-		w.WriteHeader(http.StatusBadRequest)
 	}
 }

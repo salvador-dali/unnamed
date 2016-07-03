@@ -7,7 +7,7 @@ import (
 	"log"
 )
 
-var mailer mailgun.Mailgun	// https://documentation.mailgun.com/api-sending.html#examples
+var mailer mailgun.Mailgun // https://documentation.mailgun.com/api-sending.html#examples
 
 const (
 	emailFrom = "registration@unnamed.com"

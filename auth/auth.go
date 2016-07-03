@@ -12,7 +12,8 @@ import (
 	"time"
 )
 
-// TODO read about these parameters
+// Some information about parameters
+// http://stackoverflow.com/a/30308723/1090562
 const (
 	hashN      = 32768
 	hashR      = 8
@@ -20,6 +21,7 @@ const (
 	hashKeyLen = 32
 )
 
+// CreateJWT generates a new JWT token with full TTL
 func CreateJWT(userId int, verified bool) (string, error) {
 	claims := jwt.MapClaims{
 		"id":  userId,
@@ -35,6 +37,7 @@ func CreateJWT(userId int, verified bool) (string, error) {
 	return token.SignedString(config.Cfg.Secret)
 }
 
+// ValidateJWT checks that token was not tampered with and it is not expired
 func ValidateJWT(jwtToken string) (misc.JwtToken, error) {
 	if strings.Count(jwtToken, ".") != 2 {
 		return misc.JwtToken{}, errors.New("Not a JWT token")
@@ -82,6 +85,7 @@ func ValidateJWT(jwtToken string) (misc.JwtToken, error) {
 	return misc.JwtToken{}, err
 }
 
+// ExtendJWT takes existing JWT token, and if it is valid - issues the same one but with full TTL
 func ExtendJWT(jwtToken string) (string, error) {
 	token, err := ValidateJWT(jwtToken)
 	if err != nil {
@@ -91,6 +95,7 @@ func ExtendJWT(jwtToken string) (string, error) {
 	return CreateJWT(token.UserId, true)
 }
 
+// GenerateSalt generates cryptographycally random salt of a specific length
 func GenerateSalt() ([]byte, error) {
 	salt := make([]byte, config.Cfg.SaltLen)
 	if _, err := rand.Read(salt); err != nil {
@@ -100,6 +105,7 @@ func GenerateSalt() ([]byte, error) {
 	return salt, nil
 }
 
+// PasswordHash creates an scrypt hash of user password
 func PasswordHash(password string, salt []byte) ([]byte, error) {
 	return scrypt.Key([]byte(password), salt, hashN, hashR, hashP, hashKeyLen)
 }
