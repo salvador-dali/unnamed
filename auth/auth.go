@@ -18,7 +18,7 @@ const (
 	hashN      = 32768
 	hashR      = 8
 	hashP      = 1
-	hashKeyLen = 32
+	hashKeyLen = 128
 )
 
 // CreateJWT generates a new JWT token with full TTL
