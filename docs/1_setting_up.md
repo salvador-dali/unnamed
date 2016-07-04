@@ -25,6 +25,7 @@ Set up the following env variables (all DB variables are related to your psql da
     export PROJ_MAILGUN_DOMAIN=sandbox4d69a15edfe64dfaa3680f1a19fa50fa.mailgun.org
     export PROJ_MAILGUN_PRIVATE= // ask me
     export PROJ_MAILGUN_PUBLIC= // ask me
+    export PROJ_MAX_IMG_KB=5120 // 5 Mb
     export PROJ_IS_TEST=true
     export PROJ_TEST_EMAIL= // your email
     

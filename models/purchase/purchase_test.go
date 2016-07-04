@@ -1,14 +1,14 @@
 package purchase
 
 import (
-	"testing"
-	o "../testHelpers"
 	"../../misc"
 	"../../psql"
-	"log"
+	o "../testHelpers"
 	"io/ioutil"
+	"log"
 	"os"
 	"reflect"
+	"testing"
 )
 
 // Setup and db.close will be called before and after each test http://stackoverflow.com/a/34102842/1090562

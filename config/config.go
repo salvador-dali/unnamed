@@ -9,20 +9,21 @@ import (
 
 // Config stores environment variables
 type Config struct {
-	DbName      string // name of the psql database
-	DbUser      string // user of the psql database
-	DbHost      string // psql host
-	DbPass      string // psql password
-	DbPort      int    // psql port
-	HttpPort    int    // http server port
-	Secret      []byte // a key with which JWT token is signed
-	ExpDays     int    // for how long is JWT token valid
-	SaltLen     int    // the length of the salt of user password (hashed with scrypt)
-	MailDomain  string // domain name of the mailgun
-	MailPrivate string // private key for the mailgun
-	MailPublic  string // public key for the mailgun
-	IsTest      bool   // whether this is a testing environment. Some functions behave differently
-	TestEmail   string // all mail to all users will be sent to this address in test environments
+	DbName       string // name of the psql database
+	DbUser       string // user of the psql database
+	DbHost       string // psql host
+	DbPass       string // psql password
+	DbPort       int    // psql port
+	HttpPort     int    // http server port
+	Secret       []byte // a key with which JWT token is signed
+	ExpDays      int    // for how long is JWT token valid
+	SaltLen      int    // the length of the salt of user password (hashed with scrypt)
+	MailDomain   string // domain name of the mailgun
+	MailPrivate  string // private key for the mailgun
+	MailPublic   string // public key for the mailgun
+	MaxImgSizeKb int64  // maximum possible size of uploaded image in kilobytes
+	IsTest       bool   // whether this is a testing environment. Some functions behave differently
+	TestEmail    string // all mail to all users will be sent to this address in test environments
 }
 
 var Cfg Config
@@ -42,6 +43,7 @@ func Init() {
 		GetEnvStr("PROJ_MAILGUN_DOMAIN"),
 		GetEnvStr("PROJ_MAILGUN_PRIVATE"),
 		GetEnvStr("PROJ_MAILGUN_PUBLIC"),
+		int64(GetEnvInt("PROJ_MAX_IMG_KB")) * 1024,
 		GetEnvBool("PROJ_IS_TEST"),
 		GetEnvStr("PROJ_TEST_EMAIL"),
 	}

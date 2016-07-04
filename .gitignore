@@ -2,7 +2,9 @@
 docs/readme_explanation.md
 docs/lectures_startup.md
 src
-tmp/
+images/tmp/*
+!images/tmp/README.md
+
 bin/
 pkg/
 *.out
@@ -11,7 +13,6 @@ todo.md
 
 # Compiled Object files, Static and Dynamic libs (Shared Objects)
 *.o
-*.a
 *.so
 
 # Folders

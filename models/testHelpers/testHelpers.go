@@ -2,16 +2,16 @@
 package testHelpers
 
 import (
-	"sort"
-	"time"
 	"../../config"
 	"../../mailer"
-	"../../psql"
 	"../../misc"
-	"os/exec"
+	"../../psql"
+	"log"
 	"math/rand"
 	"os"
-	"log"
+	"os/exec"
+	"sort"
+	"time"
 )
 
 const (

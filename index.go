@@ -76,5 +76,7 @@ func main() {
 	//api.POST("/answer/:id/vote", routes.UpvoteAnswer)
 	//api.DELETE("/answer/:id/vote", routes.DownvoteAnswer)
 
+	api.POST("/users/me/avatar", routes.Avatar)
+
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Cfg.HttpPort), router))
 }

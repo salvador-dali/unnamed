@@ -556,3 +556,7 @@ func AnswerQuestion(w http.ResponseWriter, r *http.Request, ps map[string]string
 		sendJson(w, misc.Id{id}, http.StatusCreated)
 	}
 }
+
+func Avatar(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	misc.SaveFileFromClient(w, r, "img")
+}

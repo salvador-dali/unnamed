@@ -1,13 +1,13 @@
 package brand
 
 import (
-	"testing"
-	o "../testHelpers"
 	"../../misc"
 	"../../psql"
-	"log"
+	o "../testHelpers"
 	"io/ioutil"
+	"log"
 	"os"
+	"testing"
 )
 
 // Setup and db.close will be called before and after each test http://stackoverflow.com/a/34102842/1090562
@@ -21,7 +21,7 @@ func TestMain(m *testing.M) {
 	os.Exit(retCode)
 }
 
-func TestShowAll(t *testing.T){
+func TestShowAll(t *testing.T) {
 	o.CleanUpDb()
 
 	brands, code := ShowAll()
