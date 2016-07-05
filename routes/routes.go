@@ -558,5 +558,5 @@ func AnswerQuestion(w http.ResponseWriter, r *http.Request, ps map[string]string
 }
 
 func Avatar(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	misc.SaveFileFromClient(w, r, "img")
+	
 }

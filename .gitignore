@@ -1,15 +1,24 @@
 .idea
-docs/readme_explanation.md
-docs/lectures_startup.md
-src
-images/tmp/*
-!images/tmp/README.md
 
+# Go source files, packages
+src/
 bin/
 pkg/
 *.out
+
+# personal variables and writing
 .env
 todo.md
+docs/readme_explanation.md
+docs/lectures_startup.md
+
+# all image related data
+images/tmp/*
+!images/tmp/README.md
+images/avatars/s/*
+!images/avatars/s/README.md
+images/avatars/b/*
+!images/avatars/b/README.md
 
 # Compiled Object files, Static and Dynamic libs (Shared Objects)
 *.o

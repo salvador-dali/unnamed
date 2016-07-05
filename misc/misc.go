@@ -1,16 +1,9 @@
 package misc
 
 import (
-	"../config"
-	"fmt"
-	"io"
-	"log"
 	"math/rand"
-	"net/http"
 	"net/mail"
-	"os"
 	"strings"
-	"time"
 )
 
 const (
@@ -46,13 +39,6 @@ const (
 	DbDuplicate           = 302 // duplicate constrain violation. Inserted X, where X already exists and should be unique
 	DbForeignKeyViolation = 303 // foreign key violation
 )
-
-// have all the mime types that we accept and maps them to file extensions
-var mimeToExtension = map[string]string{
-	"image/jpeg": ".jpg",
-	"image/png":  ".png",
-	"image/webp": ".webp",
-}
 
 // ErrorCode stores code of a problem that happened while processing client's request.
 // It is sent together with 404 status code. It is up to a client how to present it
@@ -183,56 +169,4 @@ func RandomString(n int) string {
 		b[i] = letterBytes[rand.Int63()%int64(len(letterBytes))]
 	}
 	return string(b)
-}
-
-func SaveFileFromClient(w http.ResponseWriter, r *http.Request, formDataKey string) {
-	// make sure that the file is of correct size
-	r.Body = http.MaxBytesReader(w, r.Body, config.Cfg.MaxImgSizeKb)
-	clientFile, handler, err := r.FormFile(formDataKey)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	defer clientFile.Close()
-
-	if handler.Filename == "" {
-		log.Println("No filename provided")
-		return
-	}
-
-	if _, ok := handler.Header["Content-Type"]; !ok {
-		log.Println("No content-type provided")
-		return
-	}
-
-	// save the file locally in a temporary location
-	fileName := fmt.Sprintf("%d_%s", time.Now().Unix(), RandomString(10))
-	fileLoc := fmt.Sprintf("images/tmp/%s", fileName)
-	serverFile, err := os.OpenFile(fileLoc, os.O_WRONLY|os.O_CREATE, 0666)
-	if err != nil {
-		log.Println(err)
-		return
-	}
-	defer serverFile.Close()
-	io.Copy(serverFile, clientFile)
-
-	// read that file and check that it is of correct type
-	fs, err := os.Open(fileLoc)
-	if err != nil {
-		log.Println("error reading file")
-		return
-	}
-	defer fs.Close()
-	buff := make([]byte, 512) // http://golang.org/pkg/net/http/#DetectContentType
-	fs.Read(buff)
-	mime := http.DetectContentType(buff)
-	ext, ok := mimeToExtension[mime]
-	if !ok {
-		log.Println("File with wrong MIME type", mime)
-		os.Remove(fileLoc)
-		return
-	}
-
-	newName := fileName + ext
-	fmt.Println(newName)
 }

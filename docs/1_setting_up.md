@@ -2,7 +2,8 @@
 
  - [Go](https://golang.org/doc/install) Latest: 1.6.2 darwin/amd64
  - [PostgreSQL](https://www.postgresql.org/download/) 9.4.0 (update to latest after machine switch)
- - python 2.7.9 ([psycopg2](http://initd.org/psycopg/)). Used to setup a database and run tests 
+ - python 2.7.9 ([psycopg2](http://initd.org/psycopg/)). Used to setup a database and run tests
+ - for image manipulation install [libvips](http://www.vips.ecs.soton.ac.uk/index.php?title=Build_on_OS_X)
  
 ### Install tools with [Homebrew](http://brew.sh)
 
