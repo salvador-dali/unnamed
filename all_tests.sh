@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Run all Go tests from one script. Can take ~10 seconds
 go test ./auth/
 go test ./config/
 go test ./misc/
