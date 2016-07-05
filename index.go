@@ -50,6 +50,7 @@ func main() {
 	api.POST("/users", routes.CreateUser)
 	api.GET("/users/:id", routes.GetUser)
 	api.PUT("/users/me/info", routes.UpdateUser)
+	api.PUT("/users/me/avatar", routes.UpdateAvatar)
 	api.POST("/users/me/follow/:id", routes.Follow)
 	api.DELETE("/users/me/follow/:id", routes.Unfollow)
 	api.GET("/users/:id/followers", routes.GetFollowers)
@@ -75,8 +76,6 @@ func main() {
 	// Answers
 	//api.POST("/answer/:id/vote", routes.UpvoteAnswer)
 	//api.DELETE("/answer/:id/vote", routes.DownvoteAnswer)
-
-	api.POST("/users/me/avatar", routes.Avatar)
 
 	log.Fatal(http.ListenAndServe(fmt.Sprintf(":%d", config.Cfg.HttpPort), router))
 }

@@ -15,7 +15,7 @@ import (
 const (
 	minImgHeight = 400
 	minImgWidth  = 600
-	avatarBig	 = 300
+	avatarBig    = 300
 	avatarSmall  = 64
 )
 
@@ -81,9 +81,9 @@ func SaveTmpFileFromClient(w http.ResponseWriter, r *http.Request) (bool, string
 func CheckTmpFileImgSize(fileName string, minWidth, minHeight int) (bool, *bimg.Image) {
 	fileLoc := "images/tmp/" + fileName
 	buffer, err := bimg.Read(fileLoc)
+	os.Remove(fileLoc)
 	if err != nil {
 		log.Println(err)
-		os.Remove(fileLoc)
 		return false, nil
 	}
 	img := bimg.NewImage(buffer)
@@ -91,36 +91,36 @@ func CheckTmpFileImgSize(fileName string, minWidth, minHeight int) (bool, *bimg.
 	sizeInfo, err := img.Size()
 	if err != nil {
 		log.Println(err)
-		os.Remove(fileLoc)
 		return false, nil
 	}
 
 	if sizeInfo.Width < minWidth || sizeInfo.Height < minHeight {
 		log.Println("Image size is too small", sizeInfo)
-		os.Remove(fileLoc)
 		return false, nil
 	}
 
 	return true, img
 }
 
-func TmpToAvatar(fileName, ext string) {
+func TmpToAvatar(fileName, ext string) bool {
 	ok, img := CheckTmpFileImgSize(fileName, avatarBig, avatarBig)
 	if !ok {
-		return
+		return false
 	}
 
 	newImage, err := img.Thumbnail(avatarBig)
 	if err != nil {
 		log.Println(err)
-		return
+		return false
 	}
 	bimg.Write(fmt.Sprintf("images/avatars/b/%s.%s", fileName, ext), newImage)
 
 	newImage, err = img.Thumbnail(avatarSmall)
 	if err != nil {
 		log.Println(err)
-		return
+		return false
 	}
 	bimg.Write(fmt.Sprintf("images/avatars/s/%s.%s", fileName, ext), newImage)
+
+	return true
 }

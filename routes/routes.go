@@ -3,12 +3,14 @@ package routes
 
 import (
 	"../auth"
+	"../imager"
 	"../misc"
 	"../models/brand"
 	"../models/purchase"
 	"../models/tag"
 	"../models/user"
 	"encoding/json"
+	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
@@ -260,7 +262,7 @@ func GetUser(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	}
 }
 
-// UpdateYourUserInfo changes the information about a user who is currently
+// UpdateUser changes the information about a user who is currently
 func UpdateUser(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
@@ -277,6 +279,31 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	}
 
 	if code := user.Update(userId, data.Nickname, data.About); isCodeTrivial(code, w) {
+		sendJson(w, nil, http.StatusNoContent)
+	}
+}
+
+// UpdateAvatar uploads a new user avatar and updates avatar information of a user
+func UpdateAvatar(w http.ResponseWriter, r *http.Request, ps map[string]string) {
+	w.Header().Set("Content-Type", "application/javascript")
+
+	userId := getUserId(r, w)
+	if userId == 0 {
+		return
+	}
+
+	ok, fileName, ext := imager.SaveTmpFileFromClient(w, r)
+	if !ok {
+		sendJson(w, misc.ErrorCode{misc.WrongImg}, http.StatusBadRequest)
+		return
+	}
+
+	ok = imager.TmpToAvatar(fileName, ext)
+	if !ok {
+
+	}
+
+	if code := user.UpdateAvatar(userId, fmt.Sprintf("%s.%s", fileName, ext)); isCodeTrivial(code, w) {
 		sendJson(w, nil, http.StatusNoContent)
 	}
 }
@@ -555,8 +582,4 @@ func AnswerQuestion(w http.ResponseWriter, r *http.Request, ps map[string]string
 	if id, code := purchase.AnswerQuestion(questionId, userId, data.Name); isCodeTrivial(code, w) {
 		sendJson(w, misc.Id{id}, http.StatusCreated)
 	}
-}
-
-func Avatar(w http.ResponseWriter, r *http.Request, ps map[string]string) {
-	
 }

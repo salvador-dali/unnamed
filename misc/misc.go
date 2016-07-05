@@ -34,6 +34,7 @@ const (
 	AskYourself         = 209 // a person should not ask questions about his purchase
 	AnswerOtherPurchase = 210 // user can answer only question about his purchase
 	NoTags              = 211 // user has not provided any tags
+	WrongImg            = 212 // something wrong with the image
 
 	NoSalt                = 301 // system does not have enough randomness
 	DbDuplicate           = 302 // duplicate constrain violation. Inserted X, where X already exists and should be unique

@@ -356,3 +356,23 @@ func Login(email, password string) (string, bool) {
 	}
 	return jwt, true
 }
+
+// UpdateAvatar updates user's path to avatar
+func UpdateAvatar(userId int, path string) int {
+	if !misc.IsIdValid(userId) {
+		log.Println("user was not updated", userId)
+		return misc.NothingUpdated
+	}
+
+	sqlResult, err := psql.Db.Exec(`
+		UPDATE users
+		SET image = $1
+		WHERE id = $2`, path, userId)
+	if err, code := psql.CheckSpecificDriverErrors(err); err != nil {
+		log.Println(err)
+		return code
+	}
+
+	err, code := psql.IsAffectedOneRow(sqlResult)
+	return code
+}
