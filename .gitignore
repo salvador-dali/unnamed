@@ -19,6 +19,10 @@ images/avatars/s/*
 !images/avatars/s/README.md
 images/avatars/b/*
 !images/avatars/b/README.md
+images/purchases/m/*
+!images/purchases/m/README.md
+images/purchases/b/*
+!images/purchases/b/README.md
 
 # Compiled Object files, Static and Dynamic libs (Shared Objects)
 *.o

@@ -17,6 +17,11 @@ const (
 	minImgWidth  = 600
 	avatarBig    = 300
 	avatarSmall  = 64
+
+	imgNormalHeight = 600
+	imgNormalWidth  = 800
+	imgBigHeight    = 900
+	imgBigWidth     = 1200
 )
 
 // have all the mime types that we accept and maps them to file extensions
@@ -78,7 +83,7 @@ func SaveTmpFileFromClient(w http.ResponseWriter, r *http.Request) (bool, string
 	return true, fileName, ext
 }
 
-func CheckTmpFileImgSize(fileName string, minWidth, minHeight int) (bool, *bimg.Image) {
+func CheckTmpFileImgSize(fileName string, minHeight, minWidth int) (bool, *bimg.Image) {
 	fileLoc := "images/tmp/" + fileName
 	buffer, err := bimg.Read(fileLoc)
 	os.Remove(fileLoc)
@@ -121,6 +126,59 @@ func TmpToAvatar(fileName, ext string) bool {
 		return false
 	}
 	bimg.Write(fmt.Sprintf("images/avatars/s/%s.%s", fileName, ext), newImage)
+
+	return true
+}
+
+func findBestDimensions(imgHeight, imgWidth, maxHeight, maxWidth int) (bool, int, int) {
+	bestArea, bestHeight, bestWidth := 0, 0, 0
+
+	height := imgHeight * maxWidth / imgWidth
+	if height <= imgHeight && bestArea < maxWidth*height {
+		bestArea = maxWidth * height
+		bestHeight, bestWidth = height, maxWidth
+	}
+
+	width := imgWidth * maxHeight / imgHeight
+	if width <= imgWidth && bestArea < maxHeight*width {
+		bestArea = maxHeight * width
+		bestHeight, bestWidth = maxHeight, width
+	}
+
+	return bestArea != 0, bestHeight, bestWidth
+}
+
+func TmpToPurchase(fileName, ext string) bool {
+	ok, img := CheckTmpFileImgSize(fileName, minImgHeight, minImgWidth)
+	if !ok {
+		return false
+	}
+
+	sizeInfo, _ := img.Size()
+	imgHeight, imgWidth := sizeInfo.Height, sizeInfo.Width
+	fmt.Println("Original", imgHeight, imgWidth)
+
+	ok, h, w := findBestDimensions(imgHeight, imgWidth, imgBigHeight, imgBigWidth)
+	fmt.Println(h, w)
+	if ok {
+		newImage, err := img.Resize(w, h)
+		if err != nil {
+			log.Println(err)
+			return false
+		}
+		bimg.Write(fmt.Sprintf("images/purchases/b/%s.%s", fileName, ext), newImage)
+	}
+
+	ok, h, w = findBestDimensions(imgHeight, imgWidth, imgNormalHeight, imgNormalWidth)
+	fmt.Println(h, w)
+	if ok {
+		newImage, err := img.Resize(w, h)
+		if err != nil {
+			log.Println(err)
+			return false
+		}
+		bimg.Write(fmt.Sprintf("images/purchases/m/%s.%s", fileName, ext), newImage)
+	}
 
 	return true
 }
