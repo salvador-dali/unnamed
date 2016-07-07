@@ -52,6 +52,11 @@ type Id struct {
 	Id int `json:"id"`
 }
 
+// Image stores name of a currently uploaded image
+type Image struct {
+	Image string `json:"img"`
+}
+
 // Id stores jwt token
 type Jwt struct {
 	Jwt string `json:"token"`

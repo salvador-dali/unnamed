@@ -14,6 +14,7 @@
 		"815270a0-6933-c443-1b20-9ed571a8c7ca",
 		"f769049e-c79f-3d92-04ec-ae806c245759",
 		"74c84846-102a-aa1a-d62e-eeab4c666376",
+		"1120095e-7e17-70b7-4627-85fd5047dc7c",
 		"139593e5-d9ed-f666-7f4a-bb067bd2e8ef",
 		"38f688a0-ca4f-bf52-1e9a-00f53310e6cc",
 		"883777fb-ceb4-6350-b425-54ca91eb6cc5",
@@ -59,6 +60,32 @@
 			"helperAttributes": {},
 			"time": 1466835893013,
 			"name": "Extend a token",
+			"description": "",
+			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
+			"responses": []
+		},
+		{
+			"id": "1120095e-7e17-70b7-4627-85fd5047dc7c",
+			"headers": "token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjR9.cI2Ie6KDVQhWk1VRuP_UzE1HpKFfyT0jgTe9J2g7pJA\n",
+			"url": "http://localhost:8080/api/v1/image/purchase",
+			"preRequestScript": null,
+			"pathVariables": {},
+			"method": "POST",
+			"data": [
+				{
+					"key": "img",
+					"value": "img_1.jpg",
+					"type": "file",
+					"enabled": true
+				}
+			],
+			"dataMode": "params",
+			"version": 2,
+			"tests": null,
+			"currentHelper": "normal",
+			"helperAttributes": {},
+			"time": 1467869329652,
+			"name": "Upload a purchase",
 			"description": "",
 			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
 			"responses": []
@@ -181,14 +208,14 @@
 		{
 			"id": "74c84846-102a-aa1a-d62e-eeab4c666376",
 			"headers": "token: eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJleHAiOjE2Mzk2MzMyMTEsImlhdCI6MTQ2NjgzMzIxMSwiaWQiOjR9.cI2Ie6KDVQhWk1VRuP_UzE1HpKFfyT0jgTe9J2g7pJA\n",
-			"url": "http://localhost:8080/api/v1/users/me/avatar",
+			"url": "http://localhost:8080/api/v1/image/avatar",
 			"preRequestScript": null,
 			"pathVariables": {},
-			"method": "PUT",
+			"method": "POST",
 			"data": [
 				{
 					"key": "img",
-					"value": "img_2.jpg",
+					"value": "img_1.jpg",
 					"type": "file",
 					"enabled": true
 				}
@@ -198,8 +225,8 @@
 			"tests": null,
 			"currentHelper": "normal",
 			"helperAttributes": {},
-			"time": 1467681101477,
-			"name": "Update your avatar",
+			"time": 1467869295993,
+			"name": "Upload avatar",
 			"description": "",
 			"collectionId": "ea269b6c-050e-ed5c-029c-cf49a03ed921",
 			"responses": []

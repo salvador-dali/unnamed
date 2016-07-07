@@ -32,6 +32,10 @@ func main() {
 	router := httptreemux.New()
 	api := router.NewGroup("/api/v1")
 
+	// Image
+	api.POST("/image/avatar", routes.UploadImageAvatar)
+	api.POST("/image/purchase", routes.UploadImagePurchase)
+
 	// Brands
 	api.GET("/brands", routes.GetAllBrands)
 	api.GET("/brands/:id", routes.GetBrand)
@@ -50,7 +54,6 @@ func main() {
 	api.POST("/users", routes.CreateUser)
 	api.GET("/users/:id", routes.GetUser)
 	api.PUT("/users/me/info", routes.UpdateUser)
-	api.PUT("/users/me/avatar", routes.UpdateAvatar)
 	api.POST("/users/me/follow/:id", routes.Follow)
 	api.DELETE("/users/me/follow/:id", routes.Unfollow)
 	api.GET("/users/:id/followers", routes.GetFollowers)

@@ -26,11 +26,19 @@ const (
 
 // have all the mime types that we accept and maps them to file extensions
 var mimeToExtension = map[string]string{
-	"image/jpeg": "jpg",
-	"image/png":  "png",
-	"image/webp": "webp",
+	"image/jpeg": ".jpg",
+	"image/png":  ".png",
+	"image/webp": ".webp",
 }
 
+// getTmpLocation is a helper which returns a location of a temporary file
+func getTmpLocation(fileName string) string {
+	return "images/tmp/" + fileName
+}
+
+// SaveTmpFileFromClient checks that the file is below the maximum possible size in Kb and
+// saves it on a disk in a temporary folder. It detects the MIME-type of the image and suggests
+// an extension based on the MIME-type. If anything is wrong, the file is removed
 func SaveTmpFileFromClient(w http.ResponseWriter, r *http.Request) (bool, string, string) {
 	// make sure that the file is of correct size
 	r.Body = http.MaxBytesReader(w, r.Body, config.Cfg.MaxImgSizeKb)
@@ -53,7 +61,7 @@ func SaveTmpFileFromClient(w http.ResponseWriter, r *http.Request) (bool, string
 
 	// save the file locally in a temporary location
 	fileName := fmt.Sprintf("%d_%s", time.Now().Unix(), misc.RandomString(10))
-	fileLoc := fmt.Sprintf("images/tmp/%s", fileName)
+	fileLoc := getTmpLocation(fileName)
 	serverFile, err := os.OpenFile(fileLoc, os.O_WRONLY|os.O_CREATE, 0666)
 	if err != nil {
 		log.Println(err)
@@ -83,16 +91,15 @@ func SaveTmpFileFromClient(w http.ResponseWriter, r *http.Request) (bool, string
 	return true, fileName, ext
 }
 
-func CheckTmpFileImgSize(fileName string, minHeight, minWidth int) (bool, *bimg.Image) {
-	fileLoc := "images/tmp/" + fileName
-	buffer, err := bimg.Read(fileLoc)
-	os.Remove(fileLoc)
+// checkTmpFileImgSize makes sure that the dimensions of the temporary image are above min height/width
+func checkTmpFileImgSize(fileName string, minHeight, minWidth int) (bool, *bimg.Image) {
+	buffer, err := bimg.Read(getTmpLocation(fileName))
 	if err != nil {
 		log.Println(err)
 		return false, nil
 	}
-	img := bimg.NewImage(buffer)
 
+	img := bimg.NewImage(buffer)
 	sizeInfo, err := img.Size()
 	if err != nil {
 		log.Println(err)
@@ -107,29 +114,8 @@ func CheckTmpFileImgSize(fileName string, minHeight, minWidth int) (bool, *bimg.
 	return true, img
 }
 
-func TmpToAvatar(fileName, ext string) bool {
-	ok, img := CheckTmpFileImgSize(fileName, avatarBig, avatarBig)
-	if !ok {
-		return false
-	}
-
-	newImage, err := img.Thumbnail(avatarBig)
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	bimg.Write(fmt.Sprintf("images/avatars/b/%s.%s", fileName, ext), newImage)
-
-	newImage, err = img.Thumbnail(avatarSmall)
-	if err != nil {
-		log.Println(err)
-		return false
-	}
-	bimg.Write(fmt.Sprintf("images/avatars/s/%s.%s", fileName, ext), newImage)
-
-	return true
-}
-
+// findBestDimensions finds the most suitable dimensions for the resize of original image.
+// It makes sure that the new dimensions are maximum possible and the aspect ratio is preserved
 func findBestDimensions(imgHeight, imgWidth, maxHeight, maxWidth int) (bool, int, int) {
 	bestArea, bestHeight, bestWidth := 0, 0, 0
 
@@ -148,37 +134,63 @@ func findBestDimensions(imgHeight, imgWidth, maxHeight, maxWidth int) (bool, int
 	return bestArea != 0, bestHeight, bestWidth
 }
 
-func TmpToPurchase(fileName, ext string) bool {
-	ok, img := CheckTmpFileImgSize(fileName, minImgHeight, minImgWidth)
+// TmpToAvatar converts a temporary file into a correctly resized avatar. Removes tmp file
+func TmpToAvatar(fileName, ext string) (bool, string) {
+	ok, img := checkTmpFileImgSize(fileName, avatarBig, avatarBig)
+	fullFileName := fileName + ext
+	os.Remove(getTmpLocation(fileName))
 	if !ok {
-		return false
+		return false, ""
+	}
+
+	newImage, err := img.Thumbnail(avatarBig)
+	if err != nil {
+		log.Println(err)
+		return false, ""
+	}
+	bimg.Write("images/avatars/b/"+fullFileName, newImage)
+
+	newImage, err = img.Thumbnail(avatarSmall)
+	if err != nil {
+		log.Println(err)
+		return false, ""
+	}
+	bimg.Write("images/avatars/s/"+fullFileName, newImage)
+
+	return true, fullFileName
+}
+
+// TmpToAvatar converts a temporary file into a correctly resized purchase. Removes tmp file
+func TmpToPurchase(fileName, ext string) (bool, string) {
+	ok, img := checkTmpFileImgSize(fileName, minImgHeight, minImgWidth)
+	fullFileName := fileName + ext
+	if !ok {
+		os.Remove(getTmpLocation(fileName))
+		return false, ""
 	}
 
 	sizeInfo, _ := img.Size()
 	imgHeight, imgWidth := sizeInfo.Height, sizeInfo.Width
-	fmt.Println("Original", imgHeight, imgWidth)
 
-	ok, h, w := findBestDimensions(imgHeight, imgWidth, imgBigHeight, imgBigWidth)
-	fmt.Println(h, w)
-	if ok {
-		newImage, err := img.Resize(w, h)
-		if err != nil {
+	if ok, h, w := findBestDimensions(imgHeight, imgWidth, imgBigHeight, imgBigWidth); ok {
+		if newImage, err := img.Resize(w, h); err != nil {
 			log.Println(err)
-			return false
+			os.Remove(getTmpLocation(fileName))
+			return false, ""
+		} else {
+			bimg.Write("images/purchases/b/"+fullFileName, newImage)
 		}
-		bimg.Write(fmt.Sprintf("images/purchases/b/%s.%s", fileName, ext), newImage)
 	}
 
-	ok, h, w = findBestDimensions(imgHeight, imgWidth, imgNormalHeight, imgNormalWidth)
-	fmt.Println(h, w)
-	if ok {
-		newImage, err := img.Resize(w, h)
-		if err != nil {
+	if ok, h, w := findBestDimensions(imgHeight, imgWidth, imgNormalHeight, imgNormalWidth); ok {
+		if newImage, err := img.Resize(w, h); err != nil {
 			log.Println(err)
-			return false
+			os.Remove(getTmpLocation(fileName))
+			return false, ""
+		} else {
+			bimg.Write("images/purchases/m/"+fullFileName, newImage)
 		}
-		bimg.Write(fmt.Sprintf("images/purchases/m/%s.%s", fileName, ext), newImage)
 	}
 
-	return true
+	return true, fullFileName
 }
