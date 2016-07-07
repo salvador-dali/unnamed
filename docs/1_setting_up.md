@@ -26,17 +26,16 @@ Set up the following env variables (all DB variables are related to your psql da
     export PROJ_MAILGUN_DOMAIN=sandbox4d69a15edfe64dfaa3680f1a19fa50fa.mailgun.org
     export PROJ_MAILGUN_PRIVATE= // ask me
     export PROJ_MAILGUN_PUBLIC= // ask me
-    export PROJ_MAX_IMG_KB=5120 // 5 Mb
     export PROJ_IS_TEST=true
     export PROJ_TEST_EMAIL= // your email
     
-When user registers/confirms registration/etc, he receives an email. On a testing setting email is 
-being sent to your email address all the time.
+When user registers/confirms registration/etc, he receives an email. If PROJ_IS_TEST=true, email is
+sent to PROJ_TEST_EMAIL email address all the time.
     
 By default after psql installation your password is empty. In this project it is not possible to have
 empty env variables, so you have to change it `ALTER USER "user_name" WITH PASSWORD 'new_password';`
     
-Cd to this repo and set up GOPATH equal to $PWD (on macOS you also need to set GOBIN):
+Cd to this repo and set up `GOPATH` equal to `$PWD` (on macOS you also need to set `GOBIN`):
 
     export GOPATH=$PWD
     if [[ `uname` == 'Darwin' ]]; then

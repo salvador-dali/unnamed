@@ -1,7 +1,6 @@
 package imager
 
 import (
-	"../config"
 	"../misc"
 	"fmt"
 	bimg "gopkg.in/h2non/bimg.v1"
@@ -22,6 +21,8 @@ const (
 	imgNormalWidth  = 800
 	imgBigHeight    = 900
 	imgBigWidth     = 1200
+
+	maxFileSize = 5 * 1024 * 1024 // 5 Mb
 )
 
 // have all the mime types that we accept and maps them to file extensions
@@ -41,7 +42,7 @@ func getTmpLocation(fileName string) string {
 // an extension based on the MIME-type. If anything is wrong, the file is removed
 func SaveTmpFileFromClient(w http.ResponseWriter, r *http.Request) (bool, string, string) {
 	// make sure that the file is of correct size
-	r.Body = http.MaxBytesReader(w, r.Body, config.Cfg.MaxImgSizeKb)
+	r.Body = http.MaxBytesReader(w, r.Body, maxFileSize)
 	clientFile, handler, err := r.FormFile("img")
 	if err != nil {
 		log.Println(err)

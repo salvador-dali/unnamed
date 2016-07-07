@@ -25,3 +25,13 @@ all the routes predefined with all required parameters.
  - return status codes properly
  - no trailing slashes, it looks like majority of the people do not use them
 
+Some of the routes requires you to upload an image ( *update information about yourself*, 
+*create a purchase*, etc). The decision of how to do this is the following.
+
+A person in the beginning uploads an image using a separate endpoint ( *image/purchase*, 
+*image/avatar*, etc). These endpoints make all the necessary checks and image manipulations and return
+a name of the resulting image. A client should remember this name and pass it together with all other
+data in create purchase/avatar endpoint.
+
+This achieves a faster speed for creating of the element because while the image is uploading a person
+can work on writing other information.
