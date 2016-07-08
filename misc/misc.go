@@ -121,13 +121,15 @@ type JsonNameDescr struct {
 	Descr string `json:"descr"`
 }
 
-type JsonNicknameAbout struct {
+type JsonNicknameAboutAvatar struct {
 	Nickname string `json:"nickname"`
 	About    string `json:"about"`
+	Avatar   string `json:"avatar"`
 }
 
-type JsonDescrBrandTag struct {
+type JsonDescrImageBrandTag struct {
 	Descr   string `json:"descr"`
+	Image   string `json:"image"`
 	BrandId int    `json:"brand"`
 	TagIds  []int  `json:"tags"`
 }

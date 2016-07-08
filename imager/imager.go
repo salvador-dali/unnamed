@@ -8,6 +8,8 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strconv"
+	"strings"
 	"time"
 )
 
@@ -165,6 +167,7 @@ func TmpToAvatar(fileName, ext string) (bool, string) {
 func TmpToPurchase(fileName, ext string) (bool, string) {
 	ok, img := checkTmpFileImgSize(fileName, minImgHeight, minImgWidth)
 	fullFileName := fileName + ext
+	os.Remove(getTmpLocation(fileName))
 	if !ok {
 		os.Remove(getTmpLocation(fileName))
 		return false, ""
@@ -194,4 +197,36 @@ func TmpToPurchase(fileName, ext string) (bool, string) {
 	}
 
 	return true, fullFileName
+}
+
+// verifyFile checks that the file exists at a specific location and was created in a right time
+func verifyFile(fileName, location string) bool {
+	if _, err := os.Stat(location + fileName); err == nil {
+		// file exist. Check when it was generated
+		timestamp, err := strconv.ParseInt(strings.Split(fileName, "_")[0], 10, 64)
+		if err != nil {
+			return false
+		}
+
+		now := time.Now()
+		// make sure that the image was created somewhere in between Now and one day before Now
+		return now.AddDate(0, -1, 0).Unix() <= timestamp && timestamp <= now.Unix()
+	}
+
+	// file does not exist
+	return false
+}
+
+// IsAvatarValid makes sure that path to avatar is valid. Empty avatar is also valid
+func IsAvatarValid(fileName string) bool {
+	if fileName == "" {
+		return true
+	}
+
+	return verifyFile(fileName, "images/avatars/b/")
+}
+
+// IsPurchaseValid makes sure that path to avatar is valid
+func IsPurchaseValid(fileName string) bool {
+	return verifyFile(fileName, "images/purchases/m/")
 }

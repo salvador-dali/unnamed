@@ -19,10 +19,10 @@ const (
 )
 
 var AllPurchases = map[int]misc.Purchase{
-	1: {1, "some_img", "Look at my new drone", 1, 0, []int{2}, 0, 0},
-	2: {2, "some_img", "How cool am I?", 4, 0, []int{3, 5}, 5, 0},
-	3: {3, "some_img", "I really like drones", 1, 0, []int{4}, 0, 3},
-	4: {4, "some_img", "Now I am fond of cars", 1, 0, []int{2}, 4, 1},
+	1: {1, "1467954439_isForTests.jpg", "Look at my new drone", 1, 0, []int{2}, 0, 0},
+	2: {2, "1467954439_isForTests.jpg", "How cool am I?", 4, 0, []int{3, 5}, 5, 0},
+	3: {3, "1467954439_isForTests.jpg", "I really like drones", 1, 0, []int{4}, 0, 3},
+	4: {4, "1467954439_isForTests.jpg", "Now I am fond of cars", 1, 0, []int{2}, 4, 1},
 }
 
 var AllBrands = map[int]misc.Brand{

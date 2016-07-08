@@ -1,6 +1,7 @@
 package purchase
 
 import (
+	"../../imager"
 	"../../misc"
 	"../../psql"
 	"../tag"
@@ -191,12 +192,17 @@ func ShowByTagId(tagId int) ([]*misc.Purchase, int) {
 }
 
 // Create a new purchase
-func Create(userId int, description string, brandId int, tagsId []int) (int, int) {
+func Create(userId int, description, image string, brandId int, tagsId []int) (int, int) {
 	// userID is the current user and should be valid
 	description, ok := misc.ValidateString(description, misc.MaxLenB)
 	if !ok {
 		log.Println("description is wrong", description)
 		return 0, misc.WrongDescr
+	}
+
+	if !imager.IsPurchaseValid(image) {
+		log.Println("Purchase is not valid", image)
+		return 0, misc.WrongImg
 	}
 
 	if brandId < 0 {
@@ -217,8 +223,8 @@ func Create(userId int, description string, brandId int, tagsId []int) (int, int
 	tagsToInsert := "{" + strings.Join(stringTagIds, ",") + "}"
 	err := psql.Db.QueryRow(`
 		INSERT INTO purchases (image, description, user_id, tag_ids, brand_id)
-		VALUES ('', $1, $2, $3, $4)
-		RETURNING id`, description, userId, tagsToInsert, brandId).Scan(&id)
+		VALUES ($1, $2, $3, $4, $5)
+		RETURNING id`, image, description, userId, tagsToInsert, brandId).Scan(&id)
 	if err != nil {
 		if err, code := psql.CheckSpecificDriverErrors(err); err != nil {
 			log.Println(err)

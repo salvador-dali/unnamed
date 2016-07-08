@@ -17,12 +17,19 @@ images/tmp/*
 !images/tmp/README.md
 images/avatars/s/*
 !images/avatars/s/README.md
+!images/avatars/s/1467954473_isForTests.jpg
+
 images/avatars/b/*
 !images/avatars/b/README.md
+!images/avatars/b/1467954473_isForTests.jpg
+
 images/purchases/m/*
 !images/purchases/m/README.md
+!images/purchases/m/1467954439_isForTests.jpg
+
 images/purchases/b/*
 !images/purchases/b/README.md
+!images/purchases/b/1467954439_isForTests.jpg
 
 # Compiled Object files, Static and Dynamic libs (Shared Objects)
 *.o

@@ -2,6 +2,7 @@ package user
 
 import (
 	"../../auth"
+	"../../imager"
 	"../../mailer"
 	"../../misc"
 	"../../psql"
@@ -42,7 +43,7 @@ func ShowById(userId int) (misc.User, int) {
 }
 
 // Update information about a user
-func Update(userId int, nickname, about string) int {
+func Update(userId int, nickname, about, image string) int {
 	if !misc.IsIdValid(userId) {
 		log.Println("user was not updated", userId)
 		return misc.NothingUpdated
@@ -60,10 +61,15 @@ func Update(userId int, nickname, about string) int {
 		return misc.WrongDescr
 	}
 
+	if !imager.IsAvatarValid(image) {
+		log.Println("Avatar is not valid", image)
+		return misc.WrongImg
+	}
+
 	sqlResult, err := psql.Db.Exec(`
 		UPDATE users
-		SET nickname = $1, about = $2
-		WHERE id = $3`, nickname, about, userId)
+		SET nickname = $1, about = $2, image = $3
+		WHERE id = $4`, nickname, about, image, userId)
 	if err, code := psql.CheckSpecificDriverErrors(err); err != nil {
 		log.Println(err)
 		return code
@@ -355,24 +361,4 @@ func Login(email, password string) (string, bool) {
 		return "", false
 	}
 	return jwt, true
-}
-
-// UpdateAvatar updates user's path to avatar
-func UpdateAvatar(userId int, path string) int {
-	if !misc.IsIdValid(userId) {
-		log.Println("user was not updated", userId)
-		return misc.NothingUpdated
-	}
-
-	sqlResult, err := psql.Db.Exec(`
-		UPDATE users
-		SET image = $1
-		WHERE id = $2`, path, userId)
-	if err, code := psql.CheckSpecificDriverErrors(err); err != nil {
-		log.Println(err)
-		return code
-	}
-
-	err, code := psql.IsAffectedOneRow(sqlResult)
-	return code
 }

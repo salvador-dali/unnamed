@@ -265,7 +265,7 @@ func GetUser(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 func UpdateUser(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	var data misc.JsonNicknameAbout
+	var data misc.JsonNicknameAboutAvatar
 	if body, ok := readJson(r, w); !ok {
 		return
 	} else {
@@ -277,7 +277,7 @@ func UpdateUser(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 		return
 	}
 
-	if code := user.Update(userId, data.Nickname, data.About); isCodeTrivial(code, w) {
+	if code := user.Update(userId, data.Nickname, data.About, data.Avatar); isCodeTrivial(code, w) {
 		sendJson(w, nil, http.StatusNoContent)
 	}
 }
@@ -451,7 +451,7 @@ func GetPurchase(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 func CreatePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string) {
 	w.Header().Set("Content-Type", "application/javascript")
 
-	var data misc.JsonDescrBrandTag
+	var data misc.JsonDescrImageBrandTag
 	if body, ok := readJson(r, w); !ok {
 		return
 	} else {
@@ -463,7 +463,7 @@ func CreatePurchase(w http.ResponseWriter, r *http.Request, ps map[string]string
 		return
 	}
 
-	if id, code := purchase.Create(userId, data.Descr, data.BrandId, data.TagIds); isCodeTrivial(code, w) {
+	if id, code := purchase.Create(userId, data.Descr, data.Image, data.BrandId, data.TagIds); isCodeTrivial(code, w) {
 		sendJson(w, misc.Id{id}, http.StatusCreated)
 	}
 }
